@@ -20,11 +20,11 @@ const interBody = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "TechDrHealth — Online Doctor Consultation | 100+ Specialists",
+    default: "TechDrHealth — Online Doctor Consultation | 1000+ Specialists",
     template: "%s | TechDrHealth",
   },
   description:
-    "Consult verified doctors online via video in minutes. 100+ specialists across 20+ specialities. Book teleconsultation now on techdrhealth.com.",
+    "Consult verified doctors online via video in minutes. 1000+ specialists across 20+ specialities. Book teleconsultation now on techdrhealth.com.",
   metadataBase: new URL("https://techdrhealth.com"),
   openGraph: {
     siteName: "TechDrHealth",

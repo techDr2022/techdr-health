@@ -70,6 +70,9 @@ export default function SymptomPage({ params }: Props) {
         verified {specialty.name.toLowerCase()} specialists. Get diagnosis,
         treatment guidance, and digital prescription from the comfort of home.
       </p>
+      {info.uniqueIntro ? (
+        <p className="mt-3 max-w-4xl text-muted-foreground">{info.uniqueIntro}</p>
+      ) : null}
 
       <section className="mt-10">
         <h2 className="font-heading text-2xl font-semibold text-[#0A1628]">

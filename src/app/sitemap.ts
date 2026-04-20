@@ -1,45 +1,10 @@
 import type { MetadataRoute } from "next";
 import { DOCTORS } from "@/data/doctors";
-import { listSpecialtySlugs } from "@/data/specialties";
 import { BLOG_POSTS } from "@/data/blog";
+import { CITY_TARGETS, SYMPTOM_TARGETS } from "@/data/seo-targets";
+import { listSpecialtySlugs } from "@/data/specialties";
 
 const SITE_URL = "https://techdrhealth.com";
-
-const SYMPTOMS = [
-  "fever",
-  "headache",
-  "back-pain",
-  "skin-rash",
-  "chest-pain",
-  "cough",
-  "anxiety",
-  "diabetes",
-  "hair-loss",
-  "acne",
-  "stomach-pain",
-  "joint-pain",
-  "fatigue",
-  "insomnia",
-  "allergies",
-];
-
-const CITIES = [
-  "hyderabad",
-  "mumbai",
-  "bangalore",
-  "delhi",
-  "chennai",
-  "kolkata",
-  "pune",
-  "ahmedabad",
-  "jaipur",
-  "lucknow",
-  "chandigarh",
-  "kochi",
-  "coimbatore",
-  "nagpur",
-  "vizag",
-];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -76,14 +41,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]);
 
-  const symptomPaths = SYMPTOMS.map((symptom) => ({
+  const symptomPaths = Object.keys(SYMPTOM_TARGETS).map((symptom) => ({
     url: `${SITE_URL}/symptoms/${symptom}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
-  const cityPaths = CITIES.map((city) => ({
+  const cityPaths = CITY_TARGETS.map((city) => ({
     url: `${SITE_URL}/doctors/city/${city}`,
     lastModified: now,
     changeFrequency: "daily" as const,
