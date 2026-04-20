@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { sendApprovalEmail, sendRejectionEmail } from "@/lib/email";
+
+export const dynamic = "force-dynamic";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const [{ prisma }, { sendApprovalEmail, sendRejectionEmail }] = await Promise.all([
+      import("@/lib/prisma"),
+      import("@/lib/email"),
+    ]);
+
     const body = await req.json();
     const action = String(body.action ?? "").toUpperCase();
     const reason = body.reason ? String(body.reason) : null;
