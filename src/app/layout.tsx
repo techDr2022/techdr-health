@@ -39,6 +39,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${interDisplay.variable} ${interBody.variable}`}>
+      <head>
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-09WZSV2Q9L"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-09WZSV2Q9L');
+            `,
+          }}
+        />
+      </head>
       <body className="antialiased">
         <Providers>
           {children}
