@@ -112,7 +112,7 @@ export default function JoinPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="relative col-span-2 h-64 overflow-hidden rounded-2xl border border-white/20 shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1550831107-1553da8c8464?auto=format&fit=crop&w=1400&q=80"
+                src="/images/placeholders/care-hero.svg"
                 alt="Doctors collaborating in a clinical setting"
                 fill
                 className="object-cover"
@@ -121,7 +121,7 @@ export default function JoinPage() {
             </div>
             <div className="relative h-36 overflow-hidden rounded-2xl border border-white/20 shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=900&q=80"
+                src="/images/placeholders/care-hero.svg"
                 alt="Doctor speaking with a patient online"
                 fill
                 className="object-cover"
@@ -130,7 +130,7 @@ export default function JoinPage() {
             </div>
             <div className="relative h-36 overflow-hidden rounded-2xl border border-white/20 shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1631217868264-e6d15f8c5f6f?auto=format&fit=crop&w=900&q=80"
+                src="/images/placeholders/care-hero.svg"
                 alt="Clinical team with digital health tools"
                 fill
                 className="object-cover"
@@ -203,7 +203,7 @@ export default function JoinPage() {
                   <Image
                     src={
                       doctorBySpecialty.get(item.specialty.toLowerCase()) ??
-                      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=300&q=80"
+                      "/images/placeholders/doctor-avatar.svg"
                     }
                     alt={item.name}
                     fill

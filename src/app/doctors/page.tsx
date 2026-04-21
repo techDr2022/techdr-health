@@ -92,7 +92,7 @@ export default function DoctorsDirectoryPage({
           </div>
           <div className="relative h-52 overflow-hidden rounded-2xl border border-emerald-100 shadow-sm sm:h-60">
             <Image
-              src="https://images.unsplash.com/photo-1612531385446-f7b6b8f8f68b?auto=format&fit=crop&w=1400&q=80"
+              src="/images/placeholders/care-hero.svg"
               alt="Doctors available for online consultation"
               fill
               className="object-cover"

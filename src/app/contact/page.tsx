@@ -47,7 +47,7 @@ export default function ContactPage() {
           </div>
           <div className="relative h-52 overflow-hidden rounded-2xl border border-emerald-100 shadow-sm sm:h-60">
             <Image
-              src="https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1400&q=80"
+              src="/images/placeholders/care-hero.svg"
               alt="Patient support specialist"
               fill
               className="object-cover"

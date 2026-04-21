@@ -53,7 +53,7 @@ export default function AboutPage() {
         <div className="grid grid-cols-2 gap-3">
           <div className="relative col-span-2 h-64 overflow-hidden rounded-2xl border border-emerald-100 shadow-sm">
             <Image
-              src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1400&q=80"
+              src="/images/placeholders/care-hero.svg"
               alt="Doctor consulting a patient online"
               fill
               className="object-cover"

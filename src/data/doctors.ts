@@ -1,8 +1,10 @@
 import type { DoctorRecord } from "@/types/catalog";
 import { SPECIALTIES } from "./specialties";
 
-const img = (id: string) =>
-  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
+const img = (id: string) => {
+  void id;
+  return "/images/placeholders/doctor-avatar.svg";
+};
 
 const STD_AVAIL = [
   { dayOfWeek: 1, startTime: "09:00", endTime: "13:00" },

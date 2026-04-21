@@ -1,7 +1,7 @@
 import type { BlogPostRecord } from "@/types/catalog";
 
 const cov =
-  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=1200&q=80";
+  "/images/placeholders/blog-cover.svg";
 
 export const BLOG_POSTS: BlogPostRecord[] = [
   {
