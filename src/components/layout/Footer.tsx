@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -8,9 +9,7 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-display text-xl font-[800] tracking-tight">
-              techDr <span className="text-emerald-600">Tele Health</span>
-            </p>
+            <Image src="/techdrhealth-logo.png" alt="techDrHealth" width={180} height={48} className="h-10 w-auto" />
             <p className="mt-3 max-w-xs font-body text-sm leading-relaxed text-slate-600">
               Fast, secure teleconsultation with verified specialists across India. Consult in minutes from anywhere.
             </p>
@@ -97,6 +96,18 @@ export function Footer() {
             >
               Get Assistance
             </Link>
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5">
+          <p className="font-display text-sm font-[700] uppercase tracking-[0.12em] text-emerald-800">Contact Info</p>
+          <div className="mt-3 space-y-2 font-body text-sm text-slate-700">
+            <p>
+              1st floor, Sri Lalitha Devi Nilayam, 16-11-16, N/118, West Prasanth Nagar, Malakpet Extension, New
+              Malakpet, Hyderabad, Telangana 500036
+            </p>
+            <p>Phone: 90322 92171</p>
+            <p>Email: techdrtelehealth@gmail.com</p>
           </div>
         </div>
 

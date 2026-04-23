@@ -26,6 +26,11 @@ export const metadata: Metadata = {
   description:
     "Consult verified doctors online via video in minutes. 1000+ specialists across 20+ specialities. Book teleconsultation now on techdrhealth.com.",
   metadataBase: new URL("https://techdrhealth.com"),
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
     siteName: "TechDrHealth",
     type: "website",

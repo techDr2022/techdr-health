@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export const metadata: Metadata = {
   title: "Registration Complete",
   description:
-    "Your onboarding is complete. Our team reviews your documents within 24-48 hours.",
+    "Your onboarding is complete and your doctor account is approved.",
 };
 
 export default function JoinSuccessPage({
@@ -16,6 +16,7 @@ export default function JoinSuccessPage({
   searchParams?: { email?: string };
 }) {
   const email = searchParams?.email;
+  const isEmailConfigured = Boolean(process.env.POSTMARK_SERVER_TOKEN);
 
   return (
     <div className="bg-slate-50 py-16">
@@ -29,17 +30,22 @@ export default function JoinSuccessPage({
               </h1>
             </div>
             <p className="text-sm text-muted-foreground">
-              Your account is under review. We will verify your documents within
-              48 hours and notify you by email.
+              Your account has been approved. You can now complete your profile
+              and start accepting consultations.
             </p>
             {email ? (
               <p className="rounded-lg bg-slate-50 p-3 text-sm">
-                Approval update will be sent to: <strong>{email}</strong>
+                {isEmailConfigured ? "Confirmation email sent to: " : "Registered email: "}
+                <strong>{email}</strong>
               </p>
             ) : null}
             <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
-              <li>Our team reviews your documents (24-48 hours)</li>
-              <li>You receive an approval email with login details</li>
+              <li>Your account is approved immediately</li>
+              <li>
+                {isEmailConfigured
+                  ? "You receive a confirmation email with login details"
+                  : "Enable email settings to send confirmation emails automatically"}
+              </li>
               <li>Complete your public profile</li>
               <li>Start accepting online consultations</li>
             </ol>

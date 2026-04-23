@@ -26,9 +26,15 @@ export async function POST(req: NextRequest) {
     }
 
     const email = String(payload.email).toLowerCase().trim();
+    const phone = String(payload.phone).trim();
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: "Email is already registered." }, { status: 409 });
+    }
+
+    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+    if (existingPhone) {
+      return NextResponse.json({ error: "Phone number is already registered." }, { status: 409 });
     }
 
     const hashedPassword = await bcrypt.hash(String(payload.password), 10);
@@ -45,7 +51,7 @@ export async function POST(req: NextRequest) {
       const user = await tx.user.create({
         data: {
           email,
-          phone: String(payload.phone),
+          phone,
           passwordHash: hashedPassword,
           role: "DOCTOR",
           name: entityName,
@@ -74,7 +80,7 @@ export async function POST(req: NextRequest) {
           followUpFee: payload.followUpFee ? Number(payload.followUpFee) : 0,
           consultDuration: payload.consultDuration ? Number(payload.consultDuration) : 15,
           consultTypes: ["VIDEO"],
-          approvalStatus: "PENDING",
+          approvalStatus: "APPROVED",
           isVisible: false,
           medRegCertUrl: payload.medRegCertUrl ? String(payload.medRegCertUrl) : null,
           degreeDocUrl: payload.degreeDocUrl ? String(payload.degreeDocUrl) : null,
@@ -110,6 +116,20 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error("create application error", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const targets = Array.isArray(error.meta?.target)
+        ? error.meta.target.map((value) => String(value))
+        : [];
+
+      if (targets.includes("email")) {
+        return NextResponse.json({ error: "Email is already registered." }, { status: 409 });
+      }
+      if (targets.includes("phone")) {
+        return NextResponse.json({ error: "Phone number is already registered." }, { status: 409 });
+      }
+
+      return NextResponse.json({ error: "Duplicate data found. Please check your details." }, { status: 409 });
+    }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
       return NextResponse.json(
         { error: "Database is not initialized. Run Prisma migrations (or prisma db push) and try again." },

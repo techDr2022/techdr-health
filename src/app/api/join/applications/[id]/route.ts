@@ -21,7 +21,7 @@ export async function PATCH(
 
     const profile = await prisma.doctorProfile.findUnique({
       where: { id: doctorId },
-      include: { user: true },
+      include: { user: true, subscription: { select: { status: true } } },
     });
 
     if (!profile) {
@@ -84,7 +84,9 @@ export async function PATCH(
           medRegCertUrl: payload.medRegCertUrl ? String(payload.medRegCertUrl) : null,
           degreeDocUrl: payload.degreeDocUrl ? String(payload.degreeDocUrl) : null,
           govIdUrl: payload.govIdUrl ? String(payload.govIdUrl) : null,
-          isVisible: false,
+          approvalStatus: "APPROVED",
+          rejectionReason: null,
+          isVisible: profile.subscription?.status === "ACTIVE",
         },
       });
     });

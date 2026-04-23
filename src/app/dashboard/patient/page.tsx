@@ -21,11 +21,19 @@ export default async function PatientDashboardPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-semibold text-slate-900">Patient Dashboard</h1>
-      <p className="mt-2 text-sm text-slate-600">Join your upcoming video consultations and view status updates.</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-semibold text-slate-900">Patient Dashboard</h1>
+        <p className="mt-1 text-sm text-slate-600">Join upcoming consultations and manage visit history.</p>
+      </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border bg-white">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Total Bookings" value={String(bookings.length)} />
+        <StatCard label="Upcoming" value={String(bookings.filter((b) => b.status === "UPCOMING").length)} />
+        <StatCard label="Completed" value={String(bookings.filter((b) => b.status === "COMPLETED").length)} />
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full min-w-[900px] text-left text-sm">
           <thead className="border-b bg-slate-50 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -76,6 +84,15 @@ export default async function PatientDashboardPage() {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
     </div>
   );
 }

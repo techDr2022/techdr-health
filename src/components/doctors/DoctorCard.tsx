@@ -7,6 +7,7 @@ import { RatingStars } from "@/components/ui/RatingStars";
 import { AvailabilityBadge } from "@/components/ui/AvailabilityBadge";
 import { ConsultationFeeTag } from "@/components/ui/ConsultationFeeTag";
 import { Card, CardContent } from "@/components/ui/card";
+import { getSafeImageSrc } from "@/lib/image";
 
 export function DoctorCard({
   doctor,
@@ -21,7 +22,10 @@ export function DoctorCard({
         <div className="flex gap-4">
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-muted sm:h-28 sm:w-28">
             <Image
-              src={doctor.photoUrl}
+              src={getSafeImageSrc(
+                doctor.photoUrl,
+                "/images/placeholders/doctor-avatar.svg"
+              )}
               alt={`${doctor.name}, ${doctor.credentials}`}
               fill
               className="object-cover"

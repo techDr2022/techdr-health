@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { DOCTORS, getDoctorBySlug } from "@/data/doctors";
 import { getSpecialtyBySlug } from "@/data/specialties";
+import { getSafeImageSrc } from "@/lib/image";
 import { getDoctorProfileSEO } from "@/lib/seo";
 import { relatedDoctorsForSpecialty } from "@/lib/queries";
 import { getDoctorSchema } from "@/lib/schema";
@@ -78,7 +79,10 @@ export default function DoctorProfilePage({ params }: Props) {
           <div className="flex flex-col gap-8 sm:flex-row">
             <div className="relative mx-auto aspect-[3/4] w-full max-w-[280px] overflow-hidden rounded-3xl bg-muted shadow-lg sm:mx-0">
               <Image
-                src={doctor.photoUrl}
+                src={getSafeImageSrc(
+                  doctor.photoUrl,
+                  "/images/placeholders/doctor-avatar.svg"
+                )}
                 alt={`${doctor.name}, ${doctor.credentials}`}
                 fill
                 priority

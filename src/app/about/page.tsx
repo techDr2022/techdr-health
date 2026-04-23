@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { DOCTORS } from "@/data/doctors";
+import { getSafeImageSrc } from "@/lib/image";
 import { SITE_NAME } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -66,7 +67,10 @@ export default function AboutPage() {
               className="relative h-40 overflow-hidden rounded-2xl border border-emerald-100 shadow-sm"
             >
               <Image
-                src={doctor.photoUrl}
+                src={getSafeImageSrc(
+                  doctor.photoUrl,
+                  "/images/placeholders/doctor-avatar.svg"
+                )}
                 alt={doctor.name}
                 fill
                 className="object-cover"

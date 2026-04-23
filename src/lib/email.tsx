@@ -1,5 +1,6 @@
-import { Resend } from "resend";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { render } from "@react-email/components";
+import { ServerClient } from "postmark";
 import { SubStatus } from "@prisma/client";
 import { SubscriptionConfirmationEmail } from "@/emails/subscription-confirmation";
 import { ApplicationApprovedEmail } from "@/emails/application-approved";
@@ -9,21 +10,28 @@ import { SubscriptionExpiredEmail } from "@/emails/subscription-expired";
 import { BookingConfirmedEmail } from "@/emails/booking-confirmed";
 import { PayoutProcessedEmail } from "@/emails/payout-processed";
 
-const resendApiKey = process.env.RESEND_API_KEY;
-const from = process.env.RESEND_FROM_EMAIL || "techDr Tele Health <no-reply@vitalconsult.health>";
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
+const postmarkServerToken = process.env.POSTMARK_SERVER_TOKEN;
+const from =
+  process.env.POSTMARK_FROM_EMAIL ||
+  process.env.RESEND_FROM_EMAIL ||
+  "techDr Tele Health <no-reply@vitalconsult.health>";
+const postmarkClient = postmarkServerToken
+  ? new ServerClient(postmarkServerToken)
+  : null;
 
 async function safeSend(args: {
   to: string;
   subject: string;
   react: ReactNode;
 }) {
-  if (!resend) return;
-  await resend.emails.send({
-    from,
-    to: args.to,
-    subject: args.subject,
-    react: args.react,
+  if (!postmarkClient) return;
+
+  const html = await render(args.react as ReactElement);
+  await postmarkClient.sendEmail({
+    From: from,
+    To: args.to,
+    Subject: args.subject,
+    HtmlBody: html,
   });
 }
 

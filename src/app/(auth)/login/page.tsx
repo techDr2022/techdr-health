@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { OTPInput, REGEXP_ONLY_DIGITS } from "input-otp";
 import { toast } from "sonner";
@@ -17,11 +16,9 @@ import { cn } from "@/lib/utils";
 type AuthMode = "choose" | "phone-enter" | "phone-otp" | "email";
 
 const emailSchema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().trim().min(1, "Email is required").email("Enter a valid email"),
+  password: z.string().trim().min(1, "Password is required"),
 });
-
-type EmailFormData = z.infer<typeof emailSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,14 +32,10 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendIn, setResendIn] = useState(0);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<EmailFormData>({
-    resolver: zodResolver(emailSchema),
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   async function sendOTP() {
     if (!/^[6-9]\d{9}$/.test(phone)) {
@@ -122,12 +115,24 @@ export default function LoginPage() {
     }
   }
 
-  async function loginWithEmail(data: EmailFormData) {
+  async function loginWithEmail() {
+    const parsed = emailSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const issues = parsed.error.issues;
+      const emailIssue = issues.find((item) => item.path[0] === "email");
+      const passwordIssue = issues.find((item) => item.path[0] === "password");
+      setEmailError(emailIssue?.message ?? "");
+      setPasswordError(passwordIssue?.message ?? "");
+      return;
+    }
+
+    setEmailError("");
+    setPasswordError("");
     setLoading(true);
     try {
       const result = await signIn("email-password", {
-        email: data.email,
-        password: data.password,
+        email: parsed.data.email,
+        password: parsed.data.password,
         redirect: false,
       });
       if (result?.error) {
@@ -158,8 +163,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-slate-50 flex">
       <div className="hidden lg:flex lg:w-[460px] flex-col justify-between p-12 bg-blue-950">
         <div>
-          <Link href="/" className="font-display font-[800] text-[18px] text-white">
-            TechDr<span className="text-blue-400">Health</span>
+          <Link href="/" className="inline-flex items-center">
+            <Image src="/techdrhealth-logo.png" alt="techDrHealth" width={168} height={44} className="h-9 w-auto" />
           </Link>
         </div>
         <div>
@@ -356,17 +361,36 @@ export default function LoginPage() {
               <h1 className="font-display font-[800] text-[28px] text-slate-900 tracking-tight mb-1">Sign in</h1>
               <p className="text-slate-500 text-[14px] mb-8 font-body">Enter your email and password to continue</p>
 
-              <form onSubmit={handleSubmit((values) => void loginWithEmail(values))} className="space-y-4">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void loginWithEmail();
+                }}
+                className="space-y-4"
+              >
                 <div>
-                  <Input {...register("email")} type="email" placeholder="doctor@example.com" className="h-12 rounded-xl" />
-                  {errors.email && <p className="text-red-500 text-[11px] mt-1 font-body">{errors.email.message}</p>}
+                  <Input
+                    type="email"
+                    placeholder="doctor@example.com"
+                    className="h-12 rounded-xl"
+                    value={email}
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      if (emailError) setEmailError("");
+                    }}
+                  />
+                  {emailError ? <p className="text-red-500 text-[11px] mt-1 font-body">{emailError}</p> : null}
                 </div>
                 <div className="relative">
                   <Input
-                    {...register("password")}
                     type={showPass ? "text" : "password"}
                     placeholder="Enter your password"
                     className="h-12 rounded-xl pr-12"
+                    value={password}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      if (passwordError) setPasswordError("");
+                    }}
                   />
                   <button
                     type="button"
@@ -375,7 +399,7 @@ export default function LoginPage() {
                   >
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
-                  {errors.password && <p className="text-red-500 text-[11px] mt-1 font-body">{errors.password.message}</p>}
+                  {passwordError ? <p className="text-red-500 text-[11px] mt-1 font-body">{passwordError}</p> : null}
                 </div>
                 <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
                   {loading ? (
@@ -387,6 +411,11 @@ export default function LoginPage() {
                     "Sign In"
                   )}
                 </Button>
+                <div className="text-right">
+                  <Link href="/forgot-password" className="text-xs font-medium text-blue-600 hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
               </form>
 
               <p className="mt-4 text-center text-slate-400 text-[13px] font-body">

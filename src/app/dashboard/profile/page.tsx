@@ -1,3 +1,7 @@
+import Image from "next/image";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { getSafeImageSrc } from "@/lib/image";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileEditPanels } from "./profile-edit-panels";
@@ -5,7 +9,13 @@ import { ProfileEditPanels } from "./profile-edit-panels";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardProfilePage() {
-  const doctor = await prisma.doctorProfile.findFirst();
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  if (session.user.role !== "DOCTOR") redirect("/dashboard/patient");
+
+  const doctor = await prisma.doctorProfile.findUnique({
+    where: { userId: session.user.id },
+  });
   if (!doctor) return <div className="mx-auto max-w-3xl px-4 py-10">No doctor account found.</div>;
 
   return (
@@ -21,6 +31,24 @@ export default async function DashboardProfilePage() {
             <CardTitle>Professional Snapshot</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <div className="relative h-16 w-16 overflow-hidden rounded-full bg-slate-200">
+                <Image
+                  src={getSafeImageSrc(
+                    doctor.photoUrl,
+                    "/images/placeholders/doctor-avatar.svg"
+                  )}
+                  alt={doctor.displayName}
+                  fill
+                  className="object-cover"
+                  sizes="64px"
+                />
+              </div>
+              <div>
+                <p className="font-semibold text-slate-900">{doctor.displayName}</p>
+                <p className="text-xs text-slate-500">{doctor.specialty}</p>
+              </div>
+            </div>
             <Line label="Name" value={doctor.displayName} />
             <Line label="Specialty" value={doctor.specialty} />
             <Line label="Credentials" value={doctor.credentials} />
@@ -37,7 +65,14 @@ export default async function DashboardProfilePage() {
         </div>
       </div>
 
-      <ProfileEditPanels />
+      <ProfileEditPanels
+        initialProfile={{
+          displayName: doctor.displayName,
+          specialty: doctor.specialty,
+          languages: doctor.languages,
+          photoUrl: doctor.photoUrl,
+        }}
+      />
     </div>
   );
 }

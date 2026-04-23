@@ -20,22 +20,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         const parsed = z
           .object({
-            email: z.string().email(),
-            password: z.string().min(6),
+            email: z.string().trim().toLowerCase().email(),
+            password: z.string().min(1),
           })
           .safeParse(credentials);
 
-        if (!parsed.success) throw new Error("Invalid credentials");
+        if (!parsed.success) return null;
 
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },
         });
 
-        if (!user || !user.passwordHash) throw new Error("No account found with this email.");
-        if (!user.isActive) throw new Error("Account suspended. Contact support.");
+        if (!user || !user.passwordHash) return null;
+        if (!user.isActive) return null;
 
         const passwordMatch = await bcrypt.compare(parsed.data.password, user.passwordHash);
-        if (!passwordMatch) throw new Error("Incorrect password.");
+        if (!passwordMatch) return null;
 
         await prisma.user.update({
           where: { id: user.id },
@@ -64,19 +64,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         const parsed = z
           .object({
-            phone: z.string().min(10),
+            phone: z.string().trim().min(10),
             userId: z.string().min(1),
           })
           .safeParse(credentials);
 
-        if (!parsed.success) throw new Error("Invalid credentials");
+        if (!parsed.success) return null;
 
         const user = await prisma.user.findUnique({
           where: { id: parsed.data.userId },
         });
 
-        if (!user || user.phone !== parsed.data.phone) throw new Error("User not found");
-        if (!user.isActive) throw new Error("Account suspended.");
+        if (!user || user.phone !== parsed.data.phone) return null;
+        if (!user.isActive) return null;
 
         await prisma.user.update({
           where: { id: user.id },

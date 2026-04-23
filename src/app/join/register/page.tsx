@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { RegisterFlow } from "@/components/join/RegisterFlow";
+import { Footer } from "@/components/layout/Footer";
+import { Navbar } from "@/components/layout/Navbar";
 
 export const metadata: Metadata = {
   title: "Doctor Registration",
@@ -13,8 +15,12 @@ export default function JoinRegisterPage({
   searchParams?: { plan?: string };
 }) {
   return (
-    <div className="bg-slate-50 py-8">
-      <RegisterFlow initialPlanId={searchParams?.plan} />
-    </div>
+    <>
+      <Navbar />
+      <main className="min-h-screen bg-gradient-to-b from-white via-emerald-50/50 to-white pt-20">
+        <RegisterFlow initialPlanId={searchParams?.plan} />
+      </main>
+      <Footer />
+    </>
   );
 }

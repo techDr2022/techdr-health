@@ -7,7 +7,7 @@ import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
-  purpose: z.enum(["LOGIN", "REGISTER"]),
+  purpose: z.enum(["LOGIN", "REGISTER", "RESET"]),
   role: z.enum(["PATIENT", "DOCTOR"]).optional(),
 });
 
@@ -41,6 +41,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           { error: "This number is already registered. Please log in instead." },
           { status: 409 }
+        );
+      }
+    }
+
+    if (purpose === "RESET") {
+      const user = await prisma.user.findUnique({ where: { phone } });
+      if (!user) {
+        return NextResponse.json(
+          { error: "No account found with this number." },
+          { status: 404 }
         );
       }
     }

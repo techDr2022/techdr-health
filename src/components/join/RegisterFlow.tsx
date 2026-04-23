@@ -4,12 +4,15 @@ import Script from "next/script";
 import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { CheckCircle2 } from "lucide-react";
 import { SPECIALTIES } from "@/data/specialties";
 import {
   PLAN_ID_TO_TYPE,
   SUBSCRIPTION_PLANS,
   type PlanType,
 } from "@/lib/plans";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -123,6 +126,13 @@ const DEFAULT_UPLOADS: UploadState = {
   clinicRegUrl: null,
   profilePhotoUrl: null,
   logoUrl: null,
+};
+
+const STEP_LABELS: Record<RegisterStep, string> = {
+  1: "Choose Plan",
+  2: "Account + Payment",
+  3: "Professional Profile",
+  4: "Documents + Submit",
 };
 
 function getInitialPlan(initialPlanId?: string): PlanType {
@@ -391,7 +401,19 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
         throw new Error("Unable to complete onboarding. Please retry.");
       }
 
-      router.push(`/join/success?email=${encodeURIComponent(form.email)}`);
+      const signInResult = await signIn("email-password", {
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+        redirect: false,
+      });
+
+      if (signInResult?.error) {
+        router.push(`/login?callbackUrl=${encodeURIComponent("/dashboard/doctor")}`);
+        return;
+      }
+
+      router.push("/dashboard/doctor");
+      router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to complete onboarding.";
       setError(message);
@@ -403,15 +425,42 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
   return (
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Join as Doctor / Clinic / Hospital</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Step {step} of 4 - Select plan, complete payment first, then finish your onboarding details.
-            </p>
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+        <Card className="overflow-hidden border-emerald-100 shadow-xl shadow-emerald-100/40">
+          <CardHeader className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <Badge className="bg-emerald-500 text-white">Doctor Growth Program</Badge>
+                <CardTitle className="mt-3 text-2xl font-semibold sm:text-3xl">
+                  Join as Doctor / Clinic / Hospital
+                </CardTitle>
+                <p className="mt-2 text-sm text-slate-200">
+                  Step {step} of 4 - {STEP_LABELS[step]}
+                </p>
+              </div>
+              {isPaymentVerified ? (
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-400/20 px-3 py-1 text-xs font-semibold text-emerald-100">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Payment verified
+                </div>
+              ) : null}
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {(Object.keys(STEP_LABELS) as unknown as RegisterStep[]).map((key) => (
+                <div
+                  key={key}
+                  className={`rounded-lg border px-3 py-2 text-xs font-medium ${
+                    key <= step
+                      ? "border-emerald-300/50 bg-emerald-400/20 text-emerald-100"
+                      : "border-white/20 bg-white/5 text-slate-300"
+                  }`}
+                >
+                  {key}. {STEP_LABELS[key]}
+                </div>
+              ))}
+            </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 p-6 sm:p-8">
             {step === 1 ? (
               <div className="grid gap-4 md:grid-cols-3">
                 {(Object.keys(SUBSCRIPTION_PLANS) as PlanType[]).map((planType) => {
@@ -422,15 +471,15 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                       key={plan.id}
                       type="button"
                       onClick={() => updateField("planType", planType)}
-                      className={`rounded-xl border p-4 text-left transition ${
+                      className={`rounded-2xl border p-5 text-left transition ${
                         active
-                          ? "border-teal-500 bg-teal-50"
-                          : "border-slate-200 hover:border-slate-300"
+                          ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
+                          : "border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40"
                       }`}
                     >
-                      <p className="text-sm text-muted-foreground">{plan.badge}</p>
-                      <p className="mt-1 font-semibold">{plan.name}</p>
-                      <p className="mt-1 text-sm">INR {plan.price.toLocaleString("en-IN")}/year</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">{plan.badge}</p>
+                      <p className="mt-2 text-lg font-semibold">{plan.name}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">INR {plan.price.toLocaleString("en-IN")} / year</p>
                     </button>
                   );
                 })}
@@ -477,20 +526,20 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                     onChange={(e) => updateField("confirmPassword", e.target.value)}
                   />
                 </div>
-                <div className="space-y-2 md:col-span-2 rounded-xl border bg-slate-50 p-4">
+                <div className="space-y-2 md:col-span-2 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5">
                   <div className="flex items-center justify-between">
                     <p className="text-base font-semibold">{selectedPlan.name}</p>
-                  <p className="text-xl font-semibold">
-                    {isFreeListingGranted ? "FREE" : `INR ${selectedPlan.price.toLocaleString("en-IN")}`}
-                  </p>
+                    <p className="text-xl font-semibold text-emerald-700">
+                      {isFreeListingGranted ? "FREE" : `INR ${selectedPlan.price.toLocaleString("en-IN")}`}
+                    </p>
                   </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  First 500 listings get free annual subscription. After that, secure Razorpay payment applies.
-                </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    First 500 listings get free annual subscription. After that, secure Razorpay payment applies.
+                  </p>
                   <Button
                     onClick={handlePayment}
                     disabled={isBusy || isPaymentVerified}
-                    className="mt-4 w-full"
+                    className="mt-4 w-full bg-emerald-600 text-white hover:bg-emerald-700"
                   >
                     {isPaymentVerified
                       ? isFreeListingGranted
@@ -671,7 +720,7 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
               </div>
             ) : null}
             {step === 4 ? (
-              <div className="rounded-xl border bg-slate-50 p-4">
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
                 <p className="text-sm text-muted-foreground">
                   Upload required documents and submit to complete onboarding.
                 </p>
@@ -685,11 +734,17 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                 Back
               </Button>
               {step === 4 ? (
-                <Button onClick={completeOnboarding} disabled={isBusy}>
+                <Button
+                  onClick={completeOnboarding}
+                  disabled={isBusy}
+                  className="bg-emerald-600 text-white hover:bg-emerald-700"
+                >
                   {isBusy ? "Submitting..." : "Submit onboarding"}
                 </Button>
               ) : step !== 2 || isPaymentVerified ? (
-                <Button onClick={nextStep}>Continue</Button>
+                <Button onClick={nextStep} className="bg-emerald-600 text-white hover:bg-emerald-700">
+                  Continue
+                </Button>
               ) : null}
             </div>
           </CardContent>

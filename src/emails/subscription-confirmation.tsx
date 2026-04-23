@@ -9,11 +9,10 @@ export function SubscriptionConfirmationEmail({ entityName }: { entityName: stri
     >
       <Text>Hi {entityName},</Text>
       <Text>
-        We have received your annual subscription payment. Your documents are now
-        queued for verification and our team will complete review within 24-48
-        business hours.
+        We have received your annual subscription payment and your account is
+        approved successfully.
       </Text>
-      <Text>You will receive an approval email as soon as verification is complete.</Text>
+      <Text>You can now complete your profile and start accepting consultations.</Text>
     </EmailLayout>
   );
 }
