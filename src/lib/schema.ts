@@ -18,13 +18,16 @@ export function getMedicalOrgSchema() {
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/logo.png`,
+    logo: `${SITE_URL}/techdrhealth-logo.png`,
     description:
       "India's trusted teleconsultation platform with 100+ verified doctors across 20+ specialities.",
-    telephone: "+91-XXXXXXXXXX",
-    email: "support@techdrhealth.com",
+    telephone: "+91-9032292171",
+    email: "techdrtelehealth@gmail.com",
     address: {
       "@type": "PostalAddress",
+      streetAddress:
+        "1st floor, Sri Lalitha Devi Nilayam, 16-11-16, N/118, West Prasanth Nagar, Malakpet Extension, New Malakpet",
+      postalCode: "500036",
       addressCountry: "IN",
       addressLocality: "Hyderabad",
       addressRegion: "Telangana",
@@ -88,17 +91,47 @@ export function getDoctorSchema(doctor: {
   medRegNumber?: string;
   languages: string[];
   education: { degree: string; institution: string; year: string | number }[];
+  reviews?: {
+    rating: number;
+    comment: string;
+    patientName: string;
+    createdAt?: string;
+  }[];
 }) {
-  return {
+  const reviewSchema = (doctor.reviews ?? [])
+    .filter((review) => Boolean(review.comment?.trim()))
+    .slice(0, 8)
+    .map((review) => {
+      const payload: Record<string, unknown> = {
+        "@type": "Review",
+        reviewBody: review.comment,
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: review.rating,
+          bestRating: "5",
+          worstRating: "1",
+        },
+        author: {
+          "@type": "Person",
+          name: review.patientName || "Verified patient",
+        },
+      };
+      if (review.createdAt) payload.datePublished = review.createdAt;
+      return payload;
+    });
+
+  const baseSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": ["Physician", "Person"],
     "@id": `${SITE_URL}/doctors/profile/${doctor.slug}/#physician`,
     name: `Dr. ${doctor.name.replace(/^Dr\.?\s*/i, "")}`,
     image: doctor.photoUrl || `${SITE_URL}/placeholder-doctor.png`,
     url: `${SITE_URL}/doctors/profile/${doctor.slug}`,
+    mainEntityOfPage: `${SITE_URL}/doctors/profile/${doctor.slug}`,
     jobTitle: doctor.specialty,
     description: `${doctor.specialty} with ${doctor.experience} years of experience. ${doctor.credentials}.`,
     medicalSpecialty: doctor.specialty,
+    areaServed: "IN",
     knowsLanguage: doctor.languages,
     alumniOf: doctor.education.map((edu) => ({
       "@type": "EducationalOrganization",
@@ -114,13 +147,6 @@ export function getDoctorSchema(doctor: {
       name: SITE_NAME,
       url: SITE_URL,
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: doctor.rating.toFixed(1),
-      reviewCount: doctor.reviewCount,
-      bestRating: "5",
-      worstRating: "1",
-    },
     priceRange: `₹${doctor.consultFee}`,
     availableService: {
       "@type": "MedicalTherapy",
@@ -134,6 +160,21 @@ export function getDoctorSchema(doctor: {
     },
     ...(doctor.medRegNumber ? { identifier: doctor.medRegNumber } : {}),
   };
+
+  if (doctor.reviewCount > 0) {
+    baseSchema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: doctor.rating.toFixed(1),
+      reviewCount: doctor.reviewCount,
+      bestRating: "5",
+      worstRating: "1",
+    };
+  }
+  if (reviewSchema.length > 0) {
+    baseSchema.review = reviewSchema;
+  }
+
+  return baseSchema;
 }
 
 export function getFAQSchema(faqs: { question: string; answer: string }[]) {
@@ -187,6 +228,73 @@ export function getSpecialtyPageSchema(specialty: string, doctorCount: number) {
   };
 }
 
+export function getSpecialtyReviewsSchema(input: {
+  specialty: string;
+  specialtySlug: string;
+  reviews: {
+    rating: number;
+    comment: string;
+    patientName: string;
+    createdAt?: string;
+    doctorName: string;
+    doctorSlug: string;
+  }[];
+}) {
+  const url = `${SITE_URL}/doctors/${input.specialtySlug}/reviews`;
+  const validReviews = input.reviews.filter((review) => Boolean(review.comment?.trim()));
+  const reviewCount = validReviews.length;
+  const avgRating =
+    reviewCount > 0
+      ? validReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
+      : 0;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `${input.specialty} Patient Reviews`,
+    url,
+    description: `Verified patient feedback for online ${input.specialty} consultations.`,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: validReviews.slice(0, 20).map((review, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Review",
+          reviewBody: review.comment,
+          reviewRating: {
+            "@type": "Rating",
+            ratingValue: review.rating,
+            bestRating: "5",
+            worstRating: "1",
+          },
+          author: {
+            "@type": "Person",
+            name: review.patientName,
+          },
+          itemReviewed: {
+            "@type": "Physician",
+            name: review.doctorName,
+            url: `${SITE_URL}/doctors/profile/${review.doctorSlug}`,
+          },
+          ...(review.createdAt ? { datePublished: review.createdAt } : {}),
+        },
+      })),
+    },
+    ...(reviewCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: avgRating.toFixed(1),
+            reviewCount,
+            bestRating: "5",
+            worstRating: "1",
+          },
+        }
+      : {}),
+  };
+}
+
 export function getArticleSchema(post: {
   title: string;
   excerpt: string;
@@ -214,7 +322,7 @@ export function getArticleSchema(post: {
       name: SITE_NAME,
       logo: {
         "@type": "ImageObject",
-        url: `${SITE_URL}/logo.png`,
+        url: `${SITE_URL}/techdrhealth-logo.png`,
       },
     },
   };

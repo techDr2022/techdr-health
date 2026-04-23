@@ -1,10 +1,34 @@
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardReviewsPage() {
-  const doctor = await prisma.doctorProfile.findFirst({ include: { reviews: true } });
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  if (session.user.role !== "DOCTOR") redirect("/dashboard/patient");
+
+  const doctor = await prisma.doctorProfile.findUnique({
+    where: { userId: session.user.id },
+    include: {
+      reviews: {
+        include: {
+          booking: {
+            include: {
+              patient: {
+                select: { name: true },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+  });
   if (!doctor) return <div className="mx-auto max-w-3xl px-4 py-10">No doctor account found.</div>;
   const avgRating =
     doctor.reviews.length > 0
@@ -25,10 +49,15 @@ export default async function DashboardReviewsPage() {
             doctor.reviews.map((review) => (
               <div key={review.id} className="rounded-lg border p-4">
                 <div className="flex items-center justify-between">
-                  <p className="font-medium">Patient</p>
+                  <p className="font-medium">{review.booking.patient?.name ?? "Patient"}</p>
                   <p className="text-sm text-muted-foreground">{review.rating}/5</p>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{review.comment}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {review.comment?.trim() || "No written feedback."}
+                </p>
+                <p className="mt-2 text-xs text-slate-400">
+                  {review.createdAt.toLocaleString("en-IN")}
+                </p>
               </div>
             ))
           ) : (

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { SPECIALTIES } from "@/data/specialties";
-import { countDoctorsBySpecialty } from "@/data/doctors";
 import { SpecialtyCard } from "@/components/specialties/SpecialtyCard";
+import { getLiveDoctorCountBySpecialty } from "@/lib/doctor-catalog";
 
-export function SpecialtyGrid() {
-  const counts = countDoctorsBySpecialty();
+export async function SpecialtyGrid() {
+  const counts = await getLiveDoctorCountBySpecialty();
   const featuredSpecialties = SPECIALTIES.slice(0, 8);
 
   return (

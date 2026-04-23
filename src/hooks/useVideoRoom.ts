@@ -1,155 +1,89 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type {
-  LocalAudioTrack,
-  LocalVideoTrack,
-  RemoteParticipant,
-  RemoteTrack,
-  RemoteTrackPublication,
-  Room,
-} from "twilio-video";
-import { connect, createLocalVideoTrack } from "twilio-video";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  selectCameraStreamByPeerID,
+  selectIsConnectedToRoom,
+  selectIsLocalAudioEnabled,
+  selectIsLocalVideoEnabled,
+  selectLocalPeer,
+  selectPeers,
+  useAVToggle,
+  useHMSActions,
+  useHMSStore,
+  useVideo,
+} from "@100mslive/react-sdk";
+import type { HMSPeer } from "@100mslive/react-sdk";
 
 interface UseVideoRoomProps {
   token: string;
-  roomName: string;
+  userName: string;
 }
 
-export function useVideoRoom({ token, roomName }: UseVideoRoomProps) {
-  const [room, setRoom] = useState<Room | null>(null);
-  const [localTrack, setLocalTrack] = useState<LocalVideoTrack | null>(null);
-  const [remoteParticipant, setRemoteParticipant] = useState<RemoteParticipant | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(true);
-  const [isMicOn, setIsMicOn] = useState(true);
+export function useVideoRoom({ token, userName }: UseVideoRoomProps) {
+  const hmsActions = useHMSActions();
+  const peers = useHMSStore(selectPeers);
+  const localPeer = useHMSStore(selectLocalPeer);
+  const isConnected = useHMSStore(selectIsConnectedToRoom);
+  const isCameraOn = useHMSStore(selectIsLocalVideoEnabled);
+  const isMicOn = useHMSStore(selectIsLocalAudioEnabled);
   const [error, setError] = useState<string | null>(null);
+  const [didJoin, setDidJoin] = useState(false);
+  const { toggleAudio, toggleVideo } = useAVToggle();
 
-  const localVideoRef = useRef<HTMLDivElement>(null);
-  const remoteVideoRef = useRef<HTMLDivElement>(null);
-  const roomRef = useRef<Room | null>(null);
-  const localTrackRef = useRef<LocalVideoTrack | null>(null);
-
-  const attachRemoteTrack = useCallback((track: RemoteTrack) => {
-    if (track.kind !== "video" || !remoteVideoRef.current) return;
-    remoteVideoRef.current.innerHTML = "";
-    const element = track.attach();
-    element.style.width = "100%";
-    element.style.height = "100%";
-    element.style.objectFit = "cover";
-    remoteVideoRef.current.appendChild(element);
-  }, []);
-
-  const handleParticipant = useCallback(
-    (participant: RemoteParticipant) => {
-      setRemoteParticipant(participant);
-
-      participant.tracks.forEach((publication: RemoteTrackPublication) => {
-        if (publication.isSubscribed && publication.track) {
-          attachRemoteTrack(publication.track);
-        }
-      });
-
-      participant.on("trackSubscribed", attachRemoteTrack);
-      participant.on("trackUnsubscribed", (track: RemoteTrack) => {
-        if (track.kind === "video") {
-          track.detach().forEach((el) => el.remove());
-        }
-      });
-    },
-    [attachRemoteTrack]
+  const remoteParticipant = useMemo<HMSPeer | null>(
+    () => peers.find((peer) => !peer.isLocal) ?? null,
+    [peers]
   );
 
-  const connectToRoom = useCallback(async () => {
-    if (!token || !roomName) return;
-    if (roomRef.current) return;
-    try {
-      const videoTrack = await createLocalVideoTrack({
-        width: 1280,
-        height: 720,
-        frameRate: 24,
-      });
-
-      setLocalTrack(videoTrack);
-      localTrackRef.current = videoTrack;
-
-      if (localVideoRef.current) {
-        const element = videoTrack.attach();
-        element.style.width = "100%";
-        element.style.height = "100%";
-        element.style.objectFit = "cover";
-        localVideoRef.current.innerHTML = "";
-        localVideoRef.current.appendChild(element);
-      }
-
-      const connectedRoom = await connect(token, {
-        name: roomName,
-        tracks: [videoTrack],
-        audio: true,
-        dominantSpeaker: true,
-      });
-
-      setRoom(connectedRoom);
-      roomRef.current = connectedRoom;
-      setIsConnected(true);
-
-      connectedRoom.participants.forEach(handleParticipant);
-      connectedRoom.on("participantConnected", handleParticipant);
-      connectedRoom.on("participantDisconnected", () => {
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.innerHTML = "";
-        }
-        setRemoteParticipant(null);
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to connect to room";
-      setError(message);
-    }
-  }, [handleParticipant, roomName, token]);
-
-  const toggleCamera = useCallback(() => {
-    if (!localTrack) return;
-    if (isCameraOn) {
-      localTrack.disable();
-    } else {
-      localTrack.enable();
-    }
-    setIsCameraOn((prev) => !prev);
-  }, [isCameraOn, localTrack]);
-
-  const toggleMic = useCallback(() => {
-    if (!room) return;
-    room.localParticipant.audioTracks.forEach((publication) => {
-      const audioTrack = publication.track as LocalAudioTrack | null;
-      if (!audioTrack) return;
-      if (isMicOn) {
-        audioTrack.disable();
-      } else {
-        audioTrack.enable();
-      }
-    });
-    setIsMicOn((prev) => !prev);
-  }, [isMicOn, room]);
-
-  const disconnect = useCallback(() => {
-    roomRef.current?.disconnect();
-    localTrackRef.current?.stop();
-    roomRef.current = null;
-    localTrackRef.current = null;
-    setRoom(null);
-    setLocalTrack(null);
-    setIsConnected(false);
-  }, []);
+  const localVideoTrack = useHMSStore(
+    selectCameraStreamByPeerID(localPeer?.id)
+  );
+  const remoteVideoTrack = useHMSStore(
+    selectCameraStreamByPeerID(remoteParticipant?.id)
+  );
+  const { videoRef: localVideoRef } = useVideo({ trackId: localVideoTrack?.id });
+  const { videoRef: remoteVideoRef } = useVideo({ trackId: remoteVideoTrack?.id });
 
   useEffect(() => {
-    void connectToRoom();
+    if (!token || didJoin) return;
+    async function joinRoom() {
+      try {
+        await hmsActions.join({
+          userName,
+          authToken: token,
+          settings: {
+            isAudioMuted: false,
+            isVideoMuted: false,
+          },
+        });
+        setDidJoin(true);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to connect to room";
+        setError(message);
+      }
+    }
+
+    void joinRoom();
+  }, [didJoin, hmsActions, token, userName]);
+
+  const toggleCamera = useCallback(() => {
+    if (toggleVideo) toggleVideo();
+  }, [toggleVideo]);
+  const toggleMic = useCallback(() => {
+    if (toggleAudio) toggleAudio();
+  }, [toggleAudio]);
+
+  const disconnect = useCallback(() => {
+    void hmsActions.leave();
+    setDidJoin(false);
+  }, [hmsActions]);
+
+  useEffect(() => {
     return () => {
-      roomRef.current?.disconnect();
-      localTrackRef.current?.stop();
-      roomRef.current = null;
-      localTrackRef.current = null;
+      void hmsActions.leave();
     };
-  }, [connectToRoom]);
+  }, [hmsActions]);
 
   return {
     localVideoRef,

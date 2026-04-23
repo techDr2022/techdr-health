@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import type { DoctorRecord } from "@/types/catalog";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
+import { BookNowModal } from "@/components/doctors/BookNowModal";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -41,26 +40,16 @@ export function BookingWidget({ doctor }: { doctor: DoctorRecord }) {
         ))}
       </ul>
       <div className="mt-6 grid gap-3">
-        <Button asChild size="lg" className="w-full shadow-md">
-          <Link
-            href={`/consult?doctor=${doctor.slug}&mode=video`}
-            data-analytics-event="book_video"
-          >
-            Book video consultation
-          </Link>
-        </Button>
-        <Button asChild size="lg" variant="outline" className="w-full">
-          <Link
-            href={`/consult?doctor=${doctor.slug}&mode=audio`}
-            data-analytics-event="book_audio"
-          >
-            Book audio consultation
-          </Link>
-        </Button>
+        <BookNowModal
+          doctor={doctor}
+          triggerLabel="Book video consultation"
+          triggerSize="lg"
+          triggerClassName="w-full"
+        />
       </div>
       <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
-        Slots shown in IST. You&apos;ll confirm the exact appointment time after
-        payment authorization.
+        Slots shown in IST. Each consultation slot is 20 minutes and the exact
+        appointment time is confirmed after payment authorization.
       </p>
     </div>
   );

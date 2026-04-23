@@ -8,6 +8,8 @@ import { ApplicationRejectedEmail } from "@/emails/application-rejected";
 import { RenewalReminderEmail } from "@/emails/renewal-reminder";
 import { SubscriptionExpiredEmail } from "@/emails/subscription-expired";
 import { BookingConfirmedEmail } from "@/emails/booking-confirmed";
+import { BookingAcknowledgementEmail } from "@/emails/booking-acknowledgement";
+import { BookingStatusUpdateEmail } from "@/emails/booking-status-update";
 import { PayoutProcessedEmail } from "@/emails/payout-processed";
 
 const postmarkServerToken = process.env.POSTMARK_SERVER_TOKEN;
@@ -97,6 +99,69 @@ export async function sendPayoutProcessedEmail(
   });
 }
 
+export async function sendBookingAcknowledgementToDoctorEmail(
+  to: string,
+  details: {
+    doctorName: string;
+    patientName: string;
+    appointmentDate: string;
+    timeSlot: string;
+    patientEmail: string;
+    patientWhatsApp: string;
+    concern: string;
+  }
+) {
+  await safeSend({
+    to,
+    subject: "New booking request received",
+    react: <BookingAcknowledgementEmail audience="doctor" {...details} />,
+  });
+}
+
+export async function sendBookingAcknowledgementToPatientEmail(
+  to: string,
+  details: {
+    doctorName: string;
+    patientName: string;
+    appointmentDate: string;
+    timeSlot: string;
+    patientEmail: string;
+    patientWhatsApp: string;
+    concern: string;
+  }
+) {
+  await safeSend({
+    to,
+    subject: "Your booking request is received",
+    react: <BookingAcknowledgementEmail audience="patient" {...details} />,
+  });
+}
+
 export function isSubscriptionActive(status: SubStatus) {
   return status === "ACTIVE";
+}
+
+export async function sendBookingStatusUpdateEmail(
+  to: string,
+  details: {
+    audience: "doctor" | "patient";
+    status: "CONFIRMED" | "CANCELLED" | "RESCHEDULED";
+    doctorName: string;
+    patientName: string;
+    scheduledAt: string;
+    reason?: string;
+  }
+) {
+  const subject =
+    details.status === "CONFIRMED"
+      ? "Consultation confirmed"
+      : details.status === "CANCELLED"
+        ? "Consultation cancelled"
+        : "Consultation rescheduled";
+
+  await safeSend({
+    to,
+    subject,
+    react: <BookingStatusUpdateEmail {...details} />,
+  });
 }

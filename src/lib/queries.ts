@@ -1,4 +1,3 @@
-import { DOCTORS } from "@/data/doctors";
 import type { DoctorRecord } from "@/types/catalog";
 import { SPECIALTIES } from "@/data/specialties";
 
@@ -18,8 +17,11 @@ function matchesLang(doctor: DoctorRecord, lang?: string) {
   return doctor.languages.some((l) => l.toLowerCase().includes(q));
 }
 
-export function filterDoctors(filters: DoctorSearchFilters): DoctorRecord[] {
-  return DOCTORS.filter((d) => {
+export function filterDoctors(
+  filters: DoctorSearchFilters,
+  sourceDoctors: DoctorRecord[] = []
+): DoctorRecord[] {
+  return sourceDoctors.filter((d) => {
     if (filters.specialty && filters.specialty !== d.specialtySlug)
       return false;
     if (filters.availableOnly && !d.isAvailable) return false;
@@ -62,9 +64,10 @@ export function getSpecialtyTitle(slug: string | undefined) {
 export function relatedDoctorsForSpecialty(
   specialtySlug: string,
   excludeSlug?: string,
-  limit = 6
+  limit = 6,
+  sourceDoctors: DoctorRecord[] = []
 ) {
-  const pool = DOCTORS.filter(
+  const pool = sourceDoctors.filter(
     (d) =>
       d.specialtySlug === specialtySlug &&
       (!excludeSlug || d.slug !== excludeSlug)
@@ -72,11 +75,15 @@ export function relatedDoctorsForSpecialty(
   return pool.slice(0, limit);
 }
 
-export function crossSpecialtyDoctors(slugs: string[], limit = 8) {
+export function crossSpecialtyDoctors(
+  slugs: string[],
+  limit = 8,
+  sourceDoctors: DoctorRecord[] = []
+) {
   const seen = new Set<string>();
   const out: DoctorRecord[] = [];
   for (const slug of slugs) {
-    for (const d of DOCTORS) {
+    for (const d of sourceDoctors) {
       if (d.specialtySlug === slug && !seen.has(d.slug)) {
         seen.add(d.slug);
         out.push(d);

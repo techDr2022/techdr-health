@@ -58,5 +58,5 @@ export function buildR2PublicUrl(objectKey: string) {
     return `${config.publicBaseUrl.replace(/\/+$/, "")}/${normalizedKey}`;
   }
 
-  return `${config.endpoint.replace(/\/+$/, "")}/${config.bucketName}/${normalizedKey}`;
+  return `/api/storage/r2-object?key=${encodeURIComponent(normalizedKey)}`;
 }

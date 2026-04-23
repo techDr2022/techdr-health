@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
+  { label: "Book", href: "/book" },
   { label: "Consultations", href: "/consult" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
@@ -114,7 +115,7 @@ export function Navbar() {
             size="sm"
             className="rounded-full bg-slate-900 px-5 text-[13px] font-semibold text-white shadow-md shadow-slate-900/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800"
           >
-            <Link href="/consult">Schedule Consultation</Link>
+            <Link href="/book">Schedule Consultation</Link>
           </Button>
         </div>
 
@@ -167,7 +168,7 @@ export function Navbar() {
                   </Button>
                 ) : null}
                 <Button className="w-full rounded-full bg-slate-900 text-white hover:bg-slate-800" asChild>
-                  <Link href="/consult">Schedule Consultation</Link>
+                  <Link href="/book">Schedule Consultation</Link>
                 </Button>
               </div>
             </nav>

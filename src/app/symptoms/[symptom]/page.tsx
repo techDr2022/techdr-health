@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { doctorsBySpecialty } from "@/data/doctors";
 import { SYMPTOM_TARGETS } from "@/data/seo-targets";
 import { getSpecialtyBySlug } from "@/data/specialties";
+import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getSymptomPageSEO } from "@/lib/seo";
 import { getFAQSchema } from "@/lib/schema";
 
@@ -23,14 +23,16 @@ export function generateMetadata({ params }: Props): Metadata {
   return getSymptomPageSEO(info.label, specialty.name);
 }
 
-export default function SymptomPage({ params }: Props) {
+export default async function SymptomPage({ params }: Props) {
   const info = SYMPTOM_TARGETS[params.symptom];
   if (!info) notFound();
 
   const specialty = getSpecialtyBySlug(info.specialtySlug);
   if (!specialty) notFound();
 
-  const doctors = doctorsBySpecialty(info.specialtySlug).slice(0, 6);
+  const doctors = (await getLiveDoctorCatalog())
+    .filter((doctor) => doctor.specialtySlug === info.specialtySlug)
+    .slice(0, 6);
   const relatedSymptoms = Object.entries(SYMPTOM_TARGETS)
     .filter(([slug, value]) => slug !== params.symptom && value.specialtySlug === info.specialtySlug)
     .slice(0, 5);

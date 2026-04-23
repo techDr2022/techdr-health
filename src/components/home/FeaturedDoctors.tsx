@@ -4,10 +4,10 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DOCTORS } from "@/data/doctors";
 import { DoctorCard } from "@/components/doctors/DoctorCard";
+import type { DoctorRecord } from "@/types/catalog";
 
-function reviewScore(doctor: (typeof DOCTORS)[number]) {
+function reviewScore(doctor: DoctorRecord) {
   const avgFromComments =
     doctor.reviews.length > 0
       ? doctor.reviews.reduce((sum, item) => sum + item.rating, 0) / doctor.reviews.length
@@ -17,11 +17,10 @@ function reviewScore(doctor: (typeof DOCTORS)[number]) {
   return weightedRating * confidenceBoost;
 }
 
-const featured = [...DOCTORS]
-  .sort((a, b) => reviewScore(b) - reviewScore(a))
-  .slice(0, 6);
-
-export function FeaturedDoctors() {
+export function FeaturedDoctors({ doctors }: { doctors: DoctorRecord[] }) {
+  const featured = [...doctors]
+    .sort((a, b) => reviewScore(b) - reviewScore(a))
+    .slice(0, 6);
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     loop: true,
@@ -67,16 +66,22 @@ export function FeaturedDoctors() {
         </div>
 
         <div className="mt-10 overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-6">
-            {featured.map((d) => (
-              <div
-                key={d.slug}
-                className="min-w-0 shrink-0 basis-[min(100%,380px)]"
-              >
-                <DoctorCard doctor={d} variant="compact" />
-              </div>
-            ))}
-          </div>
+          {featured.length > 0 ? (
+            <div className="flex gap-6">
+              {featured.map((d) => (
+                <div
+                  key={d.slug}
+                  className="min-w-0 shrink-0 basis-[min(100%,380px)]"
+                >
+                  <DoctorCard doctor={d} variant="compact" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-sm text-muted-foreground">
+              No doctors added yet. Register and approve doctors to feature them here.
+            </div>
+          )}
         </div>
       </div>
     </section>

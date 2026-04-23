@@ -168,7 +168,7 @@ model DoctorProfile {
 
   consultFee      Int
   followUpFee     Int            @default(0)
-  consultDuration Int            @default(15)
+  consultDuration Int            @default(20)
   consultTypes    ConsultType[]
 
   approvalStatus  ApprovalStatus @default(PENDING)

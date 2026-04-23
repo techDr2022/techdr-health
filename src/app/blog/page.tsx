@@ -3,20 +3,43 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { SPECIALTIES } from "@/data/specialties";
 import { getMergedPublishedPosts } from "@/lib/blog-posts";
-import { SITE_NAME } from "@/lib/site-config";
+import { generateSEO } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: `Health Blog — Telemedicine Guides | ${SITE_NAME}`,
-  description:
-    "Long-form guides on teleconsultation safety, specialty care, diabetes, kidney health, and consulting doctors online in India.",
-};
+type BlogSearchParams = { category?: string };
+
+export function generateMetadata({
+  searchParams,
+}: {
+  searchParams: BlogSearchParams;
+}): Metadata {
+  const category = searchParams.category;
+  const title = category
+    ? `Health Blog - ${category} Guides`
+    : "Health Blog - Telemedicine Guides";
+  const description = category
+    ? `Read ${category} telehealth guides, patient education content, and specialist-backed advice for online consultations.`
+    : "Long-form guides on teleconsultation safety, specialty care, diabetes, kidney health, and consulting doctors online in India.";
+  return generateSEO({
+    title,
+    description,
+    path: "/blog",
+    keywords: [
+      "health blog India",
+      "telemedicine guides",
+      "online doctor consultation tips",
+    ],
+    noIndex: Boolean(category),
+    type: "article",
+  });
+}
 
 export default async function BlogIndexPage({
   searchParams,
 }: {
-  searchParams: { category?: string };
+  searchParams: BlogSearchParams;
 }) {
   const allPosts = await getMergedPublishedPosts();
   const cat = searchParams.category;
@@ -27,6 +50,17 @@ export default async function BlogIndexPage({
   return (
     <>
       <Navbar />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          name: "techDr Tele Health Blog",
+          description:
+            "Evidence-backed guides, patient education, and specialist insights for teleconsultation in India.",
+          url: "https://techdrhealth.com/blog",
+          inLanguage: "en-IN",
+        }}
+      />
       <main className="bg-gradient-to-b from-white via-emerald-50/30 to-white pt-20">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <h1 className="font-heading text-4xl font-semibold text-[#0A1628]">
@@ -64,7 +98,7 @@ export default async function BlogIndexPage({
             {posts.map((p) => (
               <article key={p.slug} className="flex flex-col overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm">
                 <Link href={`/blog/${p.slug}`} className="relative aspect-[16/10] bg-muted">
-                  <Image src={p.coverImage} alt="" fill className="object-cover" />
+                  <Image src={p.coverImage} alt={p.title} fill className="object-cover" />
                 </Link>
                 <div className="flex flex-1 flex-col p-6">
                   <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">

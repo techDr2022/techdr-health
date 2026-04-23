@@ -141,7 +141,7 @@ CREATE TABLE "Booking" (
     "doctorId" TEXT NOT NULL,
     "scheduledAt" TIMESTAMP(3) NOT NULL,
     "consultationType" TEXT NOT NULL,
-    "durationMinutes" INTEGER NOT NULL DEFAULT 15,
+    "durationMinutes" INTEGER NOT NULL DEFAULT 20,
     "consultationFee" INTEGER NOT NULL,
     "platformFeeINR" INTEGER NOT NULL,
     "doctorPayoutINR" INTEGER NOT NULL,

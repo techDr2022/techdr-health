@@ -52,3 +52,39 @@ export async function sendOTPviaTwilio(phone: string, otp: string): Promise<bool
     return false;
   }
 }
+
+function normalizeIndianPhone(phone: string) {
+  const digitsOnly = phone.replace(/[^\d]/g, "");
+  if (digitsOnly.length === 10) return `+91${digitsOnly}`;
+  if (digitsOnly.length === 12 && digitsOnly.startsWith("91")) return `+${digitsOnly}`;
+  if (phone.startsWith("+")) return phone;
+  return `+${digitsOnly}`;
+}
+
+export async function sendWhatsAppMessage(phone: string, message: string): Promise<boolean> {
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+    console.error("[Twilio] Missing Twilio credentials for WhatsApp");
+    return false;
+  }
+
+  const fromNumber =
+    process.env.TWILIO_WHATSAPP_FROM ||
+    (process.env.TWILIO_PHONE_NUMBER ? `whatsapp:${process.env.TWILIO_PHONE_NUMBER}` : "");
+  if (!fromNumber) {
+    console.error("[Twilio] Missing TWILIO_WHATSAPP_FROM or TWILIO_PHONE_NUMBER");
+    return false;
+  }
+
+  try {
+    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    await client.messages.create({
+      body: message,
+      from: fromNumber.startsWith("whatsapp:") ? fromNumber : `whatsapp:${fromNumber}`,
+      to: `whatsapp:${normalizeIndianPhone(phone)}`,
+    });
+    return true;
+  } catch (error) {
+    console.error("[Twilio] WhatsApp send failed:", error);
+    return false;
+  }
+}

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateDoctorPayout } from "@/lib/plans";
 import { getRazorpayClient } from "@/lib/razorpay";
 import { sendBookingConfirmedEmail } from "@/lib/email";
+import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
 
 async function getOrCreateGuestPatient(id: string) {
   if (id && id !== "guest_patient") {
@@ -30,19 +31,20 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const doctorId = String(body.doctorId ?? "");
+    const doctorSlug = String(body.doctorSlug ?? "");
     const scheduledAt = String(body.scheduledAt ?? "");
     const consultationType = "VIDEO";
     const patientId = String(body.patientId ?? "guest_patient");
 
-    if (!doctorId || !scheduledAt) {
+    if ((!doctorId && !doctorSlug) || !scheduledAt) {
       return NextResponse.json(
-        { error: "doctorId and scheduledAt are required." },
+        { error: "doctorId (or doctorSlug) and scheduledAt are required." },
         { status: 400 }
       );
     }
 
     const doctor = await prisma.doctorProfile.findUnique({
-      where: { id: doctorId },
+      where: doctorId ? { id: doctorId } : { slug: doctorSlug },
       include: { user: { select: { email: true } } },
     });
 
@@ -59,7 +61,7 @@ export async function POST(req: NextRequest) {
       amount: fee.totalPatientPays * 100,
       currency: "INR",
       notes: {
-        doctorId,
+        doctorId: doctor.id,
         consultationType,
         platformFee: String(fee.platformFee),
         doctorPayout: String(fee.doctorPayout),
@@ -71,7 +73,7 @@ export async function POST(req: NextRequest) {
         patientId: patient.id,
         doctorId,
         scheduledAt: scheduledDate,
-        endsAt: addMinutes(scheduledDate, doctor.consultDuration),
+        endsAt: addMinutes(scheduledDate, CONSULTATION_SLOT_MINUTES),
         consultType: "VIDEO",
         consultFee: doctor.consultFee,
         platformFeeINR: fee.platformFee,
@@ -94,7 +96,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       orderId: order.id,
       bookingId: booking.id,
-      amount: fee.totalPatientPays,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      totalPatientPays: fee.totalPatientPays,
       feeBreakdown: fee,
     });
   } catch (error) {

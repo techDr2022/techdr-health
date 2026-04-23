@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import PusherClient from "pusher-js";
 import { Circle, Mic, MicOff, PhoneOff, Video, VideoOff } from "lucide-react";
+import { HMSRoomProvider } from "@100mslive/react-sdk";
 import { useVideoRoom } from "@/hooks/useVideoRoom";
 import { useConsultTimer } from "@/hooks/useConsultTimer";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,7 @@ interface VideoRoomClientProps {
   existingPrescription?: PrescriptionSnapshot | null;
 }
 
-export function VideoRoomClient({
+function VideoRoomClientInner({
   bookingId,
   role,
   doctorName,
@@ -44,10 +45,10 @@ export function VideoRoomClient({
 }: VideoRoomClientProps) {
   const router = useRouter();
   const [token, setToken] = useState("");
-  const [roomName, setRoomName] = useState("");
   const [activePanel, setActivePanel] = useState<"prescription" | "chat">("prescription");
   const [prescription, setPrescription] = useState<PrescriptionSnapshot | null>(existingPrescription || null);
   const [isEnding, setIsEnding] = useState(false);
+  const participantName = role === "doctor" ? doctorName : patientName;
 
   const timer = useConsultTimer(duration, () => {
     window.alert("Consultation time is up. Please wrap up.");
@@ -56,13 +57,14 @@ export function VideoRoomClient({
   const {
     localVideoRef,
     remoteVideoRef,
+    remoteParticipant,
     isConnected,
     isCameraOn,
     isMicOn,
     toggleCamera,
     toggleMic,
     disconnect,
-  } = useVideoRoom({ token, roomName });
+  } = useVideoRoom({ token, userName: participantName });
 
   useEffect(() => {
     async function getToken() {
@@ -72,9 +74,8 @@ export function VideoRoomClient({
         body: JSON.stringify({ bookingId }),
       });
       if (!response.ok) return;
-      const data = (await response.json()) as { token: string; roomName: string };
+      const data = (await response.json()) as { token: string };
       setToken(data.token);
-      setRoomName(data.roomName);
     }
 
     void getToken();
@@ -188,8 +189,9 @@ export function VideoRoomClient({
 
       <div className="flex-1 flex overflow-hidden">
         <div className="flex-1 relative bg-[#0d0d18] overflow-hidden">
-          <div ref={remoteVideoRef} className="absolute inset-0 w-full h-full bg-[#0d0d18]">
-            <div className="w-full h-full flex items-center justify-center">
+          <video ref={remoteVideoRef} autoPlay playsInline muted={false} className="absolute inset-0 h-full w-full object-cover bg-[#0d0d18]" />
+          {!remoteParticipant ? (
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
               <div className="text-center">
                 <div className="w-20 h-20 bg-blue-500/15 border-2 border-blue-400/20 rounded-2xl flex items-center justify-center font-bold text-[26px] text-blue-300 mx-auto mb-3">
                   {otherParticipant
@@ -201,9 +203,15 @@ export function VideoRoomClient({
                 <p className="text-white/30 text-[13px]">Waiting for other participant...</p>
               </div>
             </div>
-          </div>
+          ) : null}
 
-          <div ref={localVideoRef} className="absolute top-4 right-4 w-36 h-24 rounded-xl overflow-hidden border-2 border-white/10 bg-[#1c1c2e]" />
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className="absolute top-4 right-4 h-24 w-36 rounded-xl overflow-hidden border-2 border-white/10 bg-[#1c1c2e] object-cover"
+          />
 
           <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2">
             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
@@ -277,5 +285,13 @@ export function VideoRoomClient({
         </button>
       </div>
     </div>
+  );
+}
+
+export function VideoRoomClient(props: VideoRoomClientProps) {
+  return (
+    <HMSRoomProvider>
+      <VideoRoomClientInner {...props} />
+    </HMSRoomProvider>
   );
 }

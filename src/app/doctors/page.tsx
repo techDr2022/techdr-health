@@ -12,13 +12,29 @@ import {
   paginate,
   getSpecialtyTitle,
 } from "@/lib/queries";
-import { SITE_NAME } from "@/lib/site-config";
+import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { generateSEO } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: `Find Online Doctors — Teleconsult Directory | ${SITE_NAME}`,
-  description:
-    "Filter 1000+ verified specialists by specialty, language, rating, fee, and availability for teleconsultation India-wide.",
-};
+export function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SP;
+}): Metadata {
+  const hasFilters = Object.keys(searchParams).length > 0;
+  return generateSEO({
+    title: "Find Online Doctors - Teleconsult Directory",
+    description:
+      "Find verified online doctors by specialty, language, rating, fee, and availability for teleconsultation across India.",
+    path: "/doctors",
+    keywords: [
+      "find online doctors India",
+      "teleconsult doctor directory",
+      "specialist doctor consultation online",
+    ],
+    noIndex: hasFilters,
+  });
+}
 
 type SP = Record<string, string | string[] | undefined>;
 
@@ -27,11 +43,12 @@ function first(v: string | string[] | undefined): string | undefined {
   return v;
 }
 
-export default function DoctorsDirectoryPage({
+export default async function DoctorsDirectoryPage({
   searchParams,
 }: {
   searchParams: SP;
 }) {
+  const doctors = await getLiveDoctorCatalog();
   const specialty = first(searchParams.specialty);
   const lang = first(searchParams.lang);
   const q = first(searchParams.q) ?? first(searchParams.query);
@@ -51,7 +68,7 @@ export default function DoctorsDirectoryPage({
     availableOnly: available === "1",
   };
 
-  const filtered = filterDoctors(filters);
+  const filtered = filterDoctors(filters, doctors);
   const { items, totalPages, total } = paginate(filtered, page, 12);
 
   const specialtyTitle = getSpecialtyTitle(specialty);
@@ -78,6 +95,17 @@ export default function DoctorsDirectoryPage({
   return (
     <>
       <Navbar />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Find Online Doctors - Teleconsult Directory",
+          description:
+            "Find verified online doctors by specialty, language, rating, fee, and availability for teleconsultation across India.",
+          url: "https://techdrhealth.com/doctors",
+          inLanguage: "en-IN",
+        }}
+      />
       <main className="bg-gradient-to-b from-white via-emerald-50/30 to-white pt-20">
         <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
           <div>

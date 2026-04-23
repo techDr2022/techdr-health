@@ -2,6 +2,7 @@ import { PrismaClient, WeekDay } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { SPECIALTIES } from "../src/data/specialties";
 import { DOCTORS } from "../src/data/doctors";
+import { CONSULTATION_SLOT_MINUTES } from "../src/lib/consultation";
 
 const prisma = new PrismaClient();
 const DAY_MAP: Record<number, WeekDay> = {
@@ -69,7 +70,7 @@ async function main() {
         conditions: d.conditions,
         consultFee: d.consultFee,
         followUpFee: Math.max(0, Math.round(d.consultFee * 0.4)),
-        consultDuration: 15,
+        consultDuration: CONSULTATION_SLOT_MINUTES,
         consultTypes: ["VIDEO", "AUDIO", "CHAT"],
         approvalStatus: "APPROVED",
         isVisible: true,
@@ -91,7 +92,7 @@ async function main() {
         education: d.education as object,
         hospitalAffils: d.hospitalAffils,
         followUpFee: Math.max(0, Math.round(d.consultFee * 0.4)),
-        consultDuration: 15,
+        consultDuration: CONSULTATION_SLOT_MINUTES,
         consultTypes: ["VIDEO", "AUDIO", "CHAT"],
         approvalStatus: "APPROVED",
         isVisible: true,

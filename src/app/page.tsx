@@ -12,22 +12,21 @@ import { Testimonials } from "@/components/home/Testimonials";
 import { WhyChoose } from "@/components/home/WhyChoose";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { HOME_FAQ } from "@/data/faq-home";
+import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getHomepageSEO } from "@/lib/seo";
 import {
   getFAQSchema,
-  getMedicalOrgSchema,
-  getWebsiteSchema,
 } from "@/lib/schema";
 
 export const metadata: Metadata = getHomepageSEO();
 
-export default function HomePage() {
+export default async function HomePage() {
+  const doctors = await getLiveDoctorCatalog();
+
   return (
     <>
       <JsonLd
         data={[
-          getMedicalOrgSchema(),
-          getWebsiteSchema(),
           getFAQSchema(HOME_FAQ),
         ]}
       />
@@ -36,7 +35,7 @@ export default function HomePage() {
         <Hero />
         <HowItWorks />
         <SpecialtyGrid />
-        <FeaturedDoctors />
+        <FeaturedDoctors doctors={doctors} />
         <WhyChoose />
         <Testimonials />
         <HealthBlogPreview />

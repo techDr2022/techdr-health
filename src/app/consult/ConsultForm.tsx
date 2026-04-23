@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, Suspense } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DOCTORS } from "@/data/doctors";
 import { cn } from "@/lib/utils";
+
+type DoctorOption = {
+  slug: string;
+  name: string;
+};
 
 const TIME_SLOTS = [
   "09:00 AM",
@@ -36,11 +41,10 @@ const schema = z.object({
   fullName: z.string().min(2, "Please enter your full name."),
   phone: z
     .string()
-    .min(10, "Enter a valid phone number.")
-    .regex(/^[0-9+\-\s]{10,15}$/, "Phone number should contain only digits and + - spaces."),
+    .min(10, "Enter a valid WhatsApp number.")
+    .regex(/^[0-9+\-\s]{10,15}$/, "WhatsApp number should contain only digits and + - spaces."),
   email: z.string().email("Enter a valid email address."),
-  doctorSlug: z.string().optional(),
-  mode: z.literal("video"),
+  doctorSlug: z.string().min(1, "Please select a doctor."),
   appointmentDate: z.string().min(1, "Please choose a preferred date."),
   timeSlot: z.string().min(1, "Please choose a time slot."),
   chiefComplaint: z.string().min(10, "Share a brief description of your concern."),
@@ -48,15 +52,15 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-function ConsultFormInner() {
+function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const doctorFromUrl = searchParams.get("doctor") ?? "";
   const today = new Date().toISOString().split("T")[0];
 
   const defaults = useMemo(
     () => ({
-      doctorSlug: doctorFromUrl || undefined,
-      mode: "video" as const,
+      doctorSlug: doctorFromUrl || "",
       fullName: "",
       phone: "",
       email: "",
@@ -71,12 +75,47 @@ function ConsultFormInner() {
     resolver: zodResolver(schema),
     defaultValues: defaults,
   });
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
-  function onSubmit(data: FormValues) {
-    console.info("consult_submit", data);
-    alert(
-      "Booking captured. This demo stores intent only - connect payments and notifications to go live."
-    );
+  async function onSubmit(data: FormValues) {
+    setSubmitError(null);
+    setSubmitted(false);
+    const selectedDoctor = doctors.find((doctor) => doctor.slug === data.doctorSlug);
+
+    const response = await fetch("/api/bookings/acknowledge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        doctorSlug: data.doctorSlug,
+        patientName: data.fullName,
+        patientEmail: data.email,
+        patientWhatsApp: data.phone,
+        appointmentDate: data.appointmentDate,
+        timeSlot: data.timeSlot,
+        concern: data.chiefComplaint,
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      setSubmitError(payload?.error || "Failed to send booking acknowledgement.");
+      return;
+    }
+
+    setSubmitted(true);
+    const paymentParams = new URLSearchParams({
+      doctorSlug: data.doctorSlug,
+      doctorName: selectedDoctor?.name ?? data.doctorSlug,
+      patientName: data.fullName,
+      patientEmail: data.email,
+      patientPhone: data.phone,
+      appointmentDate: data.appointmentDate,
+      timeSlot: data.timeSlot,
+    });
+    router.push(`/consult/payment?${paymentParams.toString()}`);
   }
 
   const selectedSlot = form.watch("timeSlot");
@@ -93,32 +132,32 @@ function ConsultFormInner() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-7 space-y-6">
         <div className="space-y-2">
           <Label htmlFor="doctorSlug" className="text-sm font-semibold text-slate-700">
-            Doctor (optional)
+            Doctor
           </Label>
           <Select
-            value={form.watch("doctorSlug") ?? "__any"}
+            value={form.watch("doctorSlug") ?? ""}
             onValueChange={(v) => {
-              const next = v && v !== "__any" ? v : undefined;
-              form.setValue("doctorSlug", next);
+              form.setValue("doctorSlug", v ?? "", { shouldValidate: true });
             }}
           >
             <SelectTrigger id="doctorSlug" className={fieldClassName}>
               <SelectValue placeholder="Choose doctor" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__any">Any available specialist</SelectItem>
-              {DOCTORS.map((d) => (
+              {doctors.map((d) => (
                 <SelectItem key={d.slug} value={d.slug}>
                   {d.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <FieldError message={form.formState.errors.doctorSlug?.message} />
         </div>
 
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Consultation mode</p>
           <p className="mt-1 text-sm font-semibold text-emerald-900">Video consultation only</p>
+          <p className="mt-1 text-xs text-emerald-700">Each appointment slot is 20 minutes.</p>
         </div>
 
         <div className="space-y-2">
@@ -132,7 +171,7 @@ function ConsultFormInner() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="phone" className="text-sm font-semibold text-slate-700">
-              Phone
+              WhatsApp number
             </Label>
             <Input id="phone" {...form.register("phone")} className={fieldClassName} />
             <FieldError message={form.formState.errors.phone?.message} />
@@ -201,10 +240,19 @@ function ConsultFormInner() {
         <Button
           type="submit"
           size="lg"
+          disabled={form.formState.isSubmitting}
           className="h-12 w-full rounded-xl bg-cyan-500 text-sm font-bold text-slate-950 shadow-lg shadow-cyan-500/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-cyan-400"
         >
-          Confirm booking request
+          {form.formState.isSubmitting
+            ? "Continuing..."
+            : "Continue to payment"}
         </Button>
+        {submitError ? <p className="text-sm font-medium text-red-600">{submitError}</p> : null}
+        {submitted ? (
+          <p className="text-sm font-medium text-emerald-700">
+            Booking acknowledged. Email and WhatsApp notifications have been triggered for patient and doctor.
+          </p>
+        ) : null}
       </form>
     </div>
   );
@@ -221,10 +269,10 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-export function ConsultForm() {
+export function ConsultForm({ doctors }: { doctors: DoctorOption[] }) {
   return (
     <Suspense fallback={<div className="py-16 text-center text-muted-foreground">Loading booking…</div>}>
-      <ConsultFormInner />
+      <ConsultFormInner doctors={doctors} />
     </Suspense>
   );
 }

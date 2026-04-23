@@ -1,12 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import type { DoctorRecord } from "@/types/catalog";
-import { Button } from "@/components/ui/button";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { AvailabilityBadge } from "@/components/ui/AvailabilityBadge";
 import { ConsultationFeeTag } from "@/components/ui/ConsultationFeeTag";
 import { Card, CardContent } from "@/components/ui/card";
+import { BookNowModal } from "@/components/doctors/BookNowModal";
 import { getSafeImageSrc } from "@/lib/image";
 
 export function DoctorCard({
@@ -57,11 +58,7 @@ export function DoctorCard({
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
           <ConsultationFeeTag inr={doctor.consultFee} />
-          <Button asChild size="sm" className="gap-1 shadow-sm">
-            <Link href={`/consult?doctor=${doctor.slug}`}>
-              Book Now <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </Button>
+          <BookNowModal doctor={doctor} />
         </div>
       </CardContent>
     </Card>

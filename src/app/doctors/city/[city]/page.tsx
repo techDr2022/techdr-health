@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { DOCTORS } from "@/data/doctors";
 import { CITY_TARGETS, CITY_UNIQUE_COPY } from "@/data/seo-targets";
+import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getCityPageSEO } from "@/lib/seo";
 import { getFAQSchema } from "@/lib/schema";
 
@@ -30,11 +30,11 @@ export function generateMetadata({ params }: Props): Metadata {
   return getCityPageSEO(cityName, cityDoctorCount(city));
 }
 
-export default function CityDoctorsPage({ params }: Props) {
+export default async function CityDoctorsPage({ params }: Props) {
   const city = cityFromSlug(params.city);
   if (!city) notFound();
 
-  const featured = DOCTORS.slice(0, 6);
+  const featured = (await getLiveDoctorCatalog()).slice(0, 6);
   const doctorCount = cityDoctorCount(city);
   const cityName = city[0].toUpperCase() + city.slice(1);
   const cityFAQs = [

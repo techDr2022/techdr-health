@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { getMedicalOrgSchema, getWebsiteSchema } from "@/lib/schema";
 
 const interDisplay = Inter({
   subsets: ["latin"],
@@ -27,9 +29,9 @@ export const metadata: Metadata = {
     "Consult verified doctors online via video in minutes. 1000+ specialists across 20+ specialities. Book teleconsultation now on techdrhealth.com.",
   metadataBase: new URL("https://techdrhealth.com"),
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
   openGraph: {
     siteName: "TechDrHealth",
@@ -62,6 +64,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <Providers>
+          <JsonLd data={[getMedicalOrgSchema(), getWebsiteSchema()]} />
           {children}
           <Toaster richColors position="top-center" />
         </Providers>

@@ -13,7 +13,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { JOIN_FAQ } from "@/data/join-faq";
 import { JOIN_TESTIMONIALS } from "@/data/join-testimonials";
-import { DOCTORS } from "@/data/doctors";
+import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { SITE_NAME, getSiteUrl } from "@/lib/site-config";
 
 const WHY_JOIN = [
@@ -53,10 +53,11 @@ export const metadata: Metadata = {
   alternates: { canonical: `${getSiteUrl()}/join` },
 };
 
-export default function JoinPage() {
+export default async function JoinPage() {
   const siteUrl = getSiteUrl();
+  const doctors = await getLiveDoctorCatalog();
   const doctorBySpecialty = new Map(
-    DOCTORS.map((doctor) => [doctor.specialtySlug.toLowerCase(), doctor.photoUrl])
+    doctors.map((doctor) => [doctor.specialtySlug.toLowerCase(), doctor.photoUrl])
   );
 
   const faqSchema = {

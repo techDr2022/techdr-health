@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
-import { DOCTORS } from "@/data/doctors";
 import { getSafeImageSrc } from "@/lib/image";
+import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { SITE_NAME } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -15,8 +15,9 @@ export const metadata: Metadata = {
     `${SITE_NAME} connects patients with 1000+ verified specialists for teleconsultation India-wide, with privacy-first workflows and transparent fees.`,
 };
 
-export default function AboutPage() {
-  const featured = DOCTORS.slice(0, 3);
+export default async function AboutPage() {
+  const doctors = await getLiveDoctorCatalog();
+  const featured = doctors.slice(0, 3);
 
   return (
     <>

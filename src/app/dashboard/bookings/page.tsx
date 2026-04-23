@@ -1,11 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { BookingActionControls } from "@/components/dashboard/BookingActionControls";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardBookingsPage() {
-  const doctor = await prisma.doctorProfile.findFirst({ select: { id: true } });
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  if (session.user.role !== "DOCTOR") redirect("/dashboard/patient");
+
+  const doctor = await prisma.doctorProfile.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
   if (!doctor) return <div className="mx-auto max-w-3xl px-4 py-10">No doctor account found.</div>;
 
   const bookings = await prisma.booking.findMany({
@@ -47,16 +57,21 @@ export default async function DashboardBookingsPage() {
                 </td>
                 <td className="px-4 py-3">{booking.status}</td>
                 <td className="px-4 py-3">
-                  {booking.consultType === "VIDEO" && booking.status !== "COMPLETED" ? (
-                    <Link
-                      href={`/consultation/${booking.id}/waiting`}
-                      className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500"
-                    >
-                      Start Consultation
-                    </Link>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">No action</span>
-                  )}
+                  <div className="space-y-2">
+                    {booking.consultType === "VIDEO" && booking.status !== "COMPLETED" ? (
+                      <Link
+                        href={`/consultation/${booking.id}/waiting`}
+                        className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500"
+                      >
+                        Start Consultation
+                      </Link>
+                    ) : null}
+                    <BookingActionControls
+                      bookingId={booking.id}
+                      status={booking.status}
+                      scheduledAtISO={booking.scheduledAt.toISOString()}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

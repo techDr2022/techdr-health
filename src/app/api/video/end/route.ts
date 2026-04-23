@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import twilio from "twilio";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { sendWhatsAppMessage } from "@/lib/sms";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +17,10 @@ export async function POST(req: NextRequest) {
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { doctor: true },
+      include: {
+        doctor: true,
+        patient: { select: { phone: true, name: true } },
+      },
     });
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
@@ -32,11 +35,6 @@ export async function POST(req: NextRequest) {
     const room = await prisma.consultationRoom.findUnique({ where: { bookingId } });
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
-    }
-
-    const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-    if (room.twilioRoomSid) {
-      await twilioClient.video.v1.rooms(room.twilioRoomSid).update({ status: "completed" });
     }
 
     const endedAt = new Date();
@@ -54,6 +52,24 @@ export async function POST(req: NextRequest) {
         data: { status: "COMPLETED" },
       }),
     ]);
+
+    const appUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "http://localhost:3000";
+    const feedbackLink = `${appUrl}/dashboard/patient/review/${booking.id}`;
+
+    if (booking.patient.phone) {
+      await sendWhatsAppMessage(
+        booking.patient.phone,
+        [
+          `Hi ${booking.patient.name || "there"}, thanks for consulting with Dr. ${booking.doctor.displayName}.`,
+          "Please share your feedback in the app:",
+          feedbackLink,
+          "- techDr Tele Health",
+        ].join("\n")
+      );
+    }
 
     return NextResponse.json({ success: true, durationSeconds });
   } catch (error) {

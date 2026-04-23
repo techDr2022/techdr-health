@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SEO_KEYWORD_PAGES } from "@/data/seo-keywords";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -7,7 +8,24 @@ export function Footer() {
   return (
     <footer className="border-t border-emerald-100 bg-white text-slate-800">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-emerald-100 bg-white p-5">
+          <p className="font-display text-xs font-[700] uppercase tracking-[0.12em] text-slate-800">
+            Popular Teleconsultation Searches
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] leading-5 text-slate-600">
+            {SEO_KEYWORD_PAGES.map((item) => (
+              <Link
+                key={item.slug}
+                href={`/care/${item.slug}`}
+                className="hover:text-emerald-700 hover:underline"
+              >
+                {item.keyword}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Image src="/techdrhealth-logo.png" alt="techDrHealth" width={180} height={48} className="h-10 w-auto" />
             <p className="mt-3 max-w-xs font-body text-sm leading-relaxed text-slate-600">

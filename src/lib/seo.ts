@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ORG_TWITTER_HANDLE } from "@/lib/site-config";
 
 const SITE_NAME = "TechDrHealth";
 const SITE_URL = "https://techdrhealth.com";
@@ -29,7 +30,7 @@ export function generateSEO({
   title,
   description,
   path,
-  image = "/og-default.png",
+  image = "/techdrhealth-logo.png",
   type = "website",
   noIndex = false,
   keywords = [],
@@ -87,8 +88,8 @@ export function generateSEO({
       title: fullTitle,
       description,
       images: [ogImage],
-      site: "@techdrhealth",
-      creator: "@techdrhealth",
+      site: ORG_TWITTER_HANDLE,
+      creator: ORG_TWITTER_HANDLE,
     },
     other: {
       "geo.region": "IN",
@@ -138,11 +139,17 @@ export function getDoctorProfileSEO(doctor: {
   credentials: string;
   experience: number;
   slug: string;
+  rating?: number;
+  reviewCount?: number;
   city?: string;
 }): Metadata {
+  const ratingSnippet =
+    doctor.reviewCount && doctor.reviewCount > 0 && doctor.rating
+      ? ` Rated ${doctor.rating.toFixed(1)}/5 from ${doctor.reviewCount}+ patient reviews.`
+      : "";
   return generateSEO({
     title: `Dr. ${doctor.name} - Online ${doctor.specialty} Consultation`,
-    description: `Consult Dr. ${doctor.name}, ${doctor.specialty} with ${doctor.experience} years experience. ${doctor.credentials}. Book online video consultation. Get digital prescription instantly.`,
+    description: `Consult Dr. ${doctor.name}, ${doctor.specialty} with ${doctor.experience} years experience. ${doctor.credentials}.${ratingSnippet} Book online video consultation. Get digital prescription instantly.`,
     path: `/doctors/profile/${doctor.slug}`,
     keywords: [
       `Dr ${doctor.name}`,
@@ -179,6 +186,29 @@ export function getCityPageSEO(city: string, doctorCount: number): Metadata {
       `teleconsultation ${city}`,
       `video doctor ${city}`,
     ],
+  });
+}
+
+export function getSpecialtyReviewsSEO(
+  specialty: string,
+  reviewCount: number,
+  avgRating?: number,
+): Metadata {
+  const ratingSnippet =
+    reviewCount > 0 && avgRating
+      ? ` Average rating ${avgRating.toFixed(1)}/5 from ${reviewCount} patient reviews.`
+      : "";
+  return generateSEO({
+    title: `${specialty} Patient Reviews - Verified Feedback`,
+    description: `Read verified patient reviews for online ${specialty} consultations.${ratingSnippet} Compare doctors and book securely.`,
+    path: `/doctors/${toSlug(specialty)}/reviews`,
+    keywords: [
+      `${specialty.toLowerCase()} patient reviews`,
+      `${specialty.toLowerCase()} doctor ratings`,
+      `best ${specialty.toLowerCase()} doctor online`,
+      `online ${specialty.toLowerCase()} consultation reviews`,
+    ],
+    type: "website",
   });
 }
 

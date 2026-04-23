@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { PlanType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { FREE_LISTING_LIMIT, SUBSCRIPTION_PLANS } from "@/lib/plans";
+import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
 
 function parseJsonArray(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((v) => typeof v === "string");
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
           conditions: [],
           consultFee: payload.consultationFee ? Number(payload.consultationFee) : 500,
           followUpFee: payload.followUpFee ? Number(payload.followUpFee) : 0,
-          consultDuration: payload.consultDuration ? Number(payload.consultDuration) : 15,
+          consultDuration: CONSULTATION_SLOT_MINUTES,
           consultTypes: ["VIDEO"],
           approvalStatus: "APPROVED",
           isVisible: false,

@@ -1,13 +1,15 @@
 import type { MetadataRoute } from "next";
-import { DOCTORS } from "@/data/doctors";
 import { BLOG_POSTS } from "@/data/blog";
+import { SEO_KEYWORD_PAGES } from "@/data/seo-keywords";
 import { CITY_TARGETS, SYMPTOM_TARGETS } from "@/data/seo-targets";
 import { listSpecialtySlugs } from "@/data/specialties";
+import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 
 const SITE_URL = "https://techdrhealth.com";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const liveDoctors = await getLiveDoctorCatalog();
 
   const staticPaths = [
     "",
@@ -55,7 +57,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.85,
   }));
 
-  const doctors = DOCTORS.map((d) => ({
+  const keywordPaths = SEO_KEYWORD_PAGES.map((item) => ({
+    url: `${SITE_URL}/care/${item.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.72,
+  }));
+
+  const doctors = liveDoctors.map((d) => ({
     url: `${SITE_URL}/doctors/profile/${d.slug}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
@@ -74,6 +83,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...specialtyPaths,
     ...symptomPaths,
     ...cityPaths,
+    ...keywordPaths,
     ...doctors,
     ...posts,
   ];

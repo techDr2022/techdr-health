@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { ChevronDown, Lock, Trash2, UploadCloud, UserRound } from "lucide-react";
 import { toast } from "sonner";
@@ -92,6 +93,7 @@ export function ProfileEditPanels({ initialProfile }: { initialProfile: InitialP
 }
 
 function ProfileForm({ initialProfile }: { initialProfile: InitialProfile }) {
+  const router = useRouter();
   const [displayName, setDisplayName] = useState(initialProfile.displayName);
   const [specialty, setSpecialty] = useState(initialProfile.specialty);
   const [languages, setLanguages] = useState(initialProfile.languages.join(", "));
@@ -157,6 +159,7 @@ function ProfileForm({ initialProfile }: { initialProfile: InitialProfile }) {
         return;
       }
       toast.success("Profile updated successfully.");
+      router.refresh();
     } catch {
       toast.error("Unable to update profile.");
     } finally {

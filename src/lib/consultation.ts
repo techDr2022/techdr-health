@@ -1,0 +1,1 @@
+export const CONSULTATION_SLOT_MINUTES = 20;
