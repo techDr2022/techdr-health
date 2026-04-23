@@ -7,7 +7,7 @@ export const HOME_FAQ = [
   {
     question: "Is teleconsultation safe for my condition?",
     answer:
-      "Telemedicine is ideal for many chronic follow-ups, medication reviews, counseling-heavy visits, and imaging interpretation. Emergency symptoms require in-person or ER care—your clinician will guide you.",
+      "Telemedicine is ideal for many chronic follow-ups, medication reviews, counseling-heavy visits, and imaging interpretation. Emergency symptoms require in-person or ER care-your clinician will guide you.",
   },
   {
     question: "Do you provide prescriptions?",
@@ -17,12 +17,12 @@ export const HOME_FAQ = [
   {
     question: "Are doctors verified?",
     answer:
-      "Yes—every physician on techDr Tele Health completes credential verification including degree checks and medical council registration.",
+      "Yes-every physician on techDr Tele Health completes credential verification including degree checks and medical council registration.",
   },
   {
     question: "What languages are supported?",
     answer:
-      "Specialists offer consultations in English, Hindi, and regional languages—filter the directory by language before booking.",
+      "Specialists offer consultations in English, Hindi, and regional languages-filter the directory by language before booking.",
   },
   {
     question: "Can I upload my lab reports before consultation?",

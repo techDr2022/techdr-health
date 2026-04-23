@@ -20,7 +20,7 @@ export const TESTIMONIALS: TestimonialRecord[] = [
     role: "Analyst, Chennai",
     rating: 5,
     quote:
-      "Dermatology visit for chronic eczema—finally a cream routine I can stick to. Photos were easy to upload.",
+      "Dermatology visit for chronic eczema-finally a cream routine I can stick to. Photos were easy to upload.",
   },
   {
     name: "Aditya P.",

@@ -27,7 +27,7 @@ export default function ContactPage() {
 
   function onSubmit(data: FormValues) {
     console.info("contact_submit", data);
-    alert("Thanks — our team routes enterprise & patient inquiries within one business day (demo).");
+    alert("Thanks - our team routes enterprise & patient inquiries within one business day (demo).");
     form.reset();
   }
 

@@ -78,8 +78,8 @@ export async function SpecialtyDetailView({ slug }: { slug: string }) {
             needing specialist interpretation, medication side effects, or new
             diagnoses that benefit from expert confirmation are common reasons
             patients book online {specialty.name.toLowerCase()} consultations.
-            Emergency symptoms—severe pain, sudden weakness, breathing distress,
-            or bleeding—belong in emergency services, not teleconsult.
+            Emergency symptoms-severe pain, sudden weakness, breathing distress,
+            or bleeding-belong in emergency services, not teleconsult.
           </p>
         </section>
 
@@ -94,7 +94,7 @@ export async function SpecialtyDetailView({ slug }: { slug: string }) {
           </div>
           {doctors.length === 0 ? (
             <p className="text-muted-foreground">
-              No doctors listed in demo data—contact support to match a
+              No doctors listed in demo data-contact support to match a
               clinician.
             </p>
           ) : null}
@@ -185,7 +185,7 @@ export async function SpecialtyDetailView({ slug }: { slug: string }) {
             You may also consult
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Cross-specialty collaboration for overlapping symptoms—book with
+            Cross-specialty collaboration for overlapping symptoms-book with
             these doctors when clinically appropriate.
           </p>
           <div className="mt-6 grid gap-6 md:grid-cols-2">

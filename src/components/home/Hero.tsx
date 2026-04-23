@@ -98,7 +98,7 @@ export function Hero() {
             Teleconsultation India · 1000+ specialists
           </p>
           <h1 className="mt-6 font-heading text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-[3.25rem] text-balance">
-            Online Doctor Consultation India — 1000+ Verified Specialists
+            Online Doctor Consultation India - 1000+ Verified Specialists
           </h1>
           <p className="mt-5 max-w-xl text-lg text-slate-300 leading-relaxed">
             Book video doctor consultation with verified physicians across

@@ -12,7 +12,7 @@ export default function NotFound() {
         Page not found
       </h1>
       <p className="mt-4 text-muted-foreground">
-        The link may be outdated or the page moved—try our specialty hubs or doctor
+        The link may be outdated or the page moved-try our specialty hubs or doctor
         directory.
       </p>
       <div className="mt-10 flex flex-wrap justify-center gap-3">

@@ -14,7 +14,7 @@ export async function HealthBlogPreview() {
           </h2>
           <p className="mt-2 max-w-xl text-muted-foreground">
             Evidence-informed articles on teleconsultation safety, specialty
-            guides, and chronic care—built for Indian families.
+            guides, and chronic care-built for Indian families.
           </p>
         </div>
         <Link

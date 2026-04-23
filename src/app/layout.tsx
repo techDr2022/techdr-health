@@ -22,7 +22,7 @@ const interBody = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "TechDrHealth — Online Doctor Consultation | 1000+ Specialists",
+    default: "TechDrHealth - Online Doctor Consultation | 1000+ Specialists",
     template: "%s | TechDrHealth",
   },
   description:

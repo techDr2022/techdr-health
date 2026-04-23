@@ -73,7 +73,7 @@ export default async function DoctorsDirectoryPage({
 
   const specialtyTitle = getSpecialtyTitle(specialty);
   const h1 = specialtyTitle
-    ? `Online ${specialtyTitle}s — Book Teleconsultation`
+    ? `Online ${specialtyTitle}s - Book Teleconsultation`
     : "Find online doctors & specialists";
 
   const buildLink = (nextPage: number) => {

@@ -5,7 +5,7 @@ export const SPECIALTIES: SpecialtyRecord[] = [
     slug: "cardiology",
     name: "Cardiology",
     shortIntro:
-      "Expert cardiologists for blood pressure, chest pain, palpitations, and heart risk—online, with clear follow-up plans.",
+      "Expert cardiologists for blood pressure, chest pain, palpitations, and heart risk-online, with clear follow-up plans.",
     iconKey: "Heart",
     conditions: [
       "Hypertension",
@@ -23,11 +23,11 @@ export const SPECIALTIES: SpecialtyRecord[] = [
     relatedSlugs: ["endocrinology", "nephrology", "general-medicine"],
     description: `Cardiology focuses on disorders of the heart and blood vessels, from hypertension and coronary disease to rhythm problems and structural heart conditions. Teleconsultation is highly effective for medication titration, lifestyle coaching, interpretation of recent investigations, and planning in-person tests when needed. Patients across India increasingly choose online cardiologist consultations to reduce travel, access second opinions faster, and maintain continuity with the same specialist.
 
-During a structured video visit, a qualified cardiologist can review your history, symptoms, blood pressure logs, ECG uploads, lab results, and prior imaging summaries. Many conditions—including blood pressure management, lipid optimization, stable angina follow-up, and medication reviews—can be guided safely online with clear escalation criteria if red-flag symptoms appear. Telecare also helps after hospital discharge or stent procedures, ensuring you understand medications, activity levels, and warning signs.
+During a structured video visit, a qualified cardiologist can review your history, symptoms, blood pressure logs, ECG uploads, lab results, and prior imaging summaries. Many conditions-including blood pressure management, lipid optimization, stable angina follow-up, and medication reviews-can be guided safely online with clear escalation criteria if red-flag symptoms appear. Telecare also helps after hospital discharge or stent procedures, ensuring you understand medications, activity levels, and warning signs.
 
 At techDr Tele Health, our cardiologists emphasize evidence-based therapy, shared decision-making, and culturally appropriate diet and activity guidance. We explain trade-offs clearly, coordinate with your local physician, and document a care plan you can follow at home. If your condition requires physical examination, stress testing, or urgent care, your doctor will direct you promptly to the right facility.
 
-Common goals in online cardiology visits include refining antihypertensive regimens, interpreting palpitations in context, preparing for elective procedures, and reducing long-term cardiovascular risk using a holistic plan—nutrition, sleep, stress, smoking cessation, and appropriate screening. Whether you live in a metro or a tier-2 city, you can consult a cardiologist online to stay on track between in-person appointments.
+Common goals in online cardiology visits include refining antihypertensive regimens, interpreting palpitations in context, preparing for elective procedures, and reducing long-term cardiovascular risk using a holistic plan-nutrition, sleep, stress, smoking cessation, and appropriate screening. Whether you live in a metro or a tier-2 city, you can consult a cardiologist online to stay on track between in-person appointments.
 
 Choose teleconsultation when you need timely expert input, prescription adjustments, lifestyle planning, or simply peace of mind from a verified specialist.`,
     faq: [
@@ -44,7 +44,7 @@ Choose teleconsultation when you need timely expert input, prescription adjustme
       {
         question: "Will I get a prescription after an online cardiology consultation?",
         answer:
-          "If medically appropriate and compliant with telemedicine guidelines, your doctor may provide a prescription with clear documentation. Emergency symptoms require emergency care—not teleconsult.",
+          "If medically appropriate and compliant with telemedicine guidelines, your doctor may provide a prescription with clear documentation. Emergency symptoms require emergency care-not teleconsult.",
       },
     ],
   },
@@ -52,7 +52,7 @@ Choose teleconsultation when you need timely expert input, prescription adjustme
     slug: "dermatology",
     name: "Dermatology",
     shortIntro:
-      "Visible skin, hair, and nail concerns reviewed by dermatologists—with clear treatment plans and follow-up.",
+      "Visible skin, hair, and nail concerns reviewed by dermatologists-with clear treatment plans and follow-up.",
     iconKey: "Sparkles",
     conditions: [
       "Acne",
@@ -67,13 +67,13 @@ Choose teleconsultation when you need timely expert input, prescription adjustme
       "Sexually transmitted dermatoses (evaluation)",
     ],
     relatedSlugs: ["allergy-immunology", "general-medicine", "psychiatry"],
-    description: `Dermatology addresses the skin, hair, nails, and mucous membranes—conditions that are often visible and photograph-friendly, making teleconsultation uniquely practical. Patients seeking an online dermatologist consultation can upload high-quality images, describe evolution of rashes, and receive structured therapy plans including topical regimens, oral medications when indicated, and guidance on cosmetics or triggers.
+    description: `Dermatology addresses the skin, hair, nails, and mucous membranes-conditions that are often visible and photograph-friendly, making teleconsultation uniquely practical. Patients seeking an online dermatologist consultation can upload high-quality images, describe evolution of rashes, and receive structured therapy plans including topical regimens, oral medications when indicated, and guidance on cosmetics or triggers.
 
 Tele dermatology excels for inflammatory conditions like eczema and psoriasis flares, acne treatment ladders, fungal infections when clinical pattern is clear, and chronic urticaria management. Your dermatologist educates on gentle skin barrier repair, sunscreen use, and photoprotection tailored to Indian tones and climates. For lesions requiring dermoscopy or biopsy, your doctor coordinates timely in-person referral.
 
-Video visits also support medication safety—reviewing steroid potency, duration limits, pregnancy considerations, and interactions. Many patients appreciate discreet access for scalp disorders, pigmentary concerns, or adolescent acne without long clinic waits.
+Video visits also support medication safety-reviewing steroid potency, duration limits, pregnancy considerations, and interactions. Many patients appreciate discreet access for scalp disorders, pigmentary concerns, or adolescent acne without long clinic waits.
 
-techDr Tele Health dermatologists prioritize accurate diagnosis cues—distribution, morphology, aggravating factors—and clear documentation you can share with local pharmacies or labs. Whether you need a rapid flare plan or long-term clearance strategy, specialist-led teleconsultation combines convenience with accountability.
+techDr Tele Health dermatologists prioritize accurate diagnosis cues-distribution, morphology, aggravating factors-and clear documentation you can share with local pharmacies or labs. Whether you need a rapid flare plan or long-term clearance strategy, specialist-led teleconsultation combines convenience with accountability.
 
 Choose online dermatology when you want expert guidance on persistent skin conditions, cosmetic dermatology counseling within medical scope, or coordinated care with allergy and internal medicine colleagues.`,
     faq: [
@@ -98,7 +98,7 @@ Choose online dermatology when you want expert guidance on persistent skin condi
     slug: "gynecology",
     name: "Gynecology",
     shortIntro:
-      "Women’s health visits for periods, contraception, infections, PCOS, and menopause—private and judgment-free.",
+      "Women’s health visits for periods, contraception, infections, PCOS, and menopause-private and judgment-free.",
     iconKey: "Flower2",
     conditions: [
       "Irregular periods",
@@ -115,9 +115,9 @@ Choose online dermatology when you want expert guidance on persistent skin condi
     relatedSlugs: ["fertility-ivf", "endocrinology", "general-medicine"],
     description: `Gynecology covers menstrual health, contraception, infections, pelvic pain, menopause, and preventive screening counseling. Teleconsultation offers privacy, reduces stigma, and helps patients who cannot travel due to work or childcare. While not every complaint can be fully managed online, many common issues benefit from structured history-taking, symptom diaries, and laboratory-directed care.
 
-During a gynecologist online appointment, you can discuss cycle mapping, contraceptive choices, PCOS lifestyle and medication plans, recurrent UTI prevention, and menopausal hot flash management. Your physician will identify when speculum exams, ultrasound, or STI testing must be arranged locally—and provide a clear request form to guide that visit.
+During a gynecologist online appointment, you can discuss cycle mapping, contraceptive choices, PCOS lifestyle and medication plans, recurrent UTI prevention, and menopausal hot flash management. Your physician will identify when speculum exams, ultrasound, or STI testing must be arranged locally-and provide a clear request form to guide that visit.
 
-Non-pregnant patients often need counseling on abnormal bleeding patterns, contraceptive side effects, or vaginitis symptom clusters that narrow diagnosis before swabs. Telemedicine complements—not replaces—cancer screening programs; your doctor will align with national guidelines for Pap and HPV strategies.
+Non-pregnant patients often need counseling on abnormal bleeding patterns, contraceptive side effects, or vaginitis symptom clusters that narrow diagnosis before swabs. Telemedicine complements-not replaces-cancer screening programs; your doctor will align with national guidelines for Pap and HPV strategies.
 
 At techDr Tele Health, we respect confidentiality, communicate clearly about emergency symptoms like severe pain or heavy bleeding, and integrate multidisciplinary support when endocrine or mental health factors overlap. Cultural sensitivity and consent are central to every visit.
 
@@ -159,15 +159,15 @@ Online gynecology is ideal when you need timely specialist advice, prescription 
       "Constipation",
     ],
     relatedSlugs: ["general-medicine", "allergy-immunology", "psychiatry"],
-    description: `Pediatrics centers on infants, children, and adolescents—a population where caregiver education and safety-netting matter as much as diagnosis. Telepediatrics can accelerate access to specialist advice on feeding difficulties, recurrent wheeze, eczema regimens, sleep or behavior patterns, and growth concerns—especially when paired with locally obtained vitals and growth charts.
+    description: `Pediatrics centers on infants, children, and adolescents-a population where caregiver education and safety-netting matter as much as diagnosis. Telepediatrics can accelerate access to specialist advice on feeding difficulties, recurrent wheeze, eczema regimens, sleep or behavior patterns, and growth concerns-especially when paired with locally obtained vitals and growth charts.
 
-Video allows observation of breathing work, hydration status clues, interaction, and limited physical signs. Pediatricians emphasize red-flag criteria for sepsis, respiratory distress, dehydration, or neurologic emergencies—situations where emergency departments remain essential.
+Video allows observation of breathing work, hydration status clues, interaction, and limited physical signs. Pediatricians emphasize red-flag criteria for sepsis, respiratory distress, dehydration, or neurologic emergencies-situations where emergency departments remain essential.
 
 Parents often seek online pediatric consultation for clarity after conflicting advice, medication dosing reassurance, school-health forms, and coordinated plans with teachers or therapists. Breastfeeding medicine overlaps may be guided alongside lactation support resources.
 
 techDr Tele Health pediatricians communicate age-appropriately with teens when indicated, involve guardians transparently, and align with vaccination schedules endorsed by national bodies.
 
-Teleconsultation suits non-emergency guidance, chronic disease follow-up, behavioral health integration, and care navigation. It should not delay care when a child looks seriously unwell—your doctor will say so plainly.`,
+Teleconsultation suits non-emergency guidance, chronic disease follow-up, behavioral health integration, and care navigation. It should not delay care when a child looks seriously unwell-your doctor will say so plainly.`,
     faq: [
       {
         question: "Can antibiotics be prescribed online for my child?",
@@ -190,7 +190,7 @@ Teleconsultation suits non-emergency guidance, chronic disease follow-up, behavi
     slug: "psychiatry",
     name: "Psychiatry",
     shortIntro:
-      "Evidence-based mental health care for anxiety, depression, ADHD, and more—with therapy coordination options.",
+      "Evidence-based mental health care for anxiety, depression, ADHD, and more-with therapy coordination options.",
     iconKey: "Brain",
     conditions: [
       "Depression",
@@ -213,7 +213,7 @@ Medication initiation and titration, side-effect management, sleep-wake schedule
 
 techDr Tele Health psychiatrists document clearly, coordinate with counselors, and communicate with consent to other specialists when comorbid endocrine or neurological issues exist.
 
-Online psychiatry fits therapy-responsive conditions with structured follow-up—not acute mania with impulsivity, acute psychosis without support, or intoxication crises. Your safety is paramount; escalation pathways are explicit.`,
+Online psychiatry fits therapy-responsive conditions with structured follow-up-not acute mania with impulsivity, acute psychosis without support, or intoxication crises. Your safety is paramount; escalation pathways are explicit.`,
     faq: [
       {
         question: "Is telepsychiatry as effective as in-person care?",
@@ -253,9 +253,9 @@ Online psychiatry fits therapy-responsive conditions with structured follow-up�
     relatedSlugs: ["rheumatology", "neurology", "general-medicine"],
     description: `Orthopedics manages muscles, bones, joints, ligaments, and tendons. While physical examination remains important, tele orthopedics adds value in triage, rehabilitation planning, imaging review, and post-operative checklists. Patients can demonstrate range of motion on video and share X-ray or MRI summaries.
 
-Musculoskeletal complaints are among the top reasons working-age adults seek care. An online orthopedic consultation clarifies likely diagnoses, braces or splints, physiotherapy prescriptions, ergonomic changes, and when MRI or surgery discussion is warranted—reducing unnecessary imaging.
+Musculoskeletal complaints are among the top reasons working-age adults seek care. An online orthopedic consultation clarifies likely diagnoses, braces or splints, physiotherapy prescriptions, ergonomic changes, and when MRI or surgery discussion is warranted-reducing unnecessary imaging.
 
-Sports medicine topics—overuse injuries, load management, return-to-play grading—translate well to virtual coaching with objective functional tests demonstrated at home.
+Sports medicine topics-overuse injuries, load management, return-to-play grading-translate well to virtual coaching with objective functional tests demonstrated at home.
 
 techDr Tele Health orthopedic specialists align with rheumatology when inflammatory arthritis is suspected, and with neurosurgery referral pathways for progressive weakness or cauda equina symptoms.
 
@@ -264,7 +264,7 @@ Choose teleconsultation for injury guidance, conservative care strategies, secon
       {
         question: "Can you diagnose a tear without touching my knee?",
         answer:
-          "Often we can estimate probability from mechanism, exam maneuvers you perform with instruction, and imaging if available—but some cases need in-person orthopedic exam.",
+          "Often we can estimate probability from mechanism, exam maneuvers you perform with instruction, and imaging if available-but some cases need in-person orthopedic exam.",
       },
       {
         question: "Should I get an MRI before the call?",
@@ -274,7 +274,7 @@ Choose teleconsultation for injury guidance, conservative care strategies, secon
       {
         question: "What red flags mean emergency care?",
         answer:
-          "Loss of pulse, severe deformity, numbness in the saddle area, bowel or bladder dysfunction with back pain, or fever with a joint—seek emergency care.",
+          "Loss of pulse, severe deformity, numbness in the saddle area, bowel or bladder dysfunction with back pain, or fever with a joint-seek emergency care.",
       },
     ],
   },
@@ -282,7 +282,7 @@ Choose teleconsultation for injury guidance, conservative care strategies, secon
     slug: "neurology",
     name: "Neurology",
     shortIntro:
-      "Headaches, seizures, neuropathy, and movement symptoms—guided by neurologists with clear escalation criteria.",
+      "Headaches, seizures, neuropathy, and movement symptoms-guided by neurologists with clear escalation criteria.",
     iconKey: "Activity",
     conditions: [
       "Migraine",
@@ -297,9 +297,9 @@ Choose teleconsultation for injury guidance, conservative care strategies, secon
       "Restless legs",
     ],
     relatedSlugs: ["psychiatry", "endocrinology", "cardiology"],
-    description: `Neurology spans the central and peripheral nervous systems. Tele neurology aids in headache pattern recognition, seizure medication titration with patient diaries, tremor characterization on video, and longitudinal MS care—especially for stable patients balancing travel constraints.
+    description: `Neurology spans the central and peripheral nervous systems. Tele neurology aids in headache pattern recognition, seizure medication titration with patient diaries, tremor characterization on video, and longitudinal MS care-especially for stable patients balancing travel constraints.
 
-Migraine care—lifestyle triggers, acute therapy plans, preventive regimens—is well suited to virtual visits with structured headache calendars. Peripheral neuropathy may be guided with blood tests done locally and foot exam coaching for diabetics.
+Migraine care-lifestyle triggers, acute therapy plans, preventive regimens-is well suited to virtual visits with structured headache calendars. Peripheral neuropathy may be guided with blood tests done locally and foot exam coaching for diabetics.
 
 Neurologists use teleconsultation to review prior imaging reports, coordinate physical therapy for vertigo variants, and counsel families on prognosis. Acute stroke, sudden focal weakness, thunderclap headache, or new seizure with injury are emergencies beyond telemedicine scope.
 
@@ -320,7 +320,7 @@ Tele neurology strengthens access in regions with shortages of subspecialists, w
       {
         question: "How do you assess tremor virtually?",
         answer:
-          "Through directed tasks—rest and action components, handwriting samples, and gait when visible—correlated with medication history.",
+          "Through directed tasks-rest and action components, handwriting samples, and gait when visible-correlated with medication history.",
       },
     ],
   },
@@ -328,7 +328,7 @@ Tele neurology strengthens access in regions with shortages of subspecialists, w
     slug: "endocrinology",
     name: "Endocrinology",
     shortIntro:
-      "Hormonal health—thyroid, adrenal, pituitary, calcium—and integrated diabetes care with coordinated labs.",
+      "Hormonal health-thyroid, adrenal, pituitary, calcium-and integrated diabetes care with coordinated labs.",
     iconKey: "Zap",
     conditions: [
       "Hypothyroidism",
@@ -343,11 +343,11 @@ Tele neurology strengthens access in regions with shortages of subspecialists, w
       "Transgender hormone therapy counseling (policy-based)",
     ],
     relatedSlugs: ["diabetology", "gynecology", "nephrology"],
-    description: `Endocrinology manages hormones—from thyroid, adrenal, and pituitary axes to metabolic bone disease. Tele endocrinology enables lab-driven titration of levothyroxine, diabetes medication optimization with glucose downloads, and nuanced discussion of testosterone replacement candidates.
+    description: `Endocrinology manages hormones-from thyroid, adrenal, and pituitary axes to metabolic bone disease. Tele endocrinology enables lab-driven titration of levothyroxine, diabetes medication optimization with glucose downloads, and nuanced discussion of testosterone replacement candidates.
 
 Patients upload trends rather than single-point labs, enabling safer adjustments. Thyroid ultrasound or biopsy cannot be replaced online; endocrinologists advise when fine-needle aspiration is indicated based on ultrasound reports.
 
-Diabetes overlaps often involve cardiometabolic goals—blood pressure and lipids coordinated with nutrition counseling. CGM data integration enhances remote insulin adjustments when available.
+Diabetes overlaps often involve cardiometabolic goals-blood pressure and lipids coordinated with nutrition counseling. CGM data integration enhances remote insulin adjustments when available.
 
 techDr Tele Health endocrinologists communicate cross-specialty with cardiology for GLP-1 agonists in high-risk patients, nephrology for diabetic kidney disease, and OB-GYN for gestational pathways.
 
@@ -361,12 +361,12 @@ Teleconsultation excels at longitudinal hormone disorder management when monitor
       {
         question: "How often should thyroid labs be checked after a dose change?",
         answer:
-          "Typically 6–8 weeks for levothyroxine adjustments, sooner if clinically indicated—your endocrinologist sets a personalized schedule.",
+          "Typically 6–8 weeks for levothyroxine adjustments, sooner if clinically indicated-your endocrinologist sets a personalized schedule.",
       },
       {
         question: "Do you treat osteoporosis online?",
         answer:
-          "Counseling, risk scoring, and therapy selection—yes; DXA scans are arranged locally when needed.",
+          "Counseling, risk scoring, and therapy selection-yes; DXA scans are arranged locally when needed.",
       },
     ],
   },
@@ -393,7 +393,7 @@ Teleconsultation excels at longitudinal hormone disorder management when monitor
 
 Patients share endoscopy or colonoscopy reports for interpretation, polyp surveillance intervals, and IBD maintenance plans. Stool studies or breath tests may be ordered through partner labs based on geography.
 
-Tele GI care educates on red-flag symptoms—bleeding, weight loss, iron deficiency anemia—that must trigger timely endoscopy. Screening age-appropriate colorectal strategies are personalized to family history.
+Tele GI care educates on red-flag symptoms-bleeding, weight loss, iron deficiency anemia-that must trigger timely endoscopy. Screening age-appropriate colorectal strategies are personalized to family history.
 
 techDr Tele Health gastroenterologists align with oncology for alarm symptoms, hepatology pathways for abnormal LFTs, and surgery for complicated gallbladder disease.
 
@@ -437,7 +437,7 @@ Online consultation streamlines flare management for known IBD with shared decis
     relatedSlugs: ["allergy-immunology", "cardiology", "general-medicine"],
     description: `Pulmonology treats lung and pleural conditions. Tele pulmonology leverages home spirometry when available, inhaler technique checks over video, cough characterization, and oximetry readings. Asthma and COPD action plans translate beautifully to virtual care with objective trends.
 
-Sleep apnea suspicion can be triaged with screening questionnaires and arranged home sleep studies. Post-viral dyspnea syndromes need cardiopulmonary differentiation—pulmonologists coordinate testing for PE, anemia, anxiety overlap, or deconditioning.
+Sleep apnea suspicion can be triaged with screening questionnaires and arranged home sleep studies. Post-viral dyspnea syndromes need cardiopulmonary differentiation-pulmonologists coordinate testing for PE, anemia, anxiety overlap, or deconditioning.
 
 Interstitial lung disease patients benefit from imaging review and oxygen needs discussion, while recognizing that high-resolution CT must be obtained locally.
 
@@ -448,12 +448,12 @@ Teleconsultation helps you stay on guideline-based inhaler therapy, optimize smo
       {
         question: "Can you hear my lungs online?",
         answer:
-          "We rely on symptom patterns, vitals you measure, history, and sometimes peak flow or spirometry devices at home—not auscultation directly.",
+          "We rely on symptom patterns, vitals you measure, history, and sometimes peak flow or spirometry devices at home-not auscultation directly.",
       },
       {
         question: "Do I need a chest X-ray before the call?",
         answer:
-          "Only if indicated by persistent symptoms or risk factors—your pulmonologist will guide after history.",
+          "Only if indicated by persistent symptoms or risk factors-your pulmonologist will guide after history.",
       },
       {
         question: "Can oxygen therapy be started remotely?",
@@ -483,23 +483,23 @@ Teleconsultation helps you stay on guideline-based inhaler therapy, optimize smo
     relatedSlugs: ["endocrinology", "general-medicine", "diabetology"],
     description: `Ophthalmology is both highly visual and procedure-driven. Tele ophthalmology supports red-eye triage distinguishing allergic, viral, and bacterial patterns; dry eye stepwise therapy; glaucoma medication side effects; and counseling on diabetic retinopathy screening intervals with retinal imaging interpretation if uploaded.
 
-Acute angle closure, penetrating injury, sudden vision loss, flashes and floaters with field defects, or chemical injury need emergency ophthalmology—not video.
+Acute angle closure, penetrating injury, sudden vision loss, flashes and floaters with field defects, or chemical injury need emergency ophthalmology-not video.
 
 Patients can learn contact lens hygiene, demonstrate pupillary concerns, and share slit-lamp photos from partner centers. Pediatric eye alignment questions may prompt timely specialist exams.
 
 techDr Tele Health eye specialists align timing of anti-VEGF injections for AMD with retina centers and coordinate cataract readiness discussions when visual function data is present.
 
-Teleconsultation offers education, medication optimization, and triage—not replacement for comprehensive dilated exams on appropriate schedules.`,
+Teleconsultation offers education, medication optimization, and triage-not replacement for comprehensive dilated exams on appropriate schedules.`,
     faq: [
       {
         question: "Can pink eye be treated online?",
         answer:
-          "Often—if symptoms match an allergic or typical viral pattern. Bacterial cases may need cultures; severe pain or vision loss needs emergency care.",
+          "Often-if symptoms match an allergic or typical viral pattern. Bacterial cases may need cultures; severe pain or vision loss needs emergency care.",
       },
       {
         question: "How often should diabetics screen for retinopathy?",
         answer:
-          "Intervals depend on baseline findings and glycemic control—your ophthalmologist aligns with guideline-based schedules.",
+          "Intervals depend on baseline findings and glycemic control-your ophthalmologist aligns with guideline-based schedules.",
       },
       {
         question: "Can I get glasses prescription online?",
@@ -512,7 +512,7 @@ Teleconsultation offers education, medication optimization, and triage—not rep
     slug: "ent",
     name: "ENT",
     shortIntro:
-      "Ear, nose, and throat issues—sinusitis, hearing loss triage, vertigo overlap, tonsil questions.",
+      "Ear, nose, and throat issues-sinusitis, hearing loss triage, vertigo overlap, tonsil questions.",
     iconKey: "Mic2",
     conditions: [
       "Allergic rhinitis",
@@ -533,14 +533,14 @@ Patients may share audiograms for interpretation or discuss CPAP intolerance wit
 
 techDr Tele Health ENT specialists coordinate endoscopy when hoarseness persists beyond expected windows, and fine-needle aspiration plans for thyroid nodules with suspicious features on ultrasound.
 
-Virtual care streamlines medication management, allergy integration, and follow-up after surgery—wound checks when images help, pain control counseling, and return precautions.
+Virtual care streamlines medication management, allergy integration, and follow-up after surgery-wound checks when images help, pain control counseling, and return precautions.
 
 Choose online ENT consultation for persistent non-emergency symptoms, second opinions on surgical recommendations, and comprehensive education on self-care maneuvers.`,
     faq: [
       {
         question: "Is sudden hearing loss an emergency?",
         answer:
-          "Yes—sudden sensorineural hearing loss warrants urgent ENT or emergency evaluation for possible steroids and workup.",
+          "Yes-sudden sensorineural hearing loss warrants urgent ENT or emergency evaluation for possible steroids and workup.",
       },
       {
         question: "Can sinus infections be treated online?",
@@ -581,12 +581,12 @@ Acute urinary retention, fever with obstruction, trauma to genitals, or suspecte
 
 techDr Tele Health urologists coordinate oncology pathways for hematuria workups and bladder cancer surveillance education. Female pelvic floor overlap may involve gynecology co-management.
 
-Teleconsultation shines in longitudinal symptom tracking, medication optimization, and preparation for in-office procedures—so visits are efficient.`,
+Teleconsultation shines in longitudinal symptom tracking, medication optimization, and preparation for in-office procedures-so visits are efficient.`,
     faq: [
       {
         question: "Can erectile dysfunction be treated online?",
         answer:
-          "Often—after cardiovascular risk screening and medication interaction review. Some therapies require in-person BP checks.",
+          "Often-after cardiovascular risk screening and medication interaction review. Some therapies require in-person BP checks.",
       },
       {
         question: "When is blood in urine urgent?",
@@ -596,7 +596,7 @@ Teleconsultation shines in longitudinal symptom tracking, medication optimizatio
       {
         question: "Can kidney stones be diagnosed online?",
         answer:
-          "Suspicion yes—based on classic colic patterns and imaging if already done; definitive care planning integrates CT findings done locally.",
+          "Suspicion yes-based on classic colic patterns and imaging if already done; definitive care planning integrates CT findings done locally.",
       },
     ],
   },
@@ -604,7 +604,7 @@ Teleconsultation shines in longitudinal symptom tracking, medication optimizatio
     slug: "nephrology",
     name: "Nephrology",
     shortIntro:
-      "Kidney health—CKD staging, electrolytes, dialysis education, transplant medication questions.",
+      "Kidney health-CKD staging, electrolytes, dialysis education, transplant medication questions.",
     iconKey: "Filter",
     conditions: [
       "Chronic kidney disease",
@@ -619,11 +619,11 @@ Teleconsultation shines in longitudinal symptom tracking, medication optimizatio
       "Medication renal dosing review",
     ],
     relatedSlugs: ["cardiology", "endocrinology", "urology"],
-    description: `Nephrology focuses on kidney function, electrolytes, hypertension secondary to renal disease, dialysis, and transplantation medicine. Tele nephrology thrives on laboratory trends—eGFR trajectories, proteinuria quantification, mineral bone disorder labs—and medication adjustments with kidney-aware dosing.
+    description: `Nephrology focuses on kidney function, electrolytes, hypertension secondary to renal disease, dialysis, and transplantation medicine. Tele nephrology thrives on laboratory trends-eGFR trajectories, proteinuria quantification, mineral bone disorder labs-and medication adjustments with kidney-aware dosing.
 
 CKD education empowers patients on blood pressure targets, RAAS inhibition where appropriate, SGLT2 inhibitor candidacy, and dialysis modality choices when nearing Stage 5.
 
-Dialysis patients may discuss access issues triage—not definitive vascular decisions without exam—and transplant recipients require coordinated immunosuppression labs locally.
+Dialysis patients may discuss access issues triage-not definitive vascular decisions without exam-and transplant recipients require coordinated immunosuppression labs locally.
 
 Hyperkalemia emergencies, anuria, or pulmonary edema from fluid overload require urgent in-person care.
 
@@ -634,7 +634,7 @@ Online nephrology optimizes chronic care, anticipates complications, and persona
       {
         question: "Can CKD be managed online?",
         answer:
-          "Yes—with regular labs from local labs and blood pressure home monitoring; specialist visits complement primary care.",
+          "Yes-with regular labs from local labs and blood pressure home monitoring; specialist visits complement primary care.",
       },
       {
         question: "When should I go to ER for kidney issues?",
@@ -644,7 +644,7 @@ Online nephrology optimizes chronic care, anticipates complications, and persona
       {
         question: "Can you adjust transplant meds remotely?",
         answer:
-          "Sometimes with trough levels—your center protocols and local labs must integrate; urgent rejection signs need immediate hospital care.",
+          "Sometimes with trough levels-your center protocols and local labs must integrate; urgent rejection signs need immediate hospital care.",
       },
     ],
   },
@@ -652,7 +652,7 @@ Online nephrology optimizes chronic care, anticipates complications, and persona
     slug: "oncology",
     name: "Oncology",
     shortIntro:
-      "Cancer treatment education, symptom management, survivorship, and coordination—alongside your treating center.",
+      "Cancer treatment education, symptom management, survivorship, and coordination-alongside your treating center.",
     iconKey: "Ribbon",
     conditions: [
       "Chemotherapy symptom management",
@@ -667,13 +667,13 @@ Online nephrology optimizes chronic care, anticipates complications, and persona
       "Palliative supportive care",
     ],
     relatedSlugs: ["general-medicine", "psychiatry", "oncology"],
-    description: `Oncology teleconsultation emphasizes education, toxicity triage guidance, survivorship planning, and psychosocial support—not replacing infusion centers or radiation facilities. Patients clarify treatment schedules, manage nausea patterns, understand lab trends, and receive empathy-rich counseling.
+    description: `Oncology teleconsultation emphasizes education, toxicity triage guidance, survivorship planning, and psychosocial support-not replacing infusion centers or radiation facilities. Patients clarify treatment schedules, manage nausea patterns, understand lab trends, and receive empathy-rich counseling.
 
-Immunotherapy immune-related adverse events may require urgent local assessment—tele oncologists educate on warning signs. Genetic risk discussions can initiate referrals for counseling.
+Immunotherapy immune-related adverse events may require urgent local assessment-tele oncologists educate on warning signs. Genetic risk discussions can initiate referrals for counseling.
 
 Pain regimens align with multimodal strategies and specialist coordination. Survivorship addresses fear of recurrence, cardiometabolic late effects, and fertility preservation retrospectively where relevant.
 
-techDr Tele Health oncologists respect institutional protocols from primary treating hospitals and augment—not contradict—those plans.
+techDr Tele Health oncologists respect institutional protocols from primary treating hospitals and augment-not contradict-those plans.
 
 Tele oncology improves access for second opinions on imaging summaries and pathology reports when uploaded. Emergencies like neutropenic fever remain hospital pathways.
 
@@ -700,7 +700,7 @@ Compassionate, evidence-based conversations about goals of care may begin online
     slug: "general-medicine",
     name: "General Medicine",
     shortIntro:
-      "Comprehensive adult primary care—prevention, chronic disease, and coordinated referrals when you need a specialist.",
+      "Comprehensive adult primary care-prevention, chronic disease, and coordinated referrals when you need a specialist.",
     iconKey: "Stethoscope",
     conditions: [
       "Preventive health",
@@ -715,20 +715,20 @@ Compassionate, evidence-based conversations about goals of care may begin online
       "Multimorbidity coordination",
     ],
     relatedSlugs: ["cardiology", "endocrinology", "psychiatry"],
-    description: `General medicine (internal medicine) provides holistic adult care—combining prevention, diagnosis, and chronic disease management. Tele general medicine strengthens access to longitudinal relationships, medication safety reviews, and preventive planning with age-appropriate screening discussions.
+    description: `General medicine (internal medicine) provides holistic adult care-combining prevention, diagnosis, and chronic disease management. Tele general medicine strengthens access to longitudinal relationships, medication safety reviews, and preventive planning with age-appropriate screening discussions.
 
-Patients with multimorbidity benefit from a quarterback who integrates cardiology, endocrine, and kidney goals—reducing conflicting advice. Pre-travel consultations address vaccines and prophylaxis references per destination.
+Patients with multimorbidity benefit from a quarterback who integrates cardiology, endocrine, and kidney goals-reducing conflicting advice. Pre-travel consultations address vaccines and prophylaxis references per destination.
 
-Telemedicine is not ideal for ambiguous acute severe illness; your internist screens for red flags and routes quickly. Lifestyle medicine—nutrition, sleep, substance use—anchors many visits.
+Telemedicine is not ideal for ambiguous acute severe illness; your internist screens for red flags and routes quickly. Lifestyle medicine-nutrition, sleep, substance use-anchors many visits.
 
 techDr Tele Health internists emphasize shared decision-making, culturally aware communication, and clear documentation for family members when authorized.
 
-Choose online general medicine for check-ins, chronic disease tuning, preventive strategizing, and coordinated specialty referrals—anchoring your health journey with consistency.`,
+Choose online general medicine for check-ins, chronic disease tuning, preventive strategizing, and coordinated specialty referrals-anchoring your health journey with consistency.`,
     faq: [
       {
         question: "Is telemedicine a replacement for a family doctor?",
         answer:
-          "It complements local care—especially specialist access—but some exams and vaccines require in-person visits.",
+          "It complements local care-especially specialist access-but some exams and vaccines require in-person visits.",
       },
       {
         question: "Can you order labs online?",
@@ -746,7 +746,7 @@ Choose online general medicine for check-ins, chronic disease tuning, preventive
     slug: "diabetology",
     name: "Diabetology",
     shortIntro:
-      "Focused diabetes care—CGM-driven titrations, hypoglycemia prevention, and complication risk reduction.",
+      "Focused diabetes care-CGM-driven titrations, hypoglycemia prevention, and complication risk reduction.",
     iconKey: "Syringe",
     conditions: [
       "Type 2 diabetes",
@@ -765,28 +765,28 @@ Choose online general medicine for check-ins, chronic disease tuning, preventive
 
 Food timing, cultural dietary patterns in India, and exercise integration are individualized. Coaching on foot self-exams and footwear reduces ulcer risk; retinal screening intervals are reinforced.
 
-Technology—pumps and hybrid closed loops—may be discussed with referrals to certified centers for starts. Sick-day rules and ketone monitoring for Type 1 are emphasized.
+Technology-pumps and hybrid closed loops-may be discussed with referrals to certified centers for starts. Sick-day rules and ketone monitoring for Type 1 are emphasized.
 
 techDr Tele Health diabetologists collaborate with cardiologists on SGLT2/GLP-1 cardiorenal benefits, nephrologists on proteinuria, and podiatry when lesions appear.
 
 Teleconsultation optimizes glycemic stability while stressing that DKA, HHS, or non-healing wounds need urgent escalation.
 
-Long-term, patients achieve better outcomes when data trends—not single glucoses—drive therapy.`,
+Long-term, patients achieve better outcomes when data trends-not single glucoses-drive therapy.`,
     faq: [
       {
         question: "Do I need a CGM for tele diabetes care?",
         answer:
-          "Not mandatory, but helpful—fingerstick logs with structure work when consistent; CGM reduces blind spots.",
+          "Not mandatory, but helpful-fingerstick logs with structure work when consistent; CGM reduces blind spots.",
       },
       {
         question: "Can insulin be started online?",
         answer:
-          "Selectively—with education, baseline labs, and follow-up cadence; first-time insulin in frail elders may need closer in-person overlap per policy.",
+          "Selectively-with education, baseline labs, and follow-up cadence; first-time insulin in frail elders may need closer in-person overlap per policy.",
       },
       {
         question: "What foot finding is urgent?",
         answer:
-          "New ulcer, redness tracking up the leg, fever with foot infection, or black discoloration—seek urgent care.",
+          "New ulcer, redness tracking up the leg, fever with foot infection, or black discoloration-seek urgent care.",
       },
     ],
   },
@@ -809,20 +809,20 @@ Long-term, patients achieve better outcomes when data trends—not single glucos
       "Anaphylaxis action plans",
     ],
     relatedSlugs: ["pulmonology", "dermatology", "pediatrics"],
-    description: `Allergy and immunology diagnoses and treats immune-mediated conditions from rhinitis and asthma to food and drug hypersensitivity and immune deficiency. Tele allergists take meticulous histories—the cornerstone of allergy practice—and design testing plans executed locally.
+    description: `Allergy and immunology diagnoses and treats immune-mediated conditions from rhinitis and asthma to food and drug hypersensitivity and immune deficiency. Tele allergists take meticulous histories-the cornerstone of allergy practice-and design testing plans executed locally.
 
 Chronic urticaria step therapy, anaphylaxis action plans with epinephrine teaching, and food label reading education suit virtual delivery. Spirometry or skin testing must be performed in-person at partner centers.
 
-Patients with recurrent infections may receive preliminary immune workup lists and referral triage—not definitive IVIG decisions without evaluation.
+Patients with recurrent infections may receive preliminary immune workup lists and referral triage-not definitive IVIG decisions without evaluation.
 
 techDr Tele Health allergists align with dermatology for atopic dermatitis biologics discussions and pulmonology for allergic asthma phenotypes.
 
-Teleconsultation strengthens self-management skills, medication access, and school/workplace accommodation letters when appropriate—while stressing that respiratory distress or anaphylaxis triggers emergency protocols.`,
+Teleconsultation strengthens self-management skills, medication access, and school/workplace accommodation letters when appropriate-while stressing that respiratory distress or anaphylaxis triggers emergency protocols.`,
     faq: [
       {
         question: "Can food allergies be diagnosed online?",
         answer:
-          "Suspicion and plan—yes; definitive oral challenges or skin tests require supervised settings.",
+          "Suspicion and plan-yes; definitive oral challenges or skin tests require supervised settings.",
       },
       {
         question: "How do I use an epinephrine auto-injector?",
@@ -832,7 +832,7 @@ Teleconsultation strengthens self-management skills, medication access, and scho
       {
         question: "Are allergy shots possible via telemedicine?",
         answer:
-          "Education and protocol planning—yes; injections are administered in qualified centers with observation.",
+          "Education and protocol planning-yes; injections are administered in qualified centers with observation.",
       },
     ],
   },
@@ -840,7 +840,7 @@ Teleconsultation strengthens self-management skills, medication access, and scho
     slug: "rheumatology",
     name: "Rheumatology",
     shortIntro:
-      "Joint pain, autoimmune diseases, and inflammation—therapy planning with labs and imaging you can complete nearby.",
+      "Joint pain, autoimmune diseases, and inflammation-therapy planning with labs and imaging you can complete nearby.",
     iconKey: "Dumbbell",
     conditions: [
       "Rheumatoid arthritis",
@@ -855,15 +855,15 @@ Teleconsultation strengthens self-management skills, medication access, and scho
       "Sjogren overlap",
     ],
     relatedSlugs: ["orthopedics", "dermatology", "nephrology"],
-    description: `Rheumatology cares for autoimmune and musculoskeletal inflammation. Tele rheumatology reviews joint distribution, morning stiffness patterns, inflammatory markers, and imaging to tune DMARD and biologic therapy—with local lab safety monitoring.
+    description: `Rheumatology cares for autoimmune and musculoskeletal inflammation. Tele rheumatology reviews joint distribution, morning stiffness patterns, inflammatory markers, and imaging to tune DMARD and biologic therapy-with local lab safety monitoring.
 
 Gout flare prophylaxis during ULT initiation, lupus hydroxychloroquine eye screening education, and osteoporosis medication sequencing are commonly virtual.
 
 Physical exam elements are partially replaced by patient-guided joint counts and videos, but new synovitis may still need ultrasound in clinic.
 
-techDr Tele Health rheumatologists coordinate ophthalmology for antimalarial monitoring and screen for infections before biologics conceptually—local completion.
+techDr Tele Health rheumatologists coordinate ophthalmology for antimalarial monitoring and screen for infections before biologics conceptually-local completion.
 
-Seronegative arthritis phenotypes overlap with GI and skin—multidisciplinary integration is emphasized.
+Seronegative arthritis phenotypes overlap with GI and skin-multidisciplinary integration is emphasized.
 
 Teleconsultation supports sustained remission strategies, medication adherence, and prompt escalation if infection or cytopenias signal.
 
@@ -872,12 +872,12 @@ Emergencies like catastrophic APS, acute visual loss from GCA suspicion, or febr
       {
         question: "Can RA be managed fully online?",
         answer:
-          "Many stable patients—yes—with periodic labs and shared remission targets; new diagnosis may need sooner in-person exam.",
+          "Many stable patients-yes-with periodic labs and shared remission targets; new diagnosis may need sooner in-person exam.",
       },
       {
         question: "What labs do biologics require?",
         answer:
-          "CBC, liver tests, tuberculosis screening per guideline, and infection surveillance—arranged locally on schedule.",
+          "CBC, liver tests, tuberculosis screening per guideline, and infection surveillance-arranged locally on schedule.",
       },
       {
         question: "Is fibromyalgia diagnosed online?",
@@ -905,15 +905,15 @@ Emergencies like catastrophic APS, acute visual loss from GCA suspicion, or febr
       "Fertility preservation education",
     ],
     relatedSlugs: ["gynecology", "endocrinology", "urology"],
-    description: `Fertility medicine supports conception through ovulation optimization, hormonal testing interpretation, ultrasound review when available, and IVF education. Tele fertility consultations help couples understand timelines, success rate nuance, and lifestyle factors—without replacing embryology labs.
+    description: `Fertility medicine supports conception through ovulation optimization, hormonal testing interpretation, ultrasound review when available, and IVF education. Tele fertility consultations help couples understand timelines, success rate nuance, and lifestyle factors-without replacing embryology labs.
 
-Male factor basics—semen analysis review, varicocele triage—can start online; procedures remain in clinics. PCOS ovulation induction strategies may be outlined with monitoring plans nearby.
+Male factor basics-semen analysis review, varicocele triage-can start online; procedures remain in clinics. PCOS ovulation induction strategies may be outlined with monitoring plans nearby.
 
 IVF medication teach-backs reduce errors; psychosocial stress is validated with optional counseling referrals.
 
 techDr Tele Health fertility specialists emphasize evidence, age-related expectations, and ethical ovarian reserve discussions with AMH contexts.
 
-Emergency topics like ectopic suspicion, OHSS severe features, or heavy bleeding early pregnancy need urgent care—not teleconsult alone.
+Emergency topics like ectopic suspicion, OHSS severe features, or heavy bleeding early pregnancy need urgent care-not teleconsult alone.
 
 Teleconsultation humanizes complex paths, aligns partner expectations, and prepares you for structured in-person fertility center visits with questions in hand.`,
     faq: [
@@ -925,7 +925,7 @@ Teleconsultation humanizes complex paths, aligns partner expectations, and prepa
       {
         question: "When should we see a specialist sooner?",
         answer:
-          "Age over 35 with 6 months trying, irregular cycles, known endometriosis, or two losses—examples that warrant earlier workups.",
+          "Age over 35 with 6 months trying, irregular cycles, known endometriosis, or two losses-examples that warrant earlier workups.",
       },
       {
         question: "Are supplements for fertility recommended?",

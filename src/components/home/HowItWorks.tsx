@@ -8,7 +8,7 @@ const steps = [
   },
   {
     title: "Pick Your Doctor",
-    copy: "Compare experience, ratings, and availability—profiles are credential-verified.",
+    copy: "Compare experience, ratings, and availability-profiles are credential-verified.",
     icon: CalendarCheck,
   },
   {
@@ -26,7 +26,7 @@ export function HowItWorks() {
           How it works
         </h2>
         <p className="mt-3 text-muted-foreground">
-          Three calm steps from search to prescription-ready documentation—built
+          Three calm steps from search to prescription-ready documentation-built
           for busy families and professionals.
         </p>
       </div>

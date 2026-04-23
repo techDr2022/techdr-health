@@ -41,7 +41,7 @@ Save your visit summary and fill prescriptions promptly. Schedule follow-ups if 
     slug: "ten-conditions-teleconsultation",
     title: "10 Conditions You Can Often Manage via Teleconsultation",
     excerpt:
-      "From migraine follow-ups to dermatology—when remote care works well and when to seek emergency care.",
+      "From migraine follow-ups to dermatology-when remote care works well and when to seek emergency care.",
     category: "Health",
     author: { name: "Dr. Priya Mehta", slug: "dr-priya-mehta-cardiology", role: "Cardiology" },
     publishedAt: "2025-11-28",
@@ -92,7 +92,7 @@ Encrypted sessions and careful documentation mirror modern hospital information 
 
 ## Medication safety
 
-Prescriptions follow jurisdictional rules and clinical judgment—not patient demand alone.
+Prescriptions follow jurisdictional rules and clinical judgment-not patient demand alone.
 
 ## Know your limits
 
@@ -113,7 +113,7 @@ If red-flag symptoms appear during a call, your doctor will advise immediate esc
     body: `
 ## Start with pattern recognition
 
-Digestive burning after meals differs from exertional chest pressure—your internist helps route testing.
+Digestive burning after meals differs from exertional chest pressure-your internist helps route testing.
 
 ## Use internists as quarterbacks
 
@@ -121,11 +121,11 @@ Complex symptoms often benefit from one coordinating clinician before parallel s
 
 ## Specialty landing pages
 
-Our specialty hubs explain typical conditions treated—compare that list with your symptoms cluster.
+Our specialty hubs explain typical conditions treated-compare that list with your symptoms cluster.
 
 ## Second opinions
 
-Bring imaging summaries rather than guessing imaging language—accuracy improves recommendations.
+Bring imaging summaries rather than guessing imaging language-accuracy improves recommendations.
 `,
   },
   {
@@ -150,7 +150,7 @@ Conditions requiring palpation, acute severe undifferentiated symptoms, procedur
 
 ## Hybrid models
 
-Many patients alternate—tele for tuning, in-person annually or when exam-dependent milestones arise.
+Many patients alternate-tele for tuning, in-person annually or when exam-dependent milestones arise.
 `,
   },
   {
@@ -200,7 +200,7 @@ Psoriasis and eczema benefit from stepped topical and systemic strategies tailor
 
 ## Suspicious lesions
 
-Changing moles require dermoscopy or biopsy—not guesswork online.
+Changing moles require dermoscopy or biopsy-not guesswork online.
 `,
   },
   {
@@ -221,11 +221,11 @@ Eye contact and pacing still translate when cameras are positioned well.
 
 ## Therapy integration
 
-Medication alone is not always optimal—combine with CBT or related modalities when indicated.
+Medication alone is not always optimal-combine with CBT or related modalities when indicated.
 
 ## Crisis pathways
 
-Emergency resources must be identified before crises—store hotline numbers visibly.
+Emergency resources must be identified before crises-store hotline numbers visibly.
 `,
   },
   {
@@ -267,7 +267,7 @@ Sleep, stress, and activity integrate with pharmacotherapy for durable A1c impro
     body: `
 ## Telemedicine guidelines evolve
 
-Qualified providers may prescribe when clinically appropriate—never guaranteed.
+Qualified providers may prescribe when clinically appropriate-never guaranteed.
 
 ## Controlled substances
 
@@ -292,11 +292,11 @@ First visits may emphasize assessment; renewals streamline when stable.
     body: `
 ## Infant considerations
 
-Young infants with fever often need urgent evaluation—follow local protocols.
+Young infants with fever often need urgent evaluation-follow local protocols.
 
 ## Respiratory distress
 
-Nasal flaring, grunting, or blue tones mean emergency—not tele delay.
+Nasal flaring, grunting, or blue tones mean emergency-not tele delay.
 
 ## Hydration
 
@@ -317,7 +317,7 @@ Urine frequency and tear production guide oral rehydration success.
     body: `
 ## Protein matters
 
-Albuminuria changes targets—coordinate ACE/ARB discussions with labs.
+Albuminuria changes targets-coordinate ACE/ARB discussions with labs.
 
 ## Avoid nephrotoxins
 
@@ -325,7 +325,7 @@ NSAID overuse and contrast protocols should be individualized.
 
 ## Multidisciplinary care
 
-Diabetes and hypertension control dominate progression risk—tele visits support titration loops.
+Diabetes and hypertension control dominate progression risk-tele visits support titration loops.
 `,
   },
 ];

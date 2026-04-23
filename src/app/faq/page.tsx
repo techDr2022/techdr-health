@@ -16,7 +16,7 @@ import Link from "next/link";
 const extra = [
   {
     q: "How does techDr Tele Health compare to hospital OPD?",
-    a: "We complement—not replace—in-person care. Ideal for follow-ups, second opinions, and timely access; physical exams and emergencies still belong in clinics or ERs.",
+    a: "We complement-not replace-in-person care. Ideal for follow-ups, second opinions, and timely access; physical exams and emergencies still belong in clinics or ERs.",
   },
   {
     q: "Do you store my medical records?",

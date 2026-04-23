@@ -275,7 +275,7 @@ export default async function DoctorProfilePage({ params }: Props) {
               Related specialties
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Explore adjacent hubs for overlapping symptoms—your clinician may
+              Explore adjacent hubs for overlapping symptoms-your clinician may
               recommend coordinated care.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">

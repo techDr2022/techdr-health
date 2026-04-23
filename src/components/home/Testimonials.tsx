@@ -38,7 +38,7 @@ export function Testimonials() {
           Patient stories
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">
-          Real outcomes from teleconsultations—shared to illustrate typical
+          Real outcomes from teleconsultations-shared to illustrate typical
           experiences, not as guaranteed results.
         </p>
         <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
