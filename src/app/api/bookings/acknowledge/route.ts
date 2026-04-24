@@ -6,6 +6,7 @@ import {
   sendBookingAcknowledgementToPatientEmail,
 } from "@/lib/email";
 import { sendWhatsAppMessage } from "@/lib/sms";
+import { buildGoogleCalendarLink } from "@/lib/calendar";
 
 const schema = z.object({
   doctorSlug: z.string().min(1, "Doctor is required."),
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const doctorName = doctor.displayName.replace(/^Dr\.?\s*/i, "") || doctor.displayName;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const details = {
       doctorName,
       patientName: payload.patientName,
@@ -46,6 +48,13 @@ export async function POST(request: NextRequest) {
       patientEmail: payload.patientEmail,
       patientWhatsApp: payload.patientWhatsApp,
       concern: payload.concern,
+      calendarUrl: buildGoogleCalendarLink({
+        title: `Consultation with Dr. ${doctorName}`,
+        description: `Video consultation booking request.\nPatient: ${payload.patientName}\nDoctor: Dr. ${doctorName}`,
+        date: payload.appointmentDate,
+        timeSlot: payload.timeSlot,
+      }) ?? undefined,
+      manageBookingUrl: `${siteUrl}/dashboard/bookings`,
     };
 
     const patientEmailPromise = sendBookingAcknowledgementToPatientEmail(
@@ -61,19 +70,21 @@ export async function POST(request: NextRequest) {
       `Date: ${payload.appointmentDate}`,
       `Time: ${payload.timeSlot}`,
       "Consultation: Video",
+      details.calendarUrl ? `Google Calendar: ${details.calendarUrl}` : "",
       "Our team will contact you shortly.",
       "- techDr Tele Health",
-    ].join("\n");
+    ].filter(Boolean).join("\n");
     const doctorWhatsappMsg = [
       `New booking request for Dr. ${doctor.displayName}.`,
       `Patient: ${payload.patientName}`,
       `Date: ${payload.appointmentDate}`,
       `Time: ${payload.timeSlot}`,
+      details.calendarUrl ? `Google Calendar: ${details.calendarUrl}` : "",
       `WhatsApp: ${payload.patientWhatsApp}`,
       `Email: ${payload.patientEmail}`,
       `Concern: ${payload.concern}`,
       "- techDr Tele Health",
-    ].join("\n");
+    ].filter(Boolean).join("\n");
 
     const patientWhatsappPromise = sendWhatsAppMessage(
       payload.patientWhatsApp,
@@ -94,9 +105,10 @@ export async function POST(request: NextRequest) {
       settledResults[0].status === "fulfilled" && settledResults[0].value === true;
     const doctorWhatsappSent =
       settledResults[1].status === "fulfilled" && settledResults[1].value === true;
-    const patientEmailSent = settledResults[2].status === "fulfilled";
+    const patientEmailSent =
+      settledResults[2].status === "fulfilled" && settledResults[2].value === true;
     const doctorEmailSent = doctor.user.email
-      ? settledResults[3].status === "fulfilled"
+      ? settledResults[3].status === "fulfilled" && settledResults[3].value === true
       : false;
 
     if (settledResults[2].status === "rejected") {

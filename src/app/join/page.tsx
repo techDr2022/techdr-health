@@ -14,6 +14,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { JOIN_FAQ } from "@/data/join-faq";
 import { JOIN_TESTIMONIALS } from "@/data/join-testimonials";
 import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { getSafeImageSrc } from "@/lib/image";
 import { SITE_NAME, getSiteUrl } from "@/lib/site-config";
 
 const WHY_JOIN = [
@@ -44,7 +45,7 @@ const HOW_IT_WORKS = [
 export const metadata: Metadata = {
   title: "Join as Doctor | Subscription Plans",
   description:
-    "Join India's teleconsultation platform as a doctor, clinic, or hospital. Transparent pricing, 25% platform fee, and secure Razorpay payouts.",
+    "Join India's teleconsultation platform as a doctor, clinic, or hospital. Transparent pricing, 25% platform fee, and secure Cashfree payouts.",
   keywords: [
     "join teleconsultation platform",
     "register as online doctor",
@@ -202,10 +203,10 @@ export default async function JoinPage() {
               <CardContent className="space-y-3 p-6">
                 <div className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-emerald-100">
                   <Image
-                    src={
-                      doctorBySpecialty.get(item.specialty.toLowerCase()) ??
+                    src={getSafeImageSrc(
+                      doctorBySpecialty.get(item.specialty.toLowerCase()),
                       "/images/placeholders/doctor-avatar.svg"
-                    }
+                    )}
                     alt={item.name}
                     fill
                     className="object-cover"

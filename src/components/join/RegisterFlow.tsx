@@ -35,6 +35,7 @@ type FormState = {
   medRegNumber: string;
   languages: string[];
   consultationFee: string;
+  whatsappNumber: string;
   clinicName: string;
   hospitalName: string;
   address: string;
@@ -52,32 +53,12 @@ type UploadState = {
   logoUrl: UploadValue;
 };
 
-type RazorpayResponse = {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-};
-
-type RazorpayOptions = {
-  key?: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  order_id: string;
-  handler: (response: RazorpayResponse) => void;
-  prefill: {
-    name: string;
-    email: string;
-    contact: string;
-  };
-  theme: { color: string };
-};
-
 declare global {
   interface Window {
-    Razorpay?: new (options: RazorpayOptions) => {
-      open: () => void;
+    Cashfree?: (options: { mode: "sandbox" | "production" }) => {
+      checkout: (options: { paymentSessionId: string; redirectTarget?: "_self" | "_blank" | "_modal" }) => Promise<{
+        error?: { message?: string };
+      }>;
     };
   }
 }
@@ -111,6 +92,7 @@ const DEFAULT_FORM_STATE: FormState = {
   medRegNumber: "",
   languages: [],
   consultationFee: "500",
+  whatsappNumber: "",
   clinicName: "",
   hospitalName: "",
   address: "",
@@ -186,6 +168,7 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
   function validateStep3Profile() {
     if (!form.specialty || !form.credentials || !form.medRegNumber) return false;
     if (!form.experience || !form.consultationFee) return false;
+    if (!form.whatsappNumber) return false;
     if (form.planType === "CLINIC") {
       const doctorCount = Number(form.numberOfDoctors);
       if (!form.clinicName || !form.address || !form.city || !form.pincode) return false;
@@ -319,45 +302,41 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
         orderId: string;
         amount: number;
         currency: string;
-        keyId?: string;
+        paymentSessionId?: string;
+        cashfreeMode?: string;
       };
 
-      if (!window.Razorpay) {
+      if (!window.Cashfree) {
         throw new Error("Payment SDK not loaded. Please refresh and retry.");
       }
+      if (!orderData.paymentSessionId) {
+        throw new Error("Cashfree session is missing. Please retry.");
+      }
 
-      const payment = new window.Razorpay({
-        key: orderData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "techDr Tele Health",
-        description: `${selectedPlan.name} - Annual Subscription`,
-        order_id: orderData.orderId,
-        prefill: {
-          name: form.entityName,
-          email: form.email,
-          contact: form.phone,
-        },
-        theme: { color: "#14b8a6" },
-        handler: async (response) => {
-          const verify = await fetch("/api/subscriptions/verify-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...response,
-              applicationId: app.id,
-            }),
-          });
-          if (!verify.ok) {
-            setError("Payment succeeded, but verification failed. Contact support.");
-            return;
-          }
-          setIsPaymentVerified(true);
-          setStep(3);
-        },
+      const cashfree = window.Cashfree({
+        mode: orderData.cashfreeMode === "PROD" ? "production" : "sandbox",
       });
-
-      payment.open();
+      const checkoutResult = await cashfree.checkout({
+        paymentSessionId: orderData.paymentSessionId,
+        redirectTarget: "_modal",
+      });
+      if (checkoutResult.error) {
+        throw new Error(checkoutResult.error.message || "Payment was not completed.");
+      }
+      const verify = await fetch("/api/subscriptions/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: orderData.orderId,
+          applicationId: app.id,
+        }),
+      });
+      if (!verify.ok) {
+        setError("Payment succeeded, but verification failed. Contact support.");
+        return;
+      }
+      setIsPaymentVerified(true);
+      setStep(3);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Payment failed.";
       setError(message);
@@ -424,7 +403,7 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
 
   return (
     <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" />
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <Card className="overflow-hidden border-emerald-100 shadow-xl shadow-emerald-100/40">
           <CardHeader className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
@@ -534,7 +513,7 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                     </p>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    First 500 listings get free annual subscription. After that, secure Razorpay payment applies.
+                    First 500 listings get free annual subscription. After that, secure Cashfree payment applies.
                   </p>
                   <Button
                     onClick={handlePayment}
@@ -609,6 +588,18 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                     type="number"
                     value={form.consultationFee}
                     onChange={(e) => updateField("consultationFee", e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Note: 25% will be platform fee. If consultation fee is INR 1000, INR 250 will be platform charges
+                    to maintain high-security servers.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>WhatsApp Number *</Label>
+                  <Input
+                    value={form.whatsappNumber}
+                    onChange={(e) => updateField("whatsappNumber", e.target.value)}
+                    placeholder="Enter WhatsApp number"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">

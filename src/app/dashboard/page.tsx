@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import {
   ArrowRight,
   CalendarCheck2,
@@ -8,15 +9,16 @@ import {
   LineChart,
   Wallet,
 } from "lucide-react";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
-async function getDashboardData() {
-  const doctor = await prisma.doctorProfile.findFirst({
-    where: { isVisible: true },
+async function getDashboardData(userId: string) {
+  const doctor = await prisma.doctorProfile.findUnique({
+    where: { userId },
     select: { id: true, displayName: true },
   });
   if (!doctor) return null;
@@ -50,7 +52,11 @@ async function getDashboardData() {
 }
 
 export default async function DoctorDashboardPage() {
-  const data = await getDashboardData();
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  if (session.user.role !== "DOCTOR") redirect("/dashboard/patient");
+
+  const data = await getDashboardData(session.user.id);
 
   if (!data) {
     return (

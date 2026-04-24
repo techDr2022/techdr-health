@@ -7,7 +7,7 @@ import { ConsultPaymentClient } from "./ConsultPaymentClient";
 
 export const metadata: Metadata = {
   title: `Consultation Payment | ${SITE_NAME}`,
-  description: "Complete your consultation booking payment using Razorpay.",
+  description: "Complete your consultation booking payment using Cashfree.",
 };
 
 export default function ConsultPaymentPage() {

@@ -2,14 +2,53 @@ import { NextRequest, NextResponse } from "next/server";
 import { addMinutes } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { calculateDoctorPayout } from "@/lib/plans";
-import { getRazorpayClient } from "@/lib/razorpay";
-import { sendBookingConfirmedEmail } from "@/lib/email";
+import { createCashfreeOrder, getCashfreeMode } from "@/lib/cashfree";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
 
-async function getOrCreateGuestPatient(id: string) {
+async function getOrCreatePatient(input: {
+  id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+}) {
+  const id = (input.id || "").trim();
+  const email = (input.email || "").trim().toLowerCase();
+  const name = (input.name || "").trim();
+  const phone = (input.phone || "").trim();
+
   if (id && id !== "guest_patient") {
     const existing = await prisma.user.findUnique({ where: { id } });
-    if (existing) return existing;
+    if (existing) {
+      if (name || phone) {
+        return prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            ...(name ? { name } : {}),
+            ...(phone ? { phone } : {}),
+          },
+        });
+      }
+      return existing;
+    }
+  }
+
+  if (email) {
+    return prisma.user.upsert({
+      where: { email },
+      update: {
+        ...(name ? { name } : {}),
+        ...(phone ? { phone } : {}),
+      },
+      create: {
+        email,
+        passwordHash: "",
+        role: "PATIENT",
+        name: name || "Patient",
+        phone: phone || null,
+        isVerified: false,
+        authProvider: "email",
+      },
+    });
   }
 
   const guestEmail = "guest_patient@techdrhealth.local";
@@ -35,6 +74,9 @@ export async function POST(req: NextRequest) {
     const scheduledAt = String(body.scheduledAt ?? "");
     const consultationType = "VIDEO";
     const patientId = String(body.patientId ?? "guest_patient");
+    const patientName = String(body.patientName ?? "");
+    const patientEmail = String(body.patientEmail ?? "");
+    const patientPhone = String(body.patientPhone ?? "");
 
     if ((!doctorId && !doctorSlug) || !scheduledAt) {
       return NextResponse.json(
@@ -53,13 +95,22 @@ export async function POST(req: NextRequest) {
     }
 
     const fee = calculateDoctorPayout(doctor.consultFee);
-    const razorpay = getRazorpayClient();
-    const patient = await getOrCreateGuestPatient(patientId);
+    const patient = await getOrCreatePatient({
+      id: patientId,
+      name: patientName,
+      email: patientEmail,
+      phone: patientPhone,
+    });
     const scheduledDate = new Date(scheduledAt);
-
-    const order = await razorpay.orders.create({
-      amount: fee.totalPatientPays * 100,
-      currency: "INR",
+    const orderId = `bkg_${Date.now()}_${patient.id.slice(0, 8)}`;
+    const order = await createCashfreeOrder({
+      orderId,
+      amount: fee.totalPatientPays,
+      customerId: patient.id,
+      customerName: patient.name || "Patient",
+      customerEmail: patient.email,
+      customerPhone: patient.phone || patientPhone || "9999999999",
+      returnUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/consult/payment`,
       notes: {
         doctorId: doctor.id,
         consultationType,
@@ -71,7 +122,7 @@ export async function POST(req: NextRequest) {
     const booking = await prisma.booking.create({
       data: {
         patientId: patient.id,
-        doctorId,
+        doctorId: doctor.id,
         scheduledAt: scheduledDate,
         endsAt: addMinutes(scheduledDate, CONSULTATION_SLOT_MINUTES),
         consultType: "VIDEO",
@@ -80,32 +131,26 @@ export async function POST(req: NextRequest) {
         doctorPayoutINR: fee.doctorPayout,
         gstINR: fee.gstOnPlatformFee,
         totalPatientPays: fee.totalPatientPays,
-        razorpayOrderId: order.id,
+        cashfreeOrderId: order.order_id,
       },
-      select: { id: true, razorpayOrderId: true, totalPatientPays: true },
+      select: { id: true, cashfreeOrderId: true, totalPatientPays: true },
     });
 
-    if (doctor.user.email) {
-      await sendBookingConfirmedEmail(doctor.user.email, {
-        patientId,
-        scheduledAt: scheduledDate,
-        consultationType,
-      });
-    }
-
     return NextResponse.json({
-      orderId: order.id,
+      orderId: order.order_id,
       bookingId: booking.id,
-      amount: order.amount,
-      currency: order.currency,
-      keyId: process.env.RAZORPAY_KEY_ID,
+      amount: order.order_amount,
+      currency: order.order_currency,
+      paymentSessionId: order.payment_session_id,
+      cashfreeMode: getCashfreeMode(),
       totalPatientPays: fee.totalPatientPays,
       feeBreakdown: fee,
     });
   } catch (error) {
     console.error("booking order error", error);
+    const message = error instanceof Error ? error.message : "Unable to create booking order.";
     return NextResponse.json(
-      { error: "Unable to create booking order." },
+      { error: message },
       { status: 500 }
     );
   }

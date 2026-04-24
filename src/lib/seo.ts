@@ -219,7 +219,15 @@ export function getBlogPostSEO(post: {
   publishedAt: string;
   author: string;
   category: string;
+  specialtySlug?: string;
 }): Metadata {
+  const titleTerms = post.title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((term) => term.length > 3)
+    .slice(0, 5);
+
   return generateSEO({
     title: post.title,
     description: post.excerpt || SITE_DESC,
@@ -228,7 +236,9 @@ export function getBlogPostSEO(post: {
       "teleconsultation",
       "online doctor",
       "health tips India",
-      post.category,
+      `${post.category} guide`,
+      post.specialtySlug ? `online ${post.specialtySlug} consultation` : "",
+      ...titleTerms,
     ],
     type: "article",
   });

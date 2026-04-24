@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { ChevronDown, Lock, Trash2, UploadCloud, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { getSafeImageSrc } from "@/lib/image";
 
-type PanelKey = "profile" | "password" | "reports" | "delete";
+export type PanelKey = "profile" | "password" | "reports" | "delete";
 type InitialProfile = {
   displayName: string;
   specialty: string;
@@ -42,8 +44,14 @@ const panels: { key: PanelKey; title: string; icon: typeof UserRound; descriptio
   },
 ];
 
-export function ProfileEditPanels({ initialProfile }: { initialProfile: InitialProfile }) {
-  const [active, setActive] = useState<PanelKey | null>("profile");
+export function ProfileEditPanels({
+  initialProfile,
+  defaultPanel = "profile",
+}: {
+  initialProfile: InitialProfile;
+  defaultPanel?: PanelKey;
+}) {
+  const [active, setActive] = useState<PanelKey | null>(defaultPanel);
 
   return (
     <section className="space-y-3">
@@ -172,10 +180,15 @@ function ProfileForm({ initialProfile }: { initialProfile: InitialProfile }) {
       <div className="sm:col-span-2">
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="relative h-16 w-16 overflow-hidden rounded-full bg-slate-200">
-            <img
-              src={previewUrl || "/images/placeholders/doctor-avatar.svg"}
+            <Image
+              src={getSafeImageSrc(
+                previewUrl,
+                "/images/placeholders/doctor-avatar.svg"
+              )}
               alt="Profile preview"
-              className="h-full w-full object-cover"
+              fill
+              className="object-cover"
+              sizes="64px"
             />
           </div>
           <div className="flex-1 min-w-[220px] space-y-2">

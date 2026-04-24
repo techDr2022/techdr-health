@@ -1,37 +1,30 @@
-import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { fetchCashfreeOrder } from "@/lib/cashfree";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const orderId = String(body.razorpay_order_id ?? "");
-    const paymentId = String(body.razorpay_payment_id ?? "");
-    const signature = String(body.razorpay_signature ?? "");
+    const orderId = String(body.orderId ?? "");
     const bookingId = String(body.bookingId ?? "");
 
-    if (!orderId || !paymentId || !signature || !bookingId) {
+    if (!orderId || !bookingId) {
       return NextResponse.json({ error: "Missing payment verification payload." }, { status: 400 });
     }
 
-    const secret = process.env.RAZORPAY_KEY_SECRET;
-    if (!secret) {
-      return NextResponse.json({ error: "Razorpay secret is not configured." }, { status: 500 });
-    }
-
-    const generated = crypto.createHmac("sha256", secret).update(`${orderId}|${paymentId}`).digest("hex");
-    if (generated !== signature) {
-      return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
+    const order = await fetchCashfreeOrder(orderId);
+    if (order.order_status !== "PAID") {
+      return NextResponse.json({ error: "Payment is not completed yet." }, { status: 400 });
     }
 
     const updateResult = await prisma.booking.updateMany({
       where: {
         id: bookingId,
-        razorpayOrderId: orderId,
+        cashfreeOrderId: orderId,
       },
       data: {
         payStatus: "CAPTURED",
-        razorpayPaymentId: paymentId,
+        cashfreePaymentId: order.order_id,
       },
     });
 

@@ -2,36 +2,18 @@
 
 import Script from "next/script";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type RazorpayResponse = {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-};
-
-type RazorpayOptions = {
-  key?: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  order_id: string;
-  handler: (response: RazorpayResponse) => void;
-  prefill: {
-    name: string;
-    email: string;
-    contact: string;
-  };
-  theme: { color: string };
-};
-
 declare global {
   interface Window {
-    Razorpay?: new (options: RazorpayOptions) => { open: () => void };
+    Cashfree?: (options: { mode: "sandbox" | "production" }) => {
+      checkout: (options: { paymentSessionId: string; redirectTarget?: "_self" | "_blank" | "_modal" }) => Promise<{
+        error?: { message?: string };
+      }>;
+    };
   }
 }
 
@@ -87,14 +69,6 @@ export function ConsultPaymentClient() {
       details.timeSlot
   );
 
-  useEffect(() => {
-    if (!isPaid) return;
-    const timer = window.setTimeout(() => {
-      router.push("/dashboard/patient");
-    }, 2500);
-    return () => window.clearTimeout(timer);
-  }, [isPaid, router]);
-
   async function handlePayNow() {
     setError(null);
     if (!canPay) {
@@ -116,6 +90,9 @@ export function ConsultPaymentClient() {
         body: JSON.stringify({
           doctorSlug: details.doctorSlug,
           scheduledAt,
+          patientName: details.patientName,
+          patientEmail: details.patientEmail,
+          patientPhone: details.patientPhone,
         }),
       });
 
@@ -131,46 +108,38 @@ export function ConsultPaymentClient() {
         bookingId: string;
         amount: number;
         currency: string;
-        keyId?: string;
+        paymentSessionId?: string;
+        cashfreeMode?: string;
       };
 
-      if (!window.Razorpay) {
-        throw new Error("Razorpay SDK is not loaded. Please refresh and try again.");
+      if (!orderData.paymentSessionId) {
+        throw new Error("Cashfree session is missing. Please try again.");
       }
-
-      const payment = new window.Razorpay({
-        key: orderData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "techDr Tele Health",
-        description: "Video consultation booking",
-        order_id: orderData.orderId,
-        prefill: {
-          name: details.patientName,
-          email: details.patientEmail,
-          contact: details.patientPhone,
-        },
-        theme: { color: "#06b6d4" },
-        handler: async (response) => {
-          const verifyResponse = await fetch("/api/bookings/verify-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...response,
-              bookingId: orderData.bookingId,
-            }),
-          });
-
-          if (!verifyResponse.ok) {
-            setError("Payment completed but verification failed. Please contact support.");
-            return;
-          }
-
-          setIsPaid(true);
-        },
+      if (!window.Cashfree) throw new Error("Cashfree SDK is not loaded. Please refresh and try again.");
+      const cashfree = window.Cashfree({
+        mode: orderData.cashfreeMode === "PROD" ? "production" : "sandbox",
       });
-
-      payment.open();
+      const checkoutResult = await cashfree.checkout({
+        paymentSessionId: orderData.paymentSessionId,
+        redirectTarget: "_modal",
+      });
+      if (checkoutResult.error) {
+        throw new Error(checkoutResult.error.message || "Payment was not completed.");
+      }
+      const verifyResponse = await fetch("/api/bookings/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: orderData.orderId,
+          bookingId: orderData.bookingId,
+        }),
+      });
+      if (!verifyResponse.ok) {
+        setError("Payment completed but verification failed. Please contact support.");
+        return;
+      }
+      setIsPaid(true);
+      router.push("/dashboard/patient");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Payment failed. Please try again.");
     } finally {
@@ -201,10 +170,10 @@ export function ConsultPaymentClient() {
 
   return (
     <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" />
       <div className="mx-auto mt-8 max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/70 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">Step 2: Payment</p>
-        <h1 className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">Complete Razorpay payment</h1>
+        <h1 className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">Complete Cashfree payment</h1>
         <p className="mt-2 text-sm text-slate-600">
           Confirm your details and proceed with secure payment to reserve your video consultation slot.
         </p>
@@ -236,7 +205,7 @@ export function ConsultPaymentClient() {
           disabled={isBusy || !canPay}
           className="mt-6 h-12 w-full rounded-xl bg-cyan-500 text-sm font-bold text-slate-950 hover:bg-cyan-400"
         >
-          {isBusy ? "Opening payment..." : "Pay with Razorpay"}
+          {isBusy ? "Opening payment..." : "Pay with Cashfree"}
         </Button>
 
         {error ? <p className="mt-3 text-sm font-medium text-red-600">{error}</p> : null}

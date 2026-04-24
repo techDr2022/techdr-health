@@ -95,7 +95,7 @@ export function Navbar() {
                 variant="outline"
                 size="sm"
                 className="text-[13px] font-semibold"
-                onClick={() => void signOut({ callbackUrl: "/login" })}
+                onClick={() => void signOut({ callbackUrl: "/" })}
               >
                 Logout
               </Button>
@@ -157,7 +157,7 @@ export function Navbar() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => void signOut({ callbackUrl: "/login" })}
+                      onClick={() => void signOut({ callbackUrl: "/" })}
                     >
                       Logout
                     </Button>

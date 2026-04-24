@@ -14,7 +14,7 @@ const STEPS = [
     num: "02",
     icon: CreditCard,
     title: "Book & Pay",
-    desc: "Pick your slot and pay securely via Razorpay. Instant confirmation and reminder sent to you.",
+    desc: "Pick your slot and pay securely via Cashfree. Instant confirmation and reminder sent to you.",
   },
   {
     num: "03",

@@ -6,21 +6,22 @@ export default auth((req) => {
   const session = req.auth;
   const isLoggedIn = !!session;
 
-  const isDoctorRoute = nextUrl.pathname.startsWith("/dashboard/doctor");
+  const isDashboardRoute = nextUrl.pathname.startsWith("/dashboard");
   const isPatientRoute = nextUrl.pathname.startsWith("/dashboard/patient");
+  const isDoctorRoute = isDashboardRoute && !isPatientRoute;
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
   const isAuthRoute = ["/login", "/register"].includes(nextUrl.pathname);
 
   if (isLoggedIn && isAuthRoute) {
     const role = session.user?.role;
     const redirectPath =
-      role === "DOCTOR" ? "/dashboard/doctor" : role === "ADMIN" ? "/admin" : "/dashboard/patient";
+      role === "DOCTOR" ? "/dashboard" : role === "ADMIN" ? "/admin" : "/dashboard/patient";
     return NextResponse.redirect(new URL(redirectPath, nextUrl));
   }
 
-  if (!isLoggedIn && (isDoctorRoute || isPatientRoute || isAdminRoute)) {
+  if (!isLoggedIn && (isDashboardRoute || isAdminRoute)) {
     const loginUrl = new URL("/login", nextUrl);
-    loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
+    loginUrl.searchParams.set("callbackUrl", `${nextUrl.pathname}${nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -29,7 +30,7 @@ export default auth((req) => {
   }
 
   if (isLoggedIn && isPatientRoute && session.user?.role !== "PATIENT") {
-    return NextResponse.redirect(new URL("/dashboard/doctor", nextUrl));
+    return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 
   return NextResponse.next();

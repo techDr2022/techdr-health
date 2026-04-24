@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getMergedPublishedPosts } from "@/lib/blog-posts";
+import { getSafeImageSrc } from "@/lib/image";
 
 export async function HealthBlogPreview() {
   const posts = (await getMergedPublishedPosts()).slice(0, 3);
@@ -32,7 +33,7 @@ export async function HealthBlogPreview() {
           >
             <Link href={`/blog/${p.slug}`} className="relative aspect-[16/10] bg-muted">
               <Image
-                src={p.coverImage}
+                src={getSafeImageSrc(p.coverImage, "/images/placeholders/care-hero.svg")}
                 alt=""
                 fill
                 className="object-cover transition duration-500 group-hover:scale-[1.02]"

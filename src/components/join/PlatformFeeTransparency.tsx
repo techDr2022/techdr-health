@@ -4,7 +4,7 @@ const ITEMS = [
   {
     icon: "🔒",
     title: "Secure Payment Processing",
-    desc: "End-to-end encrypted payments via Razorpay.",
+    desc: "End-to-end encrypted payments via Cashfree.",
   },
   {
     icon: "📹",

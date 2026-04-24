@@ -1,46 +1,32 @@
-import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendSubscriptionConfirmationEmail } from "@/lib/email";
+import { fetchCashfreeOrder } from "@/lib/cashfree";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const orderId = String(body.razorpay_order_id ?? "");
-    const paymentId = String(body.razorpay_payment_id ?? "");
-    const signature = String(body.razorpay_signature ?? "");
+    const orderId = String(body.orderId ?? "");
     const doctorId = String(body.applicationId ?? body.doctorId ?? "");
 
-    if (!orderId || !paymentId || !signature || !doctorId) {
+    if (!orderId || !doctorId) {
       return NextResponse.json(
         { error: "Missing payment verification payload." },
         { status: 400 }
       );
     }
 
-    const secret = process.env.RAZORPAY_KEY_SECRET;
-    if (!secret) {
-      return NextResponse.json(
-        { error: "Razorpay secret is not configured." },
-        { status: 500 }
-      );
-    }
-
-    const generated = crypto
-      .createHmac("sha256", secret)
-      .update(`${orderId}|${paymentId}`)
-      .digest("hex");
-
-    if (generated !== signature) {
-      return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
+    const order = await fetchCashfreeOrder(orderId);
+    if (order.order_status !== "PAID") {
+      return NextResponse.json({ error: "Payment is not completed yet." }, { status: 400 });
     }
 
     const subscription = await prisma.subscription.updateMany({
-      where: { razorpayOrderId: orderId, doctorId },
+      where: { cashfreeOrderId: orderId, doctorId },
       data: {
         status: "ACTIVE",
-        razorpayPaymentId: paymentId,
-        razorpaySignature: signature,
+        cashfreePaymentId: order.order_id,
+        cashfreeSignature: "cashfree-verified",
         purchasedAt: new Date(),
         activatedAt: new Date(),
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),

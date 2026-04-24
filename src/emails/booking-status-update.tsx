@@ -8,6 +8,7 @@ type BookingStatusUpdateEmailProps = {
   patientName: string;
   scheduledAt: string;
   reason?: string;
+  joinUrl?: string;
 };
 
 export function BookingStatusUpdateEmail({
@@ -17,6 +18,7 @@ export function BookingStatusUpdateEmail({
   patientName,
   scheduledAt,
   reason,
+  joinUrl,
 }: BookingStatusUpdateEmailProps) {
   const isDoctor = audience === "doctor";
   const title =
@@ -42,6 +44,11 @@ export function BookingStatusUpdateEmail({
       {reason ? (
         <Text>
           <strong>Note:</strong> {reason}
+        </Text>
+      ) : null}
+      {status === "CONFIRMED" && joinUrl ? (
+        <Text>
+          <strong>Join consultation:</strong> <a href={joinUrl}>{joinUrl}</a>
         </Text>
       ) : null}
       <Text>

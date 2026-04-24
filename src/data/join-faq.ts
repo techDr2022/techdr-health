@@ -13,7 +13,7 @@ export const JOIN_FAQ = [
   },
   {
     q: "When do I get paid?",
-    a: "Payouts are processed within 3-5 business days after each completed consultation, directly to your registered bank account via Razorpay.",
+    a: "Payouts are processed within 3-5 business days after each completed consultation, directly to your registered bank account via Cashfree.",
   },
   {
     q: "What documents do I need to register?",

@@ -10,6 +10,8 @@ type BookingAcknowledgementEmailProps = {
   patientEmail: string;
   patientWhatsApp: string;
   concern: string;
+  calendarUrl?: string;
+  manageBookingUrl?: string;
 };
 
 export function BookingAcknowledgementEmail({
@@ -21,6 +23,8 @@ export function BookingAcknowledgementEmail({
   patientEmail,
   patientWhatsApp,
   concern,
+  calendarUrl,
+  manageBookingUrl,
 }: BookingAcknowledgementEmailProps) {
   const isDoctor = audience === "doctor";
 
@@ -63,6 +67,25 @@ export function BookingAcknowledgementEmail({
           Our care team and doctor will review your request and contact you soon on email/WhatsApp.
         </Text>
       )}
+      {calendarUrl ? (
+        <Text>
+          <a href={calendarUrl} target="_blank" rel="noreferrer">
+            Add this appointment to Google Calendar
+          </a>
+        </Text>
+      ) : null}
+      {isDoctor && manageBookingUrl ? (
+        <>
+          <Text>
+            To confirm, cancel, or reschedule this appointment, open your booking dashboard:
+          </Text>
+          <Text>
+            <a href={manageBookingUrl} target="_blank" rel="noreferrer">
+              Open Doctor Booking Actions
+            </a>
+          </Text>
+        </>
+      ) : null}
     </EmailLayout>
   );
 }

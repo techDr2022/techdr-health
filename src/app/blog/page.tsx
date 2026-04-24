@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SPECIALTIES } from "@/data/specialties";
 import { getMergedPublishedPosts } from "@/lib/blog-posts";
+import { getSafeImageSrc } from "@/lib/image";
 import { generateSEO } from "@/lib/seo";
 
 type BlogSearchParams = { category?: string };
@@ -16,13 +17,16 @@ export function generateMetadata({
   searchParams: BlogSearchParams;
 }): Metadata {
   const category = searchParams.category;
+  const categoryName = category
+    ? SPECIALTIES.find((s) => s.slug === category)?.name ?? category
+    : null;
   const title = category
-    ? `Health Blog - ${category} Guides`
+    ? `${categoryName} Health Blog Guides`
     : "Health Blog - Telemedicine Guides";
   const description = category
-    ? `Read ${category} telehealth guides, patient education content, and specialist-backed advice for online consultations.`
+    ? `Read ${categoryName} telehealth guides, patient education content, and specialist-backed advice for online consultations in India.`
     : "Long-form guides on teleconsultation safety, specialty care, diabetes, kidney health, and consulting doctors online in India.";
-  return generateSEO({
+  const seo = generateSEO({
     title,
     description,
     path: "/blog",
@@ -30,10 +34,17 @@ export function generateMetadata({
       "health blog India",
       "telemedicine guides",
       "online doctor consultation tips",
+      categoryName ? `${categoryName} consultation guide` : "",
     ],
-    noIndex: Boolean(category),
+    noIndex: false,
     type: "article",
   });
+  return {
+    ...seo,
+    alternates: {
+      canonical: category ? `/blog?category=${category}` : "/blog",
+    },
+  };
 }
 
 export default async function BlogIndexPage({
@@ -98,7 +109,12 @@ export default async function BlogIndexPage({
             {posts.map((p) => (
               <article key={p.slug} className="flex flex-col overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm">
                 <Link href={`/blog/${p.slug}`} className="relative aspect-[16/10] bg-muted">
-                  <Image src={p.coverImage} alt={p.title} fill className="object-cover" />
+                  <Image
+                    src={getSafeImageSrc(p.coverImage, "/images/placeholders/care-hero.svg")}
+                    alt={p.title}
+                    fill
+                    className="object-cover"
+                  />
                 </Link>
                 <div className="flex flex-1 flex-col p-6">
                   <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">

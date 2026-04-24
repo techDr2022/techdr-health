@@ -2,20 +2,32 @@ import { Text } from "@react-email/components";
 import { EmailLayout } from "./_layout";
 
 export function BookingConfirmedEmail({
-  patientId,
+  audience,
+  doctorName,
+  patientName,
   scheduledAt,
-  consultationType,
+  joinUrl,
 }: {
-  patientId: string;
+  audience: "doctor" | "patient";
+  doctorName: string;
+  patientName: string;
   scheduledAt: Date;
-  consultationType: string;
+  joinUrl: string;
 }) {
+  const isDoctor = audience === "doctor";
   return (
-    <EmailLayout preview="A new consultation was booked." title="New Booking Confirmed">
-      <Text>Patient ID: {patientId}</Text>
-      <Text>Consultation Type: {consultationType}</Text>
+    <EmailLayout preview="Your consultation is confirmed." title="Consultation Confirmed">
+      <Text>
+        {isDoctor
+          ? `Consultation with ${patientName} is confirmed.`
+          : `Hi ${patientName}, your consultation with Dr. ${doctorName} is confirmed.`}
+      </Text>
+      <Text>Consultation Type: Video consultation</Text>
       <Text>Scheduled At: {scheduledAt.toLocaleString("en-IN")}</Text>
-      <Text>Please review details in your dashboard and prepare for the consultation.</Text>
+      <Text>
+        Join Link: <a href={joinUrl}>{joinUrl}</a>
+      </Text>
+      <Text>Please open the link at the scheduled time to join the consultation room.</Text>
     </EmailLayout>
   );
 }

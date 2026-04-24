@@ -1,40 +1,61 @@
 import type { ReactElement, ReactNode } from "react";
 import { render } from "@react-email/components";
-import { ServerClient } from "postmark";
+import { Resend } from "resend";
 import { SubStatus } from "@prisma/client";
 import { SubscriptionConfirmationEmail } from "@/emails/subscription-confirmation";
 import { ApplicationApprovedEmail } from "@/emails/application-approved";
 import { ApplicationRejectedEmail } from "@/emails/application-rejected";
 import { RenewalReminderEmail } from "@/emails/renewal-reminder";
 import { SubscriptionExpiredEmail } from "@/emails/subscription-expired";
-import { BookingConfirmedEmail } from "@/emails/booking-confirmed";
 import { BookingAcknowledgementEmail } from "@/emails/booking-acknowledgement";
 import { BookingStatusUpdateEmail } from "@/emails/booking-status-update";
 import { PayoutProcessedEmail } from "@/emails/payout-processed";
 
-const postmarkServerToken = process.env.POSTMARK_SERVER_TOKEN;
+const resendApiKey = process.env.RESEND_API_KEY;
 const from =
-  process.env.POSTMARK_FROM_EMAIL ||
   process.env.RESEND_FROM_EMAIL ||
   "techDr Tele Health <no-reply@vitalconsult.health>";
-const postmarkClient = postmarkServerToken
-  ? new ServerClient(postmarkServerToken)
-  : null;
+const fallbackFrom = process.env.RESEND_FALLBACK_FROM || "onboarding@resend.dev";
+const resendClient = resendApiKey ? new Resend(resendApiKey) : null;
 
 async function safeSend(args: {
   to: string;
   subject: string;
   react: ReactNode;
 }) {
-  if (!postmarkClient) return;
-
+  if (!resendClient) {
+    console.warn("email send skipped: RESEND_API_KEY is not configured");
+    return false;
+  }
   const html = await render(args.react as ReactElement);
-  await postmarkClient.sendEmail({
-    From: from,
-    To: args.to,
-    Subject: args.subject,
-    HtmlBody: html,
+  const primaryResult = await resendClient.emails.send({
+    from,
+    to: args.to,
+    subject: args.subject,
+    html,
   });
+  if (!primaryResult.error) {
+    return true;
+  }
+
+  const primaryMessage = String(primaryResult.error.message || "");
+  const domainNotVerified = /domain is not verified/i.test(primaryMessage);
+  if (!domainNotVerified || !fallbackFrom || fallbackFrom === from) {
+    throw new Error(`Resend error: ${primaryMessage}`);
+  }
+
+  console.warn(`email send retry: using fallback sender ${fallbackFrom}`);
+  const fallbackResult = await resendClient.emails.send({
+    from: fallbackFrom,
+    to: args.to,
+    subject: args.subject,
+    html,
+  });
+  if (fallbackResult.error) {
+    throw new Error(`Resend error: ${fallbackResult.error.message}`);
+  }
+
+  return true;
 }
 
 export async function sendSubscriptionConfirmationEmail(to: string, entityName: string) {
@@ -77,17 +98,6 @@ export async function sendSubscriptionExpiredEmail(to: string, plan: string) {
   });
 }
 
-export async function sendBookingConfirmedEmail(
-  to: string,
-  details: { patientId: string; scheduledAt: Date; consultationType: string }
-) {
-  await safeSend({
-    to,
-    subject: "New consultation booked",
-    react: <BookingConfirmedEmail {...details} />,
-  });
-}
-
 export async function sendPayoutProcessedEmail(
   to: string,
   details: { amountINR: number; reference: string }
@@ -109,9 +119,11 @@ export async function sendBookingAcknowledgementToDoctorEmail(
     patientEmail: string;
     patientWhatsApp: string;
     concern: string;
+    calendarUrl?: string;
+    manageBookingUrl?: string;
   }
 ) {
-  await safeSend({
+  return safeSend({
     to,
     subject: "New booking request received",
     react: <BookingAcknowledgementEmail audience="doctor" {...details} />,
@@ -128,9 +140,11 @@ export async function sendBookingAcknowledgementToPatientEmail(
     patientEmail: string;
     patientWhatsApp: string;
     concern: string;
+    calendarUrl?: string;
+    manageBookingUrl?: string;
   }
 ) {
-  await safeSend({
+  return safeSend({
     to,
     subject: "Your booking request is received",
     react: <BookingAcknowledgementEmail audience="patient" {...details} />,
@@ -150,6 +164,7 @@ export async function sendBookingStatusUpdateEmail(
     patientName: string;
     scheduledAt: string;
     reason?: string;
+    joinUrl?: string;
   }
 ) {
   const subject =

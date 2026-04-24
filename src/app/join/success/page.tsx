@@ -16,7 +16,7 @@ export default function JoinSuccessPage({
   searchParams?: { email?: string };
 }) {
   const email = searchParams?.email;
-  const isEmailConfigured = Boolean(process.env.POSTMARK_SERVER_TOKEN);
+  const isEmailConfigured = Boolean(process.env.RESEND_API_KEY);
 
   return (
     <div className="bg-slate-50 py-16">

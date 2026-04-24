@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PlanType } from "@prisma/client";
 import { PLAN_ID_TO_TYPE, SUBSCRIPTION_PLANS, type PlanType as LocalPlanType } from "@/lib/plans";
-import { getRazorpayClient } from "@/lib/razorpay";
+import { createCashfreeOrder, getCashfreeMode } from "@/lib/cashfree";
 import { prisma } from "@/lib/prisma";
 
 function normalizePlanType(input: string): LocalPlanType | null {
@@ -30,26 +30,31 @@ export async function POST(req: NextRequest) {
     }
 
     const plan = SUBSCRIPTION_PLANS[normalizedPlanType];
-    const razorpay = getRazorpayClient();
-
-    const order = await razorpay.orders.create({
-      amount: plan.price * 100,
-      currency: "INR",
-      receipt: `sub_${doctorId}_${Date.now()}`,
+    const doctorForPayment = await prisma.doctorProfile.findUnique({
+      where: { id: doctorId },
+      include: {
+        user: { select: { email: true, phone: true, name: true } },
+        subscription: { select: { status: true, priceINR: true } },
+      },
+    });
+    if (!doctorForPayment) {
+      return NextResponse.json({ error: "Doctor profile not found." }, { status: 404 });
+    }
+    const order = await createCashfreeOrder({
+      orderId: `sub_${doctorId}_${Date.now()}`,
+      amount: plan.price,
+      customerId: doctorId,
+      customerName: doctorForPayment.displayName || doctorForPayment.user.name || "Doctor",
+      customerEmail: doctorForPayment.user.email,
+      customerPhone: doctorForPayment.user.phone || "9999999999",
+      returnUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/join/register`,
       notes: {
         planType: normalizedPlanType,
         doctorId,
         planName: plan.name,
       },
     });
-
-    const doctor = await prisma.doctorProfile.findUnique({
-      where: { id: doctorId },
-      select: { id: true, subscription: { select: { status: true, priceINR: true } } },
-    });
-    if (!doctor) {
-      return NextResponse.json({ error: "Doctor profile not found." }, { status: 404 });
-    }
+    const doctor = doctorForPayment;
     if (doctor.subscription?.status === "ACTIVE" && doctor.subscription.priceINR === 0) {
       return NextResponse.json(
         { error: "Free listing already activated for this account.", freeListing: true },
@@ -62,23 +67,24 @@ export async function POST(req: NextRequest) {
       update: {
         plan: normalizedPlanType as PlanType,
         priceINR: plan.price,
-        razorpayOrderId: order.id,
+        cashfreeOrderId: order.order_id,
         status: "PENDING_PAYMENT",
       },
       create: {
         doctorId,
         plan: normalizedPlanType as PlanType,
         priceINR: plan.price,
-        razorpayOrderId: order.id,
+        cashfreeOrderId: order.order_id,
         status: "PENDING_PAYMENT",
       },
     });
 
     return NextResponse.json({
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      keyId: process.env.RAZORPAY_KEY_ID,
+      orderId: order.order_id,
+      amount: order.order_amount,
+      currency: order.order_currency,
+      paymentSessionId: order.payment_session_id,
+      cashfreeMode: getCashfreeMode(),
       subscriptionId: subscription.id,
     });
   } catch (error) {

@@ -108,9 +108,11 @@ export function DashboardNav() {
             </Link>
           </Button>
 
-          <Button variant="ghost" className="w-full justify-start text-slate-700 hover:bg-slate-100">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
+          <Button variant="ghost" className="w-full justify-start text-slate-700 hover:bg-slate-100" asChild>
+            <Link href="/dashboard/profile?panel=delete">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Link>
           </Button>
         </div>
 
@@ -118,7 +120,7 @@ export function DashboardNav() {
           size="sm"
           variant="outline"
           className="mt-2 w-full border-slate-200 bg-white text-slate-700 hover:bg-slate-100 lg:mt-3"
-          onClick={() => void signOut({ callbackUrl: "/login" })}
+          onClick={() => void signOut({ callbackUrl: "/" })}
         >
           <LogOut className="mr-1 h-4 w-4" />
           Logout

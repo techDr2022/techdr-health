@@ -3,6 +3,8 @@ import { GetObjectCommand, NoSuchKey } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { getR2Client, getR2Config } from "@/lib/r2";
 
+export const dynamic = "force-dynamic";
+
 function toWebStream(body: unknown): ReadableStream<Uint8Array> | null {
   if (!body || typeof body !== "object") return null;
 

@@ -4,14 +4,24 @@ import { auth } from "@/auth";
 import { getSafeImageSrc } from "@/lib/image";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProfileEditPanels } from "./profile-edit-panels";
+import { ProfileEditPanels, type PanelKey } from "./profile-edit-panels";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardProfilePage() {
+const PANEL_KEYS: PanelKey[] = ["profile", "password", "reports", "delete"];
+
+export default async function DashboardProfilePage({
+  searchParams,
+}: {
+  searchParams?: { panel?: string };
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   if (session.user.role !== "DOCTOR") redirect("/dashboard/patient");
+  const requestedPanel = searchParams?.panel;
+  const defaultPanel: PanelKey = PANEL_KEYS.includes(requestedPanel as PanelKey)
+    ? (requestedPanel as PanelKey)
+    : "profile";
 
   const doctor = await prisma.doctorProfile.findUnique({
     where: { userId: session.user.id },
@@ -66,6 +76,7 @@ export default async function DashboardProfilePage() {
       </div>
 
       <ProfileEditPanels
+        defaultPanel={defaultPanel}
         initialProfile={{
           displayName: doctor.displayName,
           specialty: doctor.specialty,

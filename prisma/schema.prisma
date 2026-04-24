@@ -226,9 +226,9 @@ model Subscription {
   expiresAt           DateTime?
   cancelledAt         DateTime?
 
-  razorpayOrderId     String?       @unique
-  razorpayPaymentId   String?
-  razorpaySignature   String?
+  cashfreeOrderId     String?       @unique
+  cashfreePaymentId   String?
+  cashfreeSignature   String?
 
   renewalReminderSent Boolean       @default(false)
   expiredEmailSent    Boolean       @default(false)
@@ -256,8 +256,8 @@ model Booking {
   totalPatientPays   Int
 
   payStatus          PayStatus     @default(PENDING)
-  razorpayOrderId    String?
-  razorpayPaymentId  String?
+  cashfreeOrderId    String?
+  cashfreePaymentId  String?
 
   payoutStatus       PayoutStatus  @default(PENDING)
   payoutDate         DateTime?

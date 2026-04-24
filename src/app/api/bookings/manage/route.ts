@@ -103,6 +103,11 @@ export async function POST(req: NextRequest) {
     const doctorName = booking.doctor.displayName;
     const patientName = booking.patient.name || "Patient";
     const scheduleText = updated.scheduledAt.toLocaleString("en-IN");
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const joinUrl =
+      notificationStatus === "CONFIRMED"
+        ? `${siteUrl}/consultation/${booking.id}/waiting`
+        : undefined;
 
     const patientEmailPromise = booking.patient.email
       ? sendBookingStatusUpdateEmail(booking.patient.email, {
@@ -112,6 +117,7 @@ export async function POST(req: NextRequest) {
           patientName,
           scheduledAt: scheduleText,
           reason,
+          joinUrl,
         })
       : Promise.resolve();
     const doctorEmailPromise = booking.doctor.user.email
@@ -122,6 +128,7 @@ export async function POST(req: NextRequest) {
           patientName,
           scheduledAt: scheduleText,
           reason,
+          joinUrl,
         })
       : Promise.resolve();
 
