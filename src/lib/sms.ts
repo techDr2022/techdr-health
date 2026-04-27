@@ -1,11 +1,46 @@
 import twilio from "twilio";
 
+function envValue(...keys: string[]): string {
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) return value;
+  }
+  return "";
+}
+
+export function getSmsProvider(): "msg91" | "twilio" {
+  const raw = envValue("SMS_PROVIDER").toLowerCase();
+  return raw === "twilio" ? "twilio" : "msg91";
+}
+
+export function hasMsg91Credentials(): boolean {
+  return Boolean(
+    envValue("MSG91_AUTH_KEY", "MSG91_AUTHKEY", "MSG91_API_KEY") &&
+      envValue("MSG91_TEMPLATE_ID", "MSG91_OTP_TEMPLATE_ID")
+  );
+}
+
+export function hasTwilioCredentials(): boolean {
+  return Boolean(
+    envValue("TWILIO_ACCOUNT_SID", "TWILIO_SID") &&
+      envValue("TWILIO_AUTH_TOKEN", "TWILIO_TOKEN") &&
+      envValue("TWILIO_PHONE_NUMBER", "TWILIO_FROM_NUMBER")
+  );
+}
+
+export function hasAnySmsProviderConfigured(): boolean {
+  return hasMsg91Credentials() || hasTwilioCredentials();
+}
+
 export async function sendOTPviaSMS(phone: string, otp: string): Promise<boolean> {
-  const provider = (process.env.SMS_PROVIDER || "msg91").toLowerCase();
+  const provider = getSmsProvider();
   if (provider === "twilio") return sendOTPviaTwilio(phone, otp);
 
   const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
-  if (!process.env.MSG91_AUTH_KEY || !process.env.MSG91_TEMPLATE_ID) {
+  const msg91AuthKey = envValue("MSG91_AUTH_KEY", "MSG91_AUTHKEY", "MSG91_API_KEY");
+  const msg91TemplateId = envValue("MSG91_TEMPLATE_ID", "MSG91_OTP_TEMPLATE_ID");
+
+  if (!msg91AuthKey || !msg91TemplateId) {
     console.error("[SMS] MSG91 credentials are missing");
     return false;
   }
@@ -15,12 +50,12 @@ export async function sendOTPviaSMS(phone: string, otp: string): Promise<boolean
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        authkey: process.env.MSG91_AUTH_KEY,
+        authkey: msg91AuthKey,
       },
       body: JSON.stringify({
-        template_id: process.env.MSG91_TEMPLATE_ID,
+        template_id: msg91TemplateId,
         mobile: formattedPhone.replace("+", ""),
-        authkey: process.env.MSG91_AUTH_KEY,
+        authkey: msg91AuthKey,
         otp,
       }),
     });
@@ -34,16 +69,20 @@ export async function sendOTPviaSMS(phone: string, otp: string): Promise<boolean
 }
 
 export async function sendOTPviaTwilio(phone: string, otp: string): Promise<boolean> {
-  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
+  const accountSid = envValue("TWILIO_ACCOUNT_SID", "TWILIO_SID");
+  const authToken = envValue("TWILIO_AUTH_TOKEN", "TWILIO_TOKEN");
+  const phoneNumber = envValue("TWILIO_PHONE_NUMBER", "TWILIO_FROM_NUMBER");
+
+  if (!accountSid || !authToken || !phoneNumber) {
     console.error("[Twilio] Missing Twilio credentials");
     return false;
   }
 
   try {
-    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    const client = twilio(accountSid, authToken);
     await client.messages.create({
       body: `Your TechDrHealth OTP is: ${otp}. Valid for 10 minutes. Do not share this code. - TechDrHealth`,
-      from: process.env.TWILIO_PHONE_NUMBER,
+      from: phoneNumber,
       to: phone.startsWith("+") ? phone : `+91${phone}`,
     });
     return true;

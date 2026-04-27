@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { saveOTP } from "@/lib/otp";
-import { sendOTPviaSMS } from "@/lib/sms";
+import { hasAnySmsProviderConfigured, sendOTPviaSMS } from "@/lib/sms";
 import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
@@ -63,13 +63,7 @@ export async function POST(req: NextRequest) {
 
     const sent = await sendOTPviaSMS(phone, otp);
     if (!sent) {
-      const hasMsg91Creds = Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID);
-      const hasTwilioCreds = Boolean(
-        process.env.TWILIO_ACCOUNT_SID &&
-          process.env.TWILIO_AUTH_TOKEN &&
-          process.env.TWILIO_PHONE_NUMBER
-      );
-      const credsConfigured = hasMsg91Creds || hasTwilioCreds;
+      const credsConfigured = hasAnySmsProviderConfigured();
 
       return NextResponse.json(
         {
