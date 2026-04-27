@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { sendBookingStatusUpdateEmail } from "@/lib/email";
 import { sendWhatsAppMessage } from "@/lib/sms";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
+import { getSiteUrl } from "@/lib/site-config";
 
 const schema = z
   .object({
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
     const doctorName = booking.doctor.displayName;
     const patientName = booking.patient.name || "Patient";
     const scheduleText = updated.scheduledAt.toLocaleString("en-IN");
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = getSiteUrl();
     const joinUrl =
       notificationStatus === "CONFIRMED"
         ? `${siteUrl}/consultation/${booking.id}/waiting`

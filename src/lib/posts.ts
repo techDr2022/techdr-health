@@ -41,7 +41,10 @@ export function getAllPosts(): SurgeryPostMeta[] {
     .filter((file) => file.endsWith(".mdx"))
     .map((file) => readPost(file))
     .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-    .map(({ content: _content, ...meta }) => meta);
+    .map(({ content, ...meta }) => {
+      void content;
+      return meta;
+    });
 }
 
 export function getPostBySlug(slug: string): SurgeryPost | null {

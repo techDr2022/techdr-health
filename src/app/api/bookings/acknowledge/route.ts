@@ -7,6 +7,7 @@ import {
 } from "@/lib/email";
 import { sendWhatsAppMessage } from "@/lib/sms";
 import { buildGoogleCalendarLink } from "@/lib/calendar";
+import { getSiteUrl } from "@/lib/site-config";
 
 const schema = z.object({
   doctorSlug: z.string().min(1, "Doctor is required."),
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const doctorName = doctor.displayName.replace(/^Dr\.?\s*/i, "") || doctor.displayName;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = getSiteUrl();
     const details = {
       doctorName,
       patientName: payload.patientName,

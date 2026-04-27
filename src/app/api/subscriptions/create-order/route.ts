@@ -3,6 +3,7 @@ import { PlanType } from "@prisma/client";
 import { PLAN_ID_TO_TYPE, SUBSCRIPTION_PLANS, type PlanType as LocalPlanType } from "@/lib/plans";
 import { createCashfreeOrder, getCashfreeMode } from "@/lib/cashfree";
 import { prisma } from "@/lib/prisma";
+import { getSiteUrl } from "@/lib/site-config";
 
 function normalizePlanType(input: string): LocalPlanType | null {
   const upper = input.toUpperCase();
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
       customerName: doctorForPayment.displayName || doctorForPayment.user.name || "Doctor",
       customerEmail: doctorForPayment.user.email,
       customerPhone: doctorForPayment.user.phone || "9999999999",
-      returnUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/join/register`,
+      returnUrl: `${getSiteUrl()}/join/register`,
       notes: {
         planType: normalizedPlanType,
         doctorId,

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateDoctorPayout } from "@/lib/plans";
 import { createCashfreeOrder, getCashfreeMode } from "@/lib/cashfree";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
+import { getSiteUrl } from "@/lib/site-config";
 
 function normalizePhone(raw: string) {
   if (!raw || raw.includes("@")) return "";
@@ -162,7 +163,7 @@ export async function POST(req: NextRequest) {
       customerName: patient.name || "Patient",
       customerEmail: patient.email,
       customerPhone: patient.phone || patientPhone || "9999999999",
-      returnUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/consult/payment`,
+      returnUrl: `${getSiteUrl()}/consult/payment`,
       notes: {
         doctorId: doctor.id,
         consultationType,

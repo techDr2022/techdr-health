@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fetchCashfreeOrder } from "@/lib/cashfree";
 import { sendBookingStatusUpdateEmail } from "@/lib/email";
+import { getSiteUrl } from "@/lib/site-config";
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = getSiteUrl();
     const joinUrl = `${siteUrl}/consultation/${booking.id}/waiting`;
     const scheduleText = booking.scheduledAt.toLocaleString("en-IN");
     const doctorName = booking.doctor.displayName;

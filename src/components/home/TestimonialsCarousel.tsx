@@ -98,7 +98,7 @@ export function TestimonialsCarousel({
             >
               <RatingStars value={item.rating} />
               <p className="mt-4 text-sm leading-relaxed text-foreground">
-                "{item.quote}"
+                &ldquo;{item.quote}&rdquo;
               </p>
               <footer className="mt-4 text-xs font-semibold text-[#0A1628]">
                 {item.name}
