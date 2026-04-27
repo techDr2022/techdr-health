@@ -5,6 +5,49 @@ import { calculateDoctorPayout } from "@/lib/plans";
 import { createCashfreeOrder, getCashfreeMode } from "@/lib/cashfree";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
 
+function normalizePhone(raw: string) {
+  if (!raw || raw.includes("@")) return "";
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length < 10 || digits.length > 20) return "";
+  return digits;
+}
+
+async function resolveSafePhone(input: {
+  phone?: string;
+  currentUserId?: string;
+  currentEmail?: string;
+}) {
+  const original = (input.phone || "").trim();
+  const normalized = normalizePhone(original);
+  if (!normalized) {
+    if (original) {
+      console.warn("booking:create-order dropped invalid phone value", {
+        phone: original,
+        currentUserId: input.currentUserId || null,
+        currentEmail: input.currentEmail || null,
+      });
+    }
+    return null;
+  }
+
+  const phoneOwner = await prisma.user.findUnique({
+    where: { phone: normalized },
+    select: { id: true, email: true },
+  });
+
+  if (!phoneOwner) return normalized;
+  if (input.currentUserId && phoneOwner.id === input.currentUserId) return normalized;
+  if (input.currentEmail && phoneOwner.email === input.currentEmail) return normalized;
+  console.warn("booking:create-order dropped phone due to unique collision", {
+    phone: normalized,
+    ownerUserId: phoneOwner.id,
+    ownerEmail: phoneOwner.email,
+    currentUserId: input.currentUserId || null,
+    currentEmail: input.currentEmail || null,
+  });
+  return null;
+}
+
 async function getOrCreatePatient(input: {
   id?: string;
   name?: string;
@@ -19,12 +62,17 @@ async function getOrCreatePatient(input: {
   if (id && id !== "guest_patient") {
     const existing = await prisma.user.findUnique({ where: { id } });
     if (existing) {
+      const safePhone = await resolveSafePhone({
+        phone,
+        currentUserId: existing.id,
+        currentEmail: existing.email,
+      });
       if (name || phone) {
         return prisma.user.update({
           where: { id: existing.id },
           data: {
             ...(name ? { name } : {}),
-            ...(phone ? { phone } : {}),
+            ...(safePhone ? { phone: safePhone } : {}),
           },
         });
       }
@@ -33,18 +81,22 @@ async function getOrCreatePatient(input: {
   }
 
   if (email) {
+    const safePhone = await resolveSafePhone({
+      phone,
+      currentEmail: email,
+    });
     return prisma.user.upsert({
       where: { email },
       update: {
         ...(name ? { name } : {}),
-        ...(phone ? { phone } : {}),
+        ...(safePhone ? { phone: safePhone } : {}),
       },
       create: {
         email,
         passwordHash: "",
         role: "PATIENT",
         name: name || "Patient",
-        phone: phone || null,
+        phone: safePhone,
         isVerified: false,
         authProvider: "email",
       },

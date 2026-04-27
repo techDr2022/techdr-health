@@ -3,17 +3,18 @@ import { BLOG_POSTS } from "@/data/blog";
 import { prisma } from "@/lib/prisma";
 
 const BLOG_PUBLIC_IMAGES = [
-  "/Online-Medical-Consultation-Desktop.jpg",
-  "/closeup-family-talking-with-doctor-via-video-call-laptop-coronavirus-pandemic.jpg",
-  "/doctor-offering-medical-teleconsultation.jpg",
-  "/elderly-people-making-video-call.jpg",
-  "/female-patient-attending-virtual-consultation.jpg",
-  "/online-medical-consultation-with-doctor-via-video-call-laptop.jpg",
-  "/sick-patient-talking-doctor-telehealth-videocall-conference-using-computer-with-webcam-medical-consultation-online-videoconference-remote-telemedicine-virtual-meeting.jpg",
-  "/smiling-caucasian-female-doctor-medical-uniform-headphones-talk-video-call-computer-with-client-happy-woman-gp-earphones-have-online-webcam-digital-consultation-with-hospital-patient.jpg",
-  "/woman-having-appointment-with-doctor-videocall-using-laptop-telehealth-concept-online-consultation-with-professional-medical-clinic-general-practitioner-telemedicine-service.jpg",
-  "/woman-using-laptop-having-video-call-with-her-doctor-while-sitting-home.jpg",
-  "/young-asia-female-doctor-white-medical-uniform-with-stethoscope-using-computer-laptop-talking-video-conference-call.jpg",
+  "/apple-touch-icon.png",
+  "/closeup-family-talking-with-doctor-via-video-call-laptop-coronavirus-pandemic.webp",
+  "/doctor-offering-medical-teleconsultation.webp",
+  "/elderly-people-making-video-call.webp",
+  "/female-patient-attending-virtual-consultation.webp",
+  "/Online-Medical-Consultation-Desktop.webp",
+  "/online-medical-consultation-with-doctor-via-video-call-laptop.webp",
+  "/sick-patient-talking-doctor-telehealth-videocall-conference-using-computer-with-webcam-medical-consultation-online-videoconference-remote-telemedicine-virtual-meeting.webp",
+  "/smiling-caucasian-female-doctor-medical-uniform-headphones-talk-video-call-computer-with-client-happy-woman-gp-earphones-have-online-webcam-digital-consultation-with-hospital-patient.webp",
+  "/woman-having-appointment-with-doctor-videocall-using-laptop-telehealth-concept-online-consultation-with-professional-medical-clinic-general-practitioner-telemedicine-service.webp",
+  "/woman-using-laptop-having-video-call-with-her-doctor-while-sitting-home.webp",
+  "/young-asia-female-doctor-white-medical-uniform-with-stethoscope-using-computer-laptop-talking-video-conference-call.webp",
 ];
 
 export type AppBlogPost = {

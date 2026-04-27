@@ -23,6 +23,7 @@ const emailSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const callbackUrl = "/dashboard";
+  const year = new Date().getFullYear();
 
   const [mode, setMode] = useState<AuthMode>("choose");
   const [phone, setPhone] = useState("");
@@ -177,7 +178,13 @@ export default function LoginPage() {
             Secure login for doctors and patients with OTP or password.
           </p>
         </div>
-        <p className="text-white/30 text-[12px] font-body">© 2026 TechDrHealth</p>
+        <p className="text-white/30 text-[12px] font-body">
+          © {year} TechDrHealth. Powered by{" "}
+          <Link href="https://techdr.in" target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
+            techDr
+          </Link>
+          .
+        </p>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">

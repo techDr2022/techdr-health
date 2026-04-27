@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { ArrowRight, CalendarClock } from "lucide-react";
@@ -19,6 +19,23 @@ const TIME_SLOTS = [
   "04:30 PM",
   "06:00 PM",
 ];
+
+function formatDateForInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function slotToMinutes(slot: string) {
+  const match = slot.trim().toUpperCase().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (!match) return Number.NaN;
+  const [, hh, mm, meridian] = match;
+  const hour = Number(hh);
+  const minutes = Number(mm);
+  const hour24 = meridian === "PM" ? (hour % 12) + 12 : hour % 12;
+  return hour24 * 60 + minutes;
+}
 
 type BookingState = {
   fullName: string;
@@ -59,7 +76,19 @@ export function BookNowModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const minDate = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const minDate = useMemo(() => formatDateForInput(new Date()), []);
+  const visibleSlots = useMemo(() => {
+    if (form.appointmentDate !== minDate) return TIME_SLOTS;
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    return TIME_SLOTS.filter((slot) => slotToMinutes(slot) >= currentMinutes);
+  }, [form.appointmentDate, minDate]);
+
+  useEffect(() => {
+    if (form.timeSlot && !visibleSlots.includes(form.timeSlot)) {
+      update("timeSlot", "");
+    }
+  }, [form.timeSlot, visibleSlots]);
 
   function update<K extends keyof BookingState>(key: K, value: BookingState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -215,7 +244,7 @@ export function BookNowModal({
               <div className="space-y-1.5">
                 <Label>Preferred time slot</Label>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {TIME_SLOTS.map((slot) => (
+                  {visibleSlots.map((slot) => (
                     <button
                       type="button"
                       key={slot}
@@ -231,6 +260,9 @@ export function BookNowModal({
                     </button>
                   ))}
                 </div>
+                {form.appointmentDate === minDate && visibleSlots.length === 0 ? (
+                  <p className="text-xs text-slate-600">No slots left for today. Please pick another date.</p>
+                ) : null}
               </div>
 
               <div className="space-y-1.5">

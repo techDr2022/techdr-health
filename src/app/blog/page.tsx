@@ -114,6 +114,8 @@ export default async function BlogIndexPage({
                     alt={p.title}
                     fill
                     className="object-cover"
+                    sizes="(max-width:768px) 100vw, 50vw"
+                    quality={60}
                   />
                 </Link>
                 <div className="flex flex-1 flex-col p-6">

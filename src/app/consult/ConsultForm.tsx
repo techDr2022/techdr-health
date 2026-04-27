@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -34,6 +34,23 @@ const TIME_SLOTS = [
   "06:00 PM",
 ];
 
+function formatDateForInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function slotToMinutes(slot: string) {
+  const match = slot.trim().toUpperCase().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (!match) return Number.NaN;
+  const [, hh, mm, meridian] = match;
+  const hour = Number(hh);
+  const minutes = Number(mm);
+  const hour24 = meridian === "PM" ? (hour % 12) + 12 : hour % 12;
+  return hour24 * 60 + minutes;
+}
+
 const fieldClassName =
   "h-11 rounded-xl border-slate-200 bg-slate-50/80 px-3.5 transition-all duration-200 focus-visible:border-cyan-500 focus-visible:ring-4 focus-visible:ring-cyan-100";
 
@@ -56,7 +73,7 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const doctorFromUrl = searchParams.get("doctor") ?? "";
-  const today = new Date().toISOString().split("T")[0];
+  const today = useMemo(() => formatDateForInput(new Date()), []);
 
   const defaults = useMemo(
     () => ({
@@ -119,6 +136,19 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
   }
 
   const selectedSlot = form.watch("timeSlot");
+  const selectedDate = form.watch("appointmentDate");
+  const visibleSlots = useMemo(() => {
+    if (selectedDate !== today) return TIME_SLOTS;
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    return TIME_SLOTS.filter((slot) => slotToMinutes(slot) >= currentMinutes);
+  }, [selectedDate, today]);
+
+  useEffect(() => {
+    if (selectedSlot && !visibleSlots.includes(selectedSlot)) {
+      form.setValue("timeSlot", "", { shouldValidate: true });
+    }
+  }, [selectedSlot, visibleSlots, form]);
 
   return (
     <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/70 sm:p-8">
@@ -205,7 +235,7 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
         <div className="space-y-2">
           <Label className="text-sm font-semibold text-slate-700">Preferred time slot</Label>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {TIME_SLOTS.map((slot) => (
+            {visibleSlots.map((slot) => (
               <button
                 key={slot}
                 type="button"
@@ -221,6 +251,9 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
               </button>
             ))}
           </div>
+          {selectedDate === today && visibleSlots.length === 0 ? (
+            <p className="text-xs text-slate-600">No slots left for today. Please choose another date.</p>
+          ) : null}
           <FieldError message={form.formState.errors.timeSlot?.message} />
         </div>
 

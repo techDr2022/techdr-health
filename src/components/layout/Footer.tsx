@@ -130,7 +130,13 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-4 border-t border-emerald-100 pt-7 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} techDr Tele Health. All rights reserved.</p>
+          <p>
+            © {year} techDr Tele Health. All rights reserved. Powered by{" "}
+            <Link href="https://techdr.in" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-700 hover:underline">
+              techDr
+            </Link>
+            .
+          </p>
           <div className="flex flex-wrap gap-2.5">
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">🔒 Secure</span>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">✅ Verified</span>

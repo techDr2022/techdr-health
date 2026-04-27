@@ -38,6 +38,7 @@ export async function HealthBlogPreview() {
                 fill
                 className="object-cover transition duration-500 group-hover:scale-[1.02]"
                 sizes="(max-width:768px) 100vw, 33vw"
+                quality={60}
               />
             </Link>
             <div className="flex flex-1 flex-col p-5">

@@ -1,10 +1,13 @@
 import { JsonLd } from "@/components/seo/JsonLd";
-import { RatingStars } from "@/components/ui/RatingStars";
+import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
 import { TESTIMONIALS } from "@/data/testimonials";
 import { SITE_NAME, getSiteUrl } from "@/lib/site-config";
 
 export function Testimonials() {
   const base = getSiteUrl();
+  const averageRating =
+    TESTIMONIALS.reduce((sum, review) => sum + review.rating, 0) /
+    TESTIMONIALS.length;
   const reviewsLd = TESTIMONIALS.map((t) => ({
     "@type": "Review",
     author: { "@type": "Person", name: t.name },
@@ -24,8 +27,8 @@ export function Testimonials() {
     review: reviewsLd,
     aggregateRating: {
       "@type": "AggregateRating",
-      ratingValue: "4.9",
-      reviewCount: "12000",
+      ratingValue: averageRating.toFixed(1),
+      reviewCount: String(TESTIMONIALS.length),
       bestRating: "5",
     },
   };
@@ -37,29 +40,14 @@ export function Testimonials() {
         <h2 className="text-center font-heading text-3xl font-semibold text-[#0A1628] sm:text-4xl">
           Patient stories
         </h2>
+        <p className="mt-2 text-center text-sm font-medium text-[#0A1628]">
+          30 verified reviews
+        </p>
         <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">
           Real outcomes from teleconsultations-shared to illustrate typical
           experiences, not as guaranteed results.
         </p>
-        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {TESTIMONIALS.map((t) => (
-            <blockquote
-              key={t.name + t.quote.slice(0, 12)}
-              className="rounded-2xl border border-border bg-white p-6 shadow-sm"
-            >
-              <RatingStars value={t.rating} />
-              <p className="mt-4 text-sm leading-relaxed text-foreground">
-                “{t.quote}”
-              </p>
-              <footer className="mt-4 text-xs font-semibold text-[#0A1628]">
-                {t.name}
-                <span className="block font-normal text-muted-foreground">
-                  {t.role}
-                </span>
-              </footer>
-            </blockquote>
-          ))}
-        </div>
+        <TestimonialsCarousel testimonials={TESTIMONIALS} />
       </div>
     </section>
   );

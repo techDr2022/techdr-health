@@ -84,6 +84,17 @@ export function getCashfreeMode() {
   return getCashfreeConfig().mode;
 }
 
+function normalizeCustomerPhone(input: string | undefined) {
+  const raw = (input || "").trim();
+  if (!raw || raw.includes("@")) return "9999999999";
+
+  // Keep only digits and ensure it fits gateway constraints.
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length < 10 || digits.length > 20) return "9999999999";
+
+  return digits;
+}
+
 export async function createCashfreeOrder(args: {
   orderId: string;
   amount: number;
@@ -95,6 +106,7 @@ export async function createCashfreeOrder(args: {
   notes?: Record<string, string>;
 }) {
   const { baseUrl } = getCashfreeConfig();
+  const customerPhone = normalizeCustomerPhone(args.customerPhone);
   const response = await fetch(`${baseUrl}/orders`, {
     method: "POST",
     headers: getHeaders(),
@@ -106,7 +118,7 @@ export async function createCashfreeOrder(args: {
         customer_id: args.customerId,
         customer_name: args.customerName,
         customer_email: args.customerEmail,
-        customer_phone: args.customerPhone,
+        customer_phone: customerPhone,
       },
       order_meta: {
         return_url: args.returnUrl,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fetchCashfreeOrder } from "@/lib/cashfree";
+import { sendBookingStatusUpdateEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,20 +18,62 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Payment is not completed yet." }, { status: 400 });
     }
 
-    const updateResult = await prisma.booking.updateMany({
+    const booking = await prisma.booking.findFirst({
       where: {
         id: bookingId,
         cashfreeOrderId: orderId,
       },
+      include: {
+        patient: { select: { email: true, name: true } },
+        doctor: {
+          include: {
+            user: { select: { email: true } },
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found for this payment." }, { status: 404 });
+    }
+
+    await prisma.booking.update({
+      where: { id: booking.id },
       data: {
         payStatus: "CAPTURED",
         cashfreePaymentId: order.order_id,
       },
     });
 
-    if (!updateResult.count) {
-      return NextResponse.json({ error: "Booking not found for this payment." }, { status: 404 });
-    }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const joinUrl = `${siteUrl}/consultation/${booking.id}/waiting`;
+    const scheduleText = booking.scheduledAt.toLocaleString("en-IN");
+    const doctorName = booking.doctor.displayName;
+    const patientName = booking.patient.name || "Patient";
+
+    const patientEmailPromise = booking.patient.email
+      ? sendBookingStatusUpdateEmail(booking.patient.email, {
+          audience: "patient",
+          status: "CONFIRMED",
+          doctorName,
+          patientName,
+          scheduledAt: scheduleText,
+          joinUrl,
+        })
+      : Promise.resolve();
+
+    const doctorEmailPromise = booking.doctor.user.email
+      ? sendBookingStatusUpdateEmail(booking.doctor.user.email, {
+          audience: "doctor",
+          status: "CONFIRMED",
+          doctorName,
+          patientName,
+          scheduledAt: scheduleText,
+          joinUrl,
+        })
+      : Promise.resolve();
+
+    await Promise.allSettled([patientEmailPromise, doctorEmailPromise]);
 
     return NextResponse.json({ ok: true });
   } catch (error) {
