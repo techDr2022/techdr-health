@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ export function ConsultPaymentClient() {
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const hasAutoStarted = useRef(false);
 
   const details = useMemo(
     () => ({
@@ -68,6 +69,7 @@ export function ConsultPaymentClient() {
       details.appointmentDate &&
       details.timeSlot
   );
+  const autoPay = searchParams.get("autopay") === "1";
 
   async function handlePayNow() {
     setError(null);
@@ -147,6 +149,12 @@ export function ConsultPaymentClient() {
     }
   }
 
+  useEffect(() => {
+    if (!autoPay || hasAutoStarted.current || !canPay || isBusy || isPaid) return;
+    hasAutoStarted.current = true;
+    void handlePayNow();
+  }, [autoPay, canPay, isBusy, isPaid]);
+
   if (isPaid) {
     return (
       <div className="mx-auto mt-8 max-w-2xl rounded-3xl border border-emerald-200 bg-white p-8 text-center shadow-xl shadow-emerald-100/60">
@@ -205,7 +213,7 @@ export function ConsultPaymentClient() {
           disabled={isBusy || !canPay}
           className="mt-6 h-12 w-full rounded-xl bg-cyan-500 text-sm font-bold text-slate-950 hover:bg-cyan-400"
         >
-          {isBusy ? "Opening payment..." : "Pay with Cashfree"}
+          {isBusy ? "Opening payment..." : autoPay ? "Redirecting to Cashfree..." : "Pay with Cashfree"}
         </Button>
 
         {error ? <p className="mt-3 text-sm font-medium text-red-600">{error}</p> : null}

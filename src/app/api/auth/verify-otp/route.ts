@@ -24,9 +24,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    let user;
-
-    user = await prisma.user.findUnique({ where: { email: identifier } });
+    const user = await prisma.user.findUnique({ where: { email: identifier } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     return NextResponse.json({

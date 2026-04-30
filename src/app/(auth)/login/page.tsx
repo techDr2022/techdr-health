@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { z } from "zod";
 import { OTPInput, REGEXP_ONLY_DIGITS } from "input-otp";
@@ -20,7 +20,7 @@ const emailSchema = z.object({
   password: z.string().trim().min(1, "Password is required"),
 });
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = "/dashboard";
@@ -508,5 +508,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

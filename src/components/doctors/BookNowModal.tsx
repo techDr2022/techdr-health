@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { ArrowRight, CalendarClock } from "lucide-react";
@@ -46,6 +46,8 @@ type BookingState = {
   concern: string;
 };
 
+type BookingStep = 1 | 2;
+
 const initialState: BookingState = {
   fullName: "",
   phone: "",
@@ -54,6 +56,36 @@ const initialState: BookingState = {
   timeSlot: "",
   concern: "",
 };
+
+function sendAcknowledgementInBackground(payload: {
+  doctorSlug: string;
+  patientName: string;
+  patientEmail: string;
+  patientWhatsApp: string;
+  appointmentDate: string;
+  timeSlot: string;
+  concern: string;
+}) {
+  const body = JSON.stringify(payload);
+  try {
+    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+      const blob = new Blob([body], { type: "application/json" });
+      navigator.sendBeacon("/api/bookings/acknowledge", blob);
+      return;
+    }
+  } catch (error) {
+    console.error("booking acknowledgement beacon failed", error);
+  }
+
+  void fetch("/api/bookings/acknowledge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+    keepalive: true,
+  }).catch((error) => {
+    console.error("booking acknowledgement background request failed", error);
+  });
+}
 
 type BookNowModalProps = {
   doctor: DoctorRecord;
@@ -73,6 +105,7 @@ export function BookNowModal({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<BookingState>(initialState);
+  const [step, setStep] = useState<BookingStep>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -94,35 +127,34 @@ export function BookNowModal({
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function canProceedToReview() {
+    return Boolean(
+      form.fullName &&
+        form.phone &&
+        form.email &&
+        form.appointmentDate &&
+        form.timeSlot &&
+        form.concern
+    );
+  }
+
+  async function handleProceedToCashfree() {
     setSubmitError(null);
-    if (!form.fullName || !form.phone || !form.email || !form.appointmentDate || !form.timeSlot || !form.concern) {
+    if (!canProceedToReview()) {
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const response = await fetch("/api/bookings/acknowledge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          doctorSlug: doctor.slug,
-          patientName: form.fullName,
-          patientEmail: form.email,
-          patientWhatsApp: form.phone,
-          appointmentDate: form.appointmentDate,
-          timeSlot: form.timeSlot,
-          concern: form.concern,
-        }),
+      sendAcknowledgementInBackground({
+        doctorSlug: doctor.slug,
+        patientName: form.fullName,
+        patientEmail: form.email,
+        patientWhatsApp: form.phone,
+        appointmentDate: form.appointmentDate,
+        timeSlot: form.timeSlot,
+        concern: form.concern,
       });
-
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
-        throw new Error(payload?.error || "Unable to submit booking.");
-      }
 
       const paymentParams = new URLSearchParams({
         doctorSlug: doctor.slug,
@@ -132,6 +164,7 @@ export function BookNowModal({
         patientPhone: form.phone,
         appointmentDate: form.appointmentDate,
         timeSlot: form.timeSlot,
+        autopay: "1",
       });
       setOpen(false);
       router.push(`/consult/payment?${paymentParams.toString()}`);
@@ -149,6 +182,7 @@ export function BookNowModal({
     if (!next) {
       setTimeout(() => {
         setForm(initialState);
+        setStep(1);
         setSubmitError(null);
       }, 150);
     }
@@ -179,9 +213,42 @@ export function BookNowModal({
               <DialogPrimitive.Description className="mt-1 text-sm text-slate-600">
                 with {doctor.name} ({doctor.credentials})
               </DialogPrimitive.Description>
+              <div className="mt-4 grid grid-cols-3 gap-2 text-xs font-semibold">
+                <div
+                  className={cn(
+                    "rounded-lg border px-3 py-2 text-center",
+                    step >= 1 ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-500"
+                  )}
+                >
+                  1. Fill details
+                </div>
+                <div
+                  className={cn(
+                    "rounded-lg border px-3 py-2 text-center",
+                    step >= 2 ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-500"
+                  )}
+                >
+                  2. Review
+                </div>
+                <div
+                  className={cn(
+                    "rounded-lg border px-3 py-2 text-center",
+                    isSubmitting ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-500"
+                  )}
+                >
+                  3. Cashfree
+                </div>
+              </div>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+              }}
+            >
+              {step === 1 ? (
+                <>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor={`fullName-${doctor.slug}`}>Full name</Label>
@@ -277,6 +344,35 @@ export function BookNowModal({
                   className="rounded-xl bg-slate-50"
                 />
               </div>
+                </>
+              ) : null}
+
+              {step === 2 ? (
+                <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                  <p className="text-base font-semibold text-slate-900">Review your booking details</p>
+                  <p>
+                    <span className="font-semibold text-slate-900">Doctor:</span> {doctor.name}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-slate-900">Patient:</span> {form.fullName}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-slate-900">WhatsApp:</span> {form.phone}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-slate-900">Email:</span> {form.email}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-slate-900">Date:</span> {form.appointmentDate}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-slate-900">Time slot:</span> {form.timeSlot}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-slate-900">Concern:</span> {form.concern}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
                 <DialogPrimitive.Close
@@ -286,13 +382,37 @@ export function BookNowModal({
                     </Button>
                   }
                 />
-                <Button
-                  type="submit"
-                  className="rounded-xl bg-emerald-600 hover:bg-emerald-500"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Continuing..." : "Continue to payment"}
-                </Button>
+                {step === 1 ? (
+                  <Button
+                    type="button"
+                    className="rounded-xl bg-emerald-600 hover:bg-emerald-500"
+                    onClick={() => {
+                      setSubmitError(null);
+                      if (!canProceedToReview()) {
+                        setSubmitError("Please fill all required details before continuing.");
+                        return;
+                      }
+                      setStep(2);
+                    }}
+                  >
+                    Next: Review
+                  </Button>
+                ) : null}
+                {step === 2 ? (
+                  <>
+                    <Button type="button" variant="outline" className="rounded-xl" onClick={() => setStep(1)}>
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      className="rounded-xl bg-emerald-600 hover:bg-emerald-500"
+                      disabled={isSubmitting}
+                      onClick={handleProceedToCashfree}
+                    >
+                      {isSubmitting ? "Redirecting..." : "Confirm & Pay"}
+                    </Button>
+                  </>
+                ) : null}
               </div>
               {submitError ? (
                 <p className="text-sm font-medium text-red-600">{submitError}</p>
