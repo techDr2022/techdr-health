@@ -5,7 +5,9 @@ export const SITE_DESCRIPTION =
 
 export function getSiteUrl() {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (raw && !/localhost|127\.0\.0\.1/i.test(raw)) return raw;
+  if (raw && !/localhost|127\.0\.0\.1/i.test(raw)) {
+    return raw.replace("://www.", "://");
+  }
   return "https://techdrhealth.com";
 }
 

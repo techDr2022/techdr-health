@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { getSiteUrl } from "@/lib/site-config";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://techdrhealth.com";
+const siteUrl = getSiteUrl();
 
 export const surgeryGuidanceMetadata: Metadata = {
   title: "Free Surgery Guidance in Hyderabad | NABH Hospitals & Expert Surgeons",

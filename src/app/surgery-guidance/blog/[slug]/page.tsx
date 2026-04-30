@@ -4,6 +4,7 @@ import Script from "next/script";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/lib/posts";
+import { getSiteUrl } from "@/lib/site-config";
 import { Callout, CostTable, DoctorCard } from "../../components/mdx-components";
 
 export function generateStaticParams() {
@@ -11,7 +12,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://techdrhealth.com";
+  const siteUrl = getSiteUrl();
   const post = getPostBySlug(params.slug);
   if (!post) return {};
 
@@ -46,7 +47,7 @@ export default function SurgeryPostPage({ params }: { params: { slug: string } }
     .split("\n")
     .filter((line) => line.startsWith("##") || line.startsWith("###"))
     .map((line) => line.replace(/^###?\s+/, ""));
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://techdrhealth.com";
+  const siteUrl = getSiteUrl();
 
   return (
     <main>

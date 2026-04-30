@@ -7,6 +7,7 @@ import { HowItWorks } from "./components/HowItWorks";
 import { MedicalTourism } from "./components/MedicalTourism";
 import { TreatmentOptions } from "./components/TreatmentOptions";
 import { surgeryGuidanceMetadata } from "./metadata";
+import { getSiteUrl } from "@/lib/site-config";
 
 export async function generateMetadata(): Promise<Metadata> {
   return surgeryGuidanceMetadata;
@@ -22,7 +23,7 @@ const faq = [
 ];
 
 export default function SurgeryGuidancePage() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://techdrhealth.com";
+  const siteUrl = getSiteUrl();
 
   return (
     <main>

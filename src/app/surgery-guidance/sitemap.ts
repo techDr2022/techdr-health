@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/posts";
+import { getSiteUrl } from "@/lib/site-config";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://techdrhealth.com";
+  const siteUrl = getSiteUrl();
   const posts = getAllPosts();
 
   return [
