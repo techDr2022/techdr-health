@@ -158,10 +158,11 @@ export function Hero() {
             <div className="relative overflow-hidden rounded-2xl border border-white/20">
               <div className="relative aspect-[16/11]">
                 <Image
-                  src="/smiling-caucasian-female-doctor-medical-uniform-headphones-talk-video-call-computer-with-client-happy-woman-gp-earphones-have-online-webcam-digital-consultation-with-hospital-patient.jpg"
+                  src="/smiling-caucasian-female-doctor-medical-uniform-headphones-talk-video-call-computer-with-client-happy-woman-gp-earphones-have-online-webcam-digital-consultation-with-hospital-patient.webp"
                   alt="Doctor in video teleconsultation"
                   fill
                   priority
+                  unoptimized
                   className="object-cover"
                   sizes="(max-width:1024px) 100vw, 42vw"
                 />

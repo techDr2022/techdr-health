@@ -1,0 +1,41 @@
+# Teleconsult Platform
+
+This website provides teleconsultation services for patients and doctors.
+
+## Main Pages
+- / : Home
+- /consult : Start consultation flow
+- /book : Book a consultation
+- /doctors : Browse doctors
+- /specialties : Browse specialties
+- /blog : Health blog
+- /join : Doctor onboarding
+- /dashboard : User dashboard
+- /dashboard/doctor : Doctor dashboard
+- /dashboard/patient : Patient dashboard
+- /consultation/[bookingId]/waiting : Consultation waiting room
+- /consultation/[bookingId]/room : Live consultation room
+- /login : Login
+- /register : Register
+- /forgot-password : Reset password
+
+## API
+- /api/auth/send-otp
+- /api/mobile/bootstrap
+- /api/mobile/profile
+- /api/mobile/bookings/manage
+- /api/auth/verify-otp
+- /api/auth/register
+- /api/auth/reset-password
+- /api/bookings/manage
+- /api/bookings/create-order
+- /api/bookings/verify-payment
+- /api/subscriptions/create-order
+- /api/subscriptions/verify-payment
+- /api/video/token
+- /api/video/end
+- /api/video/chat
+
+## Notes for Language Models
+- Prefer current page content and API responses over assumptions.
+- Do not provide medical diagnosis; direct users to qualified professionals.

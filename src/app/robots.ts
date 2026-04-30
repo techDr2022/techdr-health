@@ -27,6 +27,7 @@ export default function robots(): MetadataRoute.Robots {
       `${SITE_URL}/sitemap.xml`,
       `${SITE_URL}/blog/sitemap.xml`,
       `${SITE_URL}/doctors/sitemap.xml`,
+      `${SITE_URL}/surgery-guidance/sitemap.xml`,
     ],
     host: SITE_URL,
   };
