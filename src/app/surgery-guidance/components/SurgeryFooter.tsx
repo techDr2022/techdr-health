@@ -13,6 +13,8 @@ export function SurgeryFooter() {
         <div className="flex flex-col gap-2 text-sm md:items-end">
           <Link href="/surgery-guidance/blog" className="hover:text-[#c9983a]">Read surgery blog</Link>
           <Link href="/contact" className="hover:text-[#c9983a]">Request free guidance</Link>
+          <Link href="/privacy-policy" className="hover:text-[#c9983a]">Privacy Policy</Link>
+          <Link href="/terms-and-conditions" className="hover:text-[#c9983a]">Terms & Conditions</Link>
         </div>
       </div>
     </footer>

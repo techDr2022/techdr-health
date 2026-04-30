@@ -55,16 +55,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
     Credentials({
-      id: "phone-otp",
-      name: "Phone OTP",
+      id: "email-otp",
+      name: "Email OTP",
       credentials: {
-        phone: { label: "Phone", type: "text" },
+        email: { label: "Email", type: "email" },
         userId: { label: "User ID", type: "text" },
       },
       async authorize(credentials) {
         const parsed = z
           .object({
-            phone: z.string().trim().min(10),
+            email: z.string().trim().toLowerCase().email(),
             userId: z.string().min(1),
           })
           .safeParse(credentials);
@@ -75,7 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { id: parsed.data.userId },
         });
 
-        if (!user || user.phone !== parsed.data.phone) return null;
+        if (!user || user.email !== parsed.data.email) return null;
         if (!user.isActive) return null;
 
         await prisma.user.update({
@@ -83,8 +83,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           data: {
             lastLoginAt: new Date(),
             loginCount: { increment: 1 },
-            phoneVerified: true,
-            authProvider: "phone",
+            emailVerified: true,
+            authProvider: "email",
           },
         });
 

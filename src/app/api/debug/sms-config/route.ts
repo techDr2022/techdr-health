@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getSmsProvider,
   hasAnySmsProviderConfigured,
-  hasMsg91Credentials,
   hasTwilioCredentials,
 } from "@/lib/sms";
 
@@ -24,7 +23,6 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     provider: getSmsProvider(),
-    hasMsg91Credentials: hasMsg91Credentials(),
     hasTwilioCredentials: hasTwilioCredentials(),
     hasAnySmsProviderConfigured: hasAnySmsProviderConfigured(),
   });

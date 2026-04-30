@@ -8,16 +8,8 @@ function envValue(...keys: string[]): string {
   return "";
 }
 
-export function getSmsProvider(): "msg91" | "twilio" {
-  const raw = envValue("SMS_PROVIDER").toLowerCase();
-  return raw === "twilio" ? "twilio" : "msg91";
-}
-
-export function hasMsg91Credentials(): boolean {
-  return Boolean(
-    envValue("MSG91_AUTH_KEY", "MSG91_AUTHKEY", "MSG91_API_KEY") &&
-      envValue("MSG91_TEMPLATE_ID", "MSG91_OTP_TEMPLATE_ID")
-  );
+export function getSmsProvider(): "twilio" {
+  return "twilio";
 }
 
 export function hasTwilioCredentials(): boolean {
@@ -29,43 +21,11 @@ export function hasTwilioCredentials(): boolean {
 }
 
 export function hasAnySmsProviderConfigured(): boolean {
-  return hasMsg91Credentials() || hasTwilioCredentials();
+  return hasTwilioCredentials();
 }
 
 export async function sendOTPviaSMS(phone: string, otp: string): Promise<boolean> {
-  const provider = getSmsProvider();
-  if (provider === "twilio") return sendOTPviaTwilio(phone, otp);
-
-  const formattedPhone = phone.startsWith("+91") ? phone : `+91${phone}`;
-  const msg91AuthKey = envValue("MSG91_AUTH_KEY", "MSG91_AUTHKEY", "MSG91_API_KEY");
-  const msg91TemplateId = envValue("MSG91_TEMPLATE_ID", "MSG91_OTP_TEMPLATE_ID");
-
-  if (!msg91AuthKey || !msg91TemplateId) {
-    console.error("[SMS] MSG91 credentials are missing");
-    return false;
-  }
-
-  try {
-    const response = await fetch("https://api.msg91.com/api/v5/otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        authkey: msg91AuthKey,
-      },
-      body: JSON.stringify({
-        template_id: msg91TemplateId,
-        mobile: formattedPhone.replace("+", ""),
-        authkey: msg91AuthKey,
-        otp,
-      }),
-    });
-
-    const data = (await response.json()) as { type?: string };
-    return data.type === "success";
-  } catch (error) {
-    console.error("[SMS] Failed to send OTP:", error);
-    return false;
-  }
+  return sendOTPviaTwilio(phone, otp);
 }
 
 export async function sendOTPviaTwilio(phone: string, otp: string): Promise<boolean> {

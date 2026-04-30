@@ -6,7 +6,8 @@ import { verifyOTP } from "@/lib/otp";
 
 const schema = z
   .object({
-    phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
+    channel: z.enum(["email"]).optional().default("email"),
+    email: z.string().trim().toLowerCase().email("Enter a valid email address").optional(),
     otp: z.string().length(6),
     newPassword: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(8),
@@ -27,15 +28,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { phone, otp, newPassword } = parsed.data;
-    const otpResult = await verifyOTP(phone, otp, "RESET");
+    const { email, otp, newPassword } = parsed.data;
+    const identifier = email;
+    if (!identifier) {
+      return NextResponse.json({ error: "Email is required." }, { status: 400 });
+    }
+
+    const otpResult = await verifyOTP(identifier, otp, "RESET");
     if (!otpResult.success) {
       return NextResponse.json({ error: otpResult.error ?? "Invalid OTP." }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { phone } });
+    const user = await prisma.user.findUnique({ where: { email: identifier } });
     if (!user) {
-      return NextResponse.json({ error: "No account found with this number." }, { status: 404 });
+      return NextResponse.json({ error: "No account found with this email." }, { status: 404 });
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 12);

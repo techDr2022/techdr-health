@@ -180,3 +180,42 @@ export async function sendBookingStatusUpdateEmail(
     react: <BookingStatusUpdateEmail {...details} />,
   });
 }
+
+export async function sendOtpEmail(to: string, otp: string) {
+  await safeSend({
+    to,
+    subject: "Your TechDrHealth login OTP",
+    react: (
+      <div style={{ fontFamily: "Arial, sans-serif", color: "#0f172a", lineHeight: 1.6 }}>
+        <h2 style={{ marginBottom: "8px" }}>Your one-time password</h2>
+        <p style={{ margin: "0 0 12px" }}>
+          Use the OTP below to sign in to your TechDrHealth account:
+        </p>
+        <p style={{ fontSize: "24px", fontWeight: 700, letterSpacing: "4px", margin: "0 0 12px" }}>{otp}</p>
+        <p style={{ margin: "0 0 8px" }}>This OTP is valid for 10 minutes.</p>
+        <p style={{ margin: 0, color: "#475569" }}>Do not share this code with anyone.</p>
+      </div>
+    ),
+  });
+}
+
+export async function sendMagicLoginEmail(to: string, magicLink: string) {
+  await safeSend({
+    to,
+    subject: "Your TechDrHealth magic sign-in link",
+    react: (
+      <div style={{ fontFamily: "Arial, sans-serif", color: "#0f172a", lineHeight: 1.6 }}>
+        <h2 style={{ marginBottom: "8px" }}>Sign in to TechDrHealth</h2>
+        <p style={{ margin: "0 0 12px" }}>
+          Click the secure link below to sign in. This link is valid for 10 minutes.
+        </p>
+        <p style={{ margin: "0 0 12px" }}>
+          <a href={magicLink} style={{ color: "#2563eb", fontWeight: 700 }}>
+            Sign in securely
+          </a>
+        </p>
+        <p style={{ margin: 0, color: "#475569" }}>If you did not request this, you can safely ignore this email.</p>
+      </div>
+    ),
+  });
+}

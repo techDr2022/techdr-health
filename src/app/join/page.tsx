@@ -57,6 +57,23 @@ export const metadata: Metadata = {
 export default async function JoinPage() {
   const siteUrl = getSiteUrl();
   const doctors = await getLiveDoctorCatalog();
+  const heroPhotos = [
+    {
+      src: "/online-medical-consultation-with-doctor-via-video-call-laptop.webp",
+      alt: "Online medical consultation with doctor via video call on laptop",
+      key: "hero-photo-1",
+    },
+    {
+      src: "/woman-using-laptop-having-video-call-with-her-doctor-while-sitting-home.webp",
+      alt: "Woman having a video call with her doctor while sitting at home",
+      key: "hero-photo-2",
+    },
+    {
+      src: "/elderly-people-making-video-call.webp",
+      alt: "Elderly people making a healthcare video call",
+      key: "hero-photo-3",
+    },
+  ] as const;
   const doctorBySpecialty = new Map(
     doctors.map((doctor) => [doctor.specialtySlug.toLowerCase(), doctor.photoUrl])
   );
@@ -114,8 +131,8 @@ export default async function JoinPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="relative col-span-2 h-64 overflow-hidden rounded-2xl border border-white/20 shadow-lg">
               <Image
-                src="/images/placeholders/care-hero.svg"
-                alt="Doctors collaborating in a clinical setting"
+                src={heroPhotos[0].src}
+                alt={heroPhotos[0].alt}
                 fill
                 className="object-cover"
                 sizes="(max-width:1024px) 100vw, 50vw"
@@ -123,8 +140,8 @@ export default async function JoinPage() {
             </div>
             <div className="relative h-36 overflow-hidden rounded-2xl border border-white/20 shadow-lg">
               <Image
-                src="/images/placeholders/care-hero.svg"
-                alt="Doctor speaking with a patient online"
+                src={heroPhotos[1].src}
+                alt={heroPhotos[1].alt}
                 fill
                 className="object-cover"
                 sizes="(max-width:1024px) 50vw, 25vw"
@@ -132,8 +149,8 @@ export default async function JoinPage() {
             </div>
             <div className="relative h-36 overflow-hidden rounded-2xl border border-white/20 shadow-lg">
               <Image
-                src="/images/placeholders/care-hero.svg"
-                alt="Clinical team with digital health tools"
+                src={heroPhotos[2].src}
+                alt={heroPhotos[2].alt}
                 fill
                 className="object-cover"
                 sizes="(max-width:1024px) 50vw, 25vw"

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,8 +21,9 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   async function sendResetOtp() {
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      setError("Enter a valid 10-digit Indian mobile number.");
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError("Enter a valid email address.");
       return;
     }
 
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
       const response = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, purpose: "RESET" }),
+        body: JSON.stringify({ channel: "email", email: normalizedEmail, purpose: "RESET" }),
       });
       const body = (await response.json()) as { error?: string; devOtp?: string };
       if (!response.ok) {
@@ -44,7 +45,7 @@ export default function ForgotPasswordPage() {
         setOtp(body.devOtp);
         toast.success(`OTP sent. Dev OTP: ${body.devOtp}`);
       } else {
-        toast.success("OTP sent to your mobile number.");
+        toast.success("OTP sent to your email.");
       }
       setStep(2);
     } finally {
@@ -72,7 +73,13 @@ export default function ForgotPasswordPage() {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, otp, newPassword, confirmPassword }),
+        body: JSON.stringify({
+          channel: "email",
+          email: email.trim().toLowerCase(),
+          otp,
+          newPassword,
+          confirmPassword,
+        }),
       });
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {
@@ -100,14 +107,12 @@ export default function ForgotPasswordPage() {
         {step === 1 ? (
           <div className="space-y-4">
             <h1 className="text-2xl font-semibold text-slate-900">Forgot password</h1>
-            <p className="text-sm text-slate-600">Enter your registered mobile number to receive reset OTP.</p>
+            <p className="text-sm text-slate-600">Enter your registered email address to receive reset OTP.</p>
             <Input
-              type="tel"
-              inputMode="numeric"
-              maxLength={10}
-              value={phone}
-              onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
-              placeholder="10-digit mobile number"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
               className="h-11"
             />
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -125,7 +130,7 @@ export default function ForgotPasswordPage() {
         ) : (
           <div className="space-y-4">
             <h1 className="text-2xl font-semibold text-slate-900">Reset password</h1>
-            <p className="text-sm text-slate-600">Enter OTP and set your new password.</p>
+            <p className="text-sm text-slate-600">Enter OTP sent to {email.trim().toLowerCase()} and set your new password.</p>
             <div className="flex justify-center">
               <OTPInput
                 value={otp}
