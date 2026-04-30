@@ -22,7 +22,15 @@ const styles = StyleSheet.create({
 
 type PrescriptionData = {
   diagnosis: string;
-  medicines: Array<{ name: string; dosage: string; duration: string; instructions?: string }>;
+  medicines: Array<{
+    name: string;
+    dosage: string;
+    duration: string;
+    instructions?: string;
+    mealTiming?: "BEFORE_FOOD" | "AFTER_FOOD" | "WITH_FOOD" | "";
+    intakeTimes?: Array<"MORNING" | "AFTERNOON" | "EVENING" | "NIGHT">;
+    exactTimings?: string;
+  }>;
   instructions?: string;
   followUpDate?: string;
 };
@@ -77,6 +85,26 @@ export function PrescriptionDocument({
             <Text style={{ fontSize: 10, color: "#475569" }}>
               Dosage: {medicine.dosage} · Duration: {medicine.duration}
             </Text>
+            {medicine.mealTiming ? (
+              <Text style={{ fontSize: 9, color: "#64748b", marginTop: 3 }}>
+                Meal timing:{" "}
+                {medicine.mealTiming === "BEFORE_FOOD"
+                  ? "Before food"
+                  : medicine.mealTiming === "AFTER_FOOD"
+                    ? "After food"
+                    : "With food"}
+              </Text>
+            ) : null}
+            {medicine.intakeTimes?.length ? (
+              <Text style={{ fontSize: 9, color: "#64748b", marginTop: 3 }}>
+                Suggested time: {medicine.intakeTimes.join(", ").toLowerCase()}
+              </Text>
+            ) : null}
+            {medicine.exactTimings ? (
+              <Text style={{ fontSize: 9, color: "#64748b", marginTop: 3 }}>
+                Exact timing: {medicine.exactTimings}
+              </Text>
+            ) : null}
             {medicine.instructions ? (
               <Text style={{ fontSize: 9, color: "#64748b", marginTop: 3 }}>{medicine.instructions}</Text>
             ) : null}

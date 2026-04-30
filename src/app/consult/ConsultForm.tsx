@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -23,6 +23,11 @@ import { cn } from "@/lib/utils";
 type DoctorOption = {
   slug: string;
   name: string;
+};
+
+type UploadedReport = {
+  name: string;
+  url: string;
 };
 
 const TIME_SLOTS = [
@@ -94,6 +99,44 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
   });
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [isUploadingReports, setIsUploadingReports] = useState(false);
+  const [uploadedReports, setUploadedReports] = useState<UploadedReport[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function handleReportUpload(event: ChangeEvent<HTMLInputElement>) {
+    const fileList = event.target.files;
+    if (!fileList || fileList.length === 0) return;
+
+    setUploadError(null);
+    setIsUploadingReports(true);
+    try {
+      const selectedFiles = Array.from(fileList).slice(0, 5);
+      const uploaded = await Promise.all(
+        selectedFiles.map(async (file) => {
+          const formData = new FormData();
+          formData.append("report", file);
+          const response = await fetch("/api/bookings/lab-report-upload", {
+            method: "POST",
+            body: formData,
+          });
+          if (!response.ok) {
+            const payload = (await response.json().catch(() => null)) as
+              | { error?: string }
+              | null;
+            throw new Error(payload?.error || `Failed to upload ${file.name}`);
+          }
+          const payload = (await response.json()) as { url: string };
+          return { name: file.name, url: payload.url };
+        })
+      );
+      setUploadedReports((prev) => [...prev, ...uploaded].slice(0, 5));
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Unable to upload reports.");
+    } finally {
+      setIsUploadingReports(false);
+      event.target.value = "";
+    }
+  }
 
   async function onSubmit(data: FormValues) {
     setSubmitError(null);
@@ -111,6 +154,7 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
         appointmentDate: data.appointmentDate,
         timeSlot: data.timeSlot,
         concern: data.chiefComplaint,
+        labReportUrls: uploadedReports.map((report) => report.url),
       }),
     });
 
@@ -131,6 +175,8 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
       patientPhone: data.phone,
       appointmentDate: data.appointmentDate,
       timeSlot: data.timeSlot,
+      concern: data.chiefComplaint,
+      labReportUrls: JSON.stringify(uploadedReports.map((report) => report.url)),
     });
     router.push(`/consult/payment?${paymentParams.toString()}`);
   }
@@ -268,6 +314,35 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
             className={cn(fieldClassName, "min-h-28 py-2.5")}
           />
           <FieldError message={form.formState.errors.chiefComplaint?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="labReports" className="text-sm font-semibold text-slate-700">
+            Lab reports (optional)
+          </Label>
+          <Input
+            id="labReports"
+            type="file"
+            accept=".pdf,image/png,image/jpeg,image/webp"
+            multiple
+            onChange={handleReportUpload}
+            disabled={isUploadingReports || uploadedReports.length >= 5}
+            className={cn(fieldClassName, "file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-cyan-900")}
+          />
+          <p className="text-xs text-slate-500">
+            Upload up to 5 files (PDF, JPG, PNG, WEBP). Max 10MB each.
+          </p>
+          {isUploadingReports ? <p className="text-xs text-cyan-700">Uploading reports...</p> : null}
+          {uploadError ? <p className="text-xs font-medium text-red-600">{uploadError}</p> : null}
+          {uploadedReports.length > 0 ? (
+            <ul className="space-y-1 text-xs text-slate-700">
+              {uploadedReports.map((report) => (
+                <li key={report.url} className="truncate">
+                  Uploaded: {report.name}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         <Button

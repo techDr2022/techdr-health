@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import type { ChangeEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { CheckCircle2 } from "lucide-react";
@@ -46,9 +46,7 @@ type FormState = {
 
 type UploadState = {
   medRegCertUrl: UploadValue;
-  degreeDocUrl: UploadValue;
   govIdUrl: UploadValue;
-  clinicRegUrl: UploadValue;
   profilePhotoUrl: UploadValue;
   logoUrl: UploadValue;
 };
@@ -103,9 +101,7 @@ const DEFAULT_FORM_STATE: FormState = {
 
 const DEFAULT_UPLOADS: UploadState = {
   medRegCertUrl: null,
-  degreeDocUrl: null,
   govIdUrl: null,
-  clinicRegUrl: null,
   profilePhotoUrl: null,
   logoUrl: null,
 };
@@ -122,9 +118,14 @@ function getInitialPlan(initialPlanId?: string): PlanType {
   return PLAN_ID_TO_TYPE[initialPlanId] ?? "INDIVIDUAL";
 }
 
+function getInitialStep(initialPlanId?: string): RegisterStep {
+  if (!initialPlanId) return 1;
+  return PLAN_ID_TO_TYPE[initialPlanId] ? 2 : 1;
+}
+
 export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
   const router = useRouter();
-  const [step, setStep] = useState<RegisterStep>(1);
+  const [step, setStep] = useState<RegisterStep>(() => getInitialStep(initialPlanId));
   const [form, setForm] = useState<FormState>({
     ...DEFAULT_FORM_STATE,
     planType: getInitialPlan(initialPlanId),
@@ -133,8 +134,29 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [isPaymentVerified, setIsPaymentVerified] = useState(false);
   const [isFreeListingGranted, setIsFreeListingGranted] = useState(false);
+  const [freeSlotsRemaining, setFreeSlotsRemaining] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  useEffect(() => {
+    let isMounted = true;
+    const loadFreeSlots = async () => {
+      try {
+        const response = await fetch("/api/join/applications", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as { freeSlotsRemaining?: number };
+        if (!isMounted || typeof data.freeSlotsRemaining !== "number") return;
+        setFreeSlotsRemaining(Math.max(data.freeSlotsRemaining, 0));
+      } catch {
+        // Ignore fetch errors and keep fallback copy.
+      }
+    };
+
+    void loadFreeSlots();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
 
   const selectedPlan = SUBSCRIPTION_PLANS[form.planType];
   const specialtyOptions = useMemo(() => SPECIALTIES.map((s) => s.name), []);
@@ -166,7 +188,7 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
   }
 
   function validateStep3Profile() {
-    if (!form.specialty || !form.credentials || !form.medRegNumber) return false;
+    if (!form.specialty || !form.credentials) return false;
     if (!form.experience || !form.consultationFee) return false;
     if (!form.whatsappNumber) return false;
     if (form.planType === "CLINIC") {
@@ -181,10 +203,9 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
   }
 
   function validateUploads() {
-    if (!uploads.medRegCertUrl || !uploads.degreeDocUrl || !uploads.govIdUrl) {
+    if (!uploads.medRegCertUrl || !uploads.govIdUrl || !uploads.profilePhotoUrl) {
       return false;
     }
-    if (form.planType !== "INDIVIDUAL" && !uploads.clinicRegUrl) return false;
     return true;
   }
 
@@ -241,9 +262,9 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
     const payload = {
       ...form,
       medRegCertUrl: uploads.medRegCertUrl?.name ?? null,
-      degreeDocUrl: uploads.degreeDocUrl?.name ?? null,
       govIdUrl: uploads.govIdUrl?.name ?? null,
-      clinicRegUrl: uploads.clinicRegUrl?.name ?? null,
+      degreeDocUrl: null,
+      clinicRegUrl: null,
       profilePhotoUrl: uploads.profilePhotoUrl?.name ?? null,
       logoUrl: uploads.logoUrl?.name ?? null,
     };
@@ -265,9 +286,16 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
       throw new Error(message);
     }
 
-    const data = (await response.json()) as { id: string; isFreeListingGranted?: boolean };
+    const data = (await response.json()) as {
+      id: string;
+      isFreeListingGranted?: boolean;
+      freeSlotsRemaining?: number;
+    };
     setApplicationId(data.id);
     setIsFreeListingGranted(Boolean(data.isFreeListingGranted));
+    if (typeof data.freeSlotsRemaining === "number") {
+      setFreeSlotsRemaining(Math.max(data.freeSlotsRemaining, 0));
+    }
     return { id: data.id, isFreeListingGranted: Boolean(data.isFreeListingGranted) };
   }
 
@@ -368,9 +396,9 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
         body: JSON.stringify({
           ...form,
           medRegCertUrl: uploads.medRegCertUrl?.name ?? null,
-          degreeDocUrl: uploads.degreeDocUrl?.name ?? null,
           govIdUrl: uploads.govIdUrl?.name ?? null,
-          clinicRegUrl: uploads.clinicRegUrl?.name ?? null,
+          degreeDocUrl: null,
+          clinicRegUrl: null,
           profilePhotoUrl: uploads.profilePhotoUrl?.name ?? null,
           logoUrl: uploads.logoUrl?.name ?? null,
         }),
@@ -513,7 +541,11 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                     </p>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    First 500 listings get free annual subscription. After that, secure Cashfree payment applies.
+                    First 500 listings get free annual subscription (
+                    {typeof freeSlotsRemaining === "number"
+                      ? `${freeSlotsRemaining} free slots left`
+                      : "checking free slots"}
+                    ). After that, secure Cashfree payment applies.
                   </p>
                   <Button
                     onClick={handlePayment}
@@ -573,13 +605,6 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                     value={form.credentials}
                     onChange={(e) => updateField("credentials", e.target.value)}
                     placeholder="MBBS, MD"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Medical Registration Number *</Label>
-                  <Input
-                    value={form.medRegNumber}
-                    onChange={(e) => updateField("medRegNumber", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -680,24 +705,12 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                   onChange={(event) => handleFileChange("medRegCertUrl", event)}
                 />
                 <FileInput
-                  label="Degree Certificate *"
-                  file={uploads.degreeDocUrl}
-                  onChange={(event) => handleFileChange("degreeDocUrl", event)}
-                />
-                <FileInput
                   label="Government ID Proof *"
                   file={uploads.govIdUrl}
                   onChange={(event) => handleFileChange("govIdUrl", event)}
                 />
-                {form.planType !== "INDIVIDUAL" ? (
-                  <FileInput
-                    label="Clinic/Hospital Registration *"
-                    file={uploads.clinicRegUrl}
-                    onChange={(event) => handleFileChange("clinicRegUrl", event)}
-                  />
-                ) : null}
                 <FileInput
-                  label="Profile Photo"
+                  label="Profile Photo * (Used across all pages)"
                   file={uploads.profilePhotoUrl}
                   onChange={(event) => handleFileChange("profilePhotoUrl", event)}
                 />
@@ -713,7 +726,8 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
             {step === 4 ? (
               <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
                 <p className="text-sm text-muted-foreground">
-                  Upload required documents and submit to complete onboarding.
+                  Upload required documents and your final profile photo. This photo will
+                  appear across doctor listing, profile, and related pages.
                 </p>
               </div>
             ) : null}

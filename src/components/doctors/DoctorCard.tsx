@@ -17,6 +17,11 @@ export function DoctorCard({
   doctor: DoctorRecord;
   variant?: "default" | "compact";
 }) {
+  const specialtyLabel = doctor.specialtySlug
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
   return (
     <Card className="overflow-hidden border-border/80 shadow-sm transition-all hover:shadow-md hover:border-primary/30">
       <CardContent className={variant === "compact" ? "p-4" : "p-5"}>
@@ -41,7 +46,10 @@ export function DoctorCard({
             >
               {doctor.name}
             </Link>
-            <p className="text-xs text-muted-foreground line-clamp-1">
+            <p className="mt-1 text-sm font-semibold text-primary line-clamp-1">
+              {specialtyLabel}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
               {doctor.credentials}
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-2">

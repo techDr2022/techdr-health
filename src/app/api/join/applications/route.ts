@@ -10,6 +10,25 @@ function parseJsonArray(value: unknown): string[] {
   return [];
 }
 
+export async function GET() {
+  try {
+    const freeSlotsClaimed = await prisma.subscription.count({
+      where: { priceINR: 0, status: "ACTIVE" },
+    });
+    return NextResponse.json({
+      freeSlotsClaimed,
+      freeSlotsRemaining: Math.max(FREE_LISTING_LIMIT - freeSlotsClaimed, 0),
+      freeSlotsLimit: FREE_LISTING_LIMIT,
+    });
+  } catch (error) {
+    console.error("fetch free slots error", error);
+    return NextResponse.json(
+      { error: "Unable to fetch free slot availability." },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();

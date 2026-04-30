@@ -120,6 +120,7 @@ export async function sendBookingAcknowledgementToDoctorEmail(
     patientEmail: string;
     patientWhatsApp: string;
     concern: string;
+    labReportUrls?: string[];
     calendarUrl?: string;
     manageBookingUrl?: string;
   }
@@ -141,6 +142,7 @@ export async function sendBookingAcknowledgementToPatientEmail(
     patientEmail: string;
     patientWhatsApp: string;
     concern: string;
+    labReportUrls?: string[];
     calendarUrl?: string;
     manageBookingUrl?: string;
   }

@@ -64,8 +64,8 @@ export function DoctorCard(props: DoctorCardProps) {
 
       <div className="p-5">
         <h3 className="mb-0.5 font-display text-[16px] font-[700] text-slate-900">Dr. {name}</h3>
-        <p className="mb-1 font-body text-[12px] font-[600] text-blue-600">{specialty}</p>
-        <p className="mb-4 font-body text-[11px] text-slate-400">
+        <p className="mt-1 text-sm font-semibold text-primary line-clamp-1">{specialty}</p>
+        <p className="mb-4 mt-0.5 font-body text-[11px] text-slate-400">
           {credentials} · {experience} yrs exp
         </p>
 

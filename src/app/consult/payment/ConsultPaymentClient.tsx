@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,17 @@ function toScheduledAtISO(date: string, slot: string) {
   return `${date}T${hhmm}:00+05:30`;
 }
 
+function parseLabReports(raw: string | null) {
+  if (!raw) return [] as string[];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((value): value is string => typeof value === "string");
+  } catch {
+    return [];
+  }
+}
+
 export function ConsultPaymentClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,6 +68,8 @@ export function ConsultPaymentClient() {
       patientPhone: searchParams.get("patientPhone") ?? "",
       appointmentDate: searchParams.get("appointmentDate") ?? "",
       timeSlot: searchParams.get("timeSlot") ?? "",
+      concern: searchParams.get("concern") ?? "",
+      labReportUrls: parseLabReports(searchParams.get("labReportUrls")),
     }),
     [searchParams]
   );
@@ -71,7 +84,7 @@ export function ConsultPaymentClient() {
   );
   const autoPay = searchParams.get("autopay") === "1";
 
-  async function handlePayNow() {
+  const handlePayNow = useCallback(async () => {
     setError(null);
     if (!canPay) {
       setError("Booking details are missing. Please fill the form again.");
@@ -95,6 +108,8 @@ export function ConsultPaymentClient() {
           patientName: details.patientName,
           patientEmail: details.patientEmail,
           patientPhone: details.patientPhone,
+          concern: details.concern,
+          labReportUrls: details.labReportUrls,
         }),
       });
 
@@ -147,13 +162,13 @@ export function ConsultPaymentClient() {
     } finally {
       setIsBusy(false);
     }
-  }
+  }, [canPay, details, router]);
 
   useEffect(() => {
     if (!autoPay || hasAutoStarted.current || !canPay || isBusy || isPaid) return;
     hasAutoStarted.current = true;
     void handlePayNow();
-  }, [autoPay, canPay, isBusy, isPaid]);
+  }, [autoPay, canPay, handlePayNow, isBusy, isPaid]);
 
   if (isPaid) {
     return (
@@ -205,6 +220,10 @@ export function ConsultPaymentClient() {
           </p>
           <p>
             <span className="font-semibold text-slate-900">Time:</span> {details.timeSlot || "-"}
+          </p>
+          <p>
+            <span className="font-semibold text-slate-900">Lab reports:</span>{" "}
+            {details.labReportUrls.length > 0 ? `${details.labReportUrls.length} attached` : "None"}
           </p>
         </div>
 

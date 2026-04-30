@@ -36,11 +36,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Missing required account details." }, { status: 400 });
     }
 
-    if (!payload.specialty || !payload.credentials || !payload.medRegNumber) {
+    if (!payload.specialty || !payload.credentials) {
       return NextResponse.json({ error: "Missing required profile details." }, { status: 400 });
     }
 
-    if (!payload.medRegCertUrl || !payload.degreeDocUrl || !payload.govIdUrl) {
+    if (!payload.medRegCertUrl || !payload.govIdUrl || !payload.profilePhotoUrl) {
       return NextResponse.json({ error: "Missing required documents." }, { status: 400 });
     }
 
@@ -74,7 +74,9 @@ export async function PATCH(
           specialty: String(payload.specialty),
           subSpecialties: parseJsonArray(payload.subSpecialties),
           credentials: String(payload.credentials),
-          medRegNumber: String(payload.medRegNumber),
+          medRegNumber: payload.medRegNumber
+            ? String(payload.medRegNumber)
+            : profile.medRegNumber || `PENDING-${profile.userId.slice(-6)}`,
           experience: Number(payload.experience ?? 0),
           hospitalAffils: [payload.clinicName, payload.hospitalName]
             .filter((v): v is string => Boolean(v))

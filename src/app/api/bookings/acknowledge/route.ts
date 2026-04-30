@@ -17,6 +17,7 @@ const schema = z.object({
   appointmentDate: z.string().min(1, "Please select appointment date."),
   timeSlot: z.string().min(1, "Please select a time slot."),
   concern: z.string().min(5, "Please describe your concern."),
+  labReportUrls: z.array(z.string().url()).max(5).optional().default([]),
 });
 
 export async function POST(request: NextRequest) {
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
       patientEmail: payload.patientEmail,
       patientWhatsApp: payload.patientWhatsApp,
       concern: payload.concern,
+      labReportUrls: payload.labReportUrls,
       calendarUrl: buildGoogleCalendarLink({
         title: `Consultation with Dr. ${doctorName}`,
         description: `Video consultation booking request.\nPatient: ${payload.patientName}\nDoctor: Dr. ${doctorName}`,
@@ -84,6 +86,7 @@ export async function POST(request: NextRequest) {
       `WhatsApp: ${payload.patientWhatsApp}`,
       `Email: ${payload.patientEmail}`,
       `Concern: ${payload.concern}`,
+      payload.labReportUrls.length > 0 ? `Lab reports: ${payload.labReportUrls.join(", ")}` : "",
       "- techDr Tele Health",
     ].filter(Boolean).join("\n");
 

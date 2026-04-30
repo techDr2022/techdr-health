@@ -10,6 +10,9 @@ type Medicine = {
   dosage: string;
   duration: string;
   instructions?: string;
+  mealTiming?: "BEFORE_FOOD" | "AFTER_FOOD" | "WITH_FOOD" | "";
+  intakeTimes?: Array<"MORNING" | "AFTERNOON" | "EVENING" | "NIGHT">;
+  exactTimings?: string;
 };
 
 export const dynamic = "force-dynamic";
@@ -143,6 +146,24 @@ export default async function PatientPrescriptionPage({
               <p className="mt-1 text-sm text-slate-700">
                 Dosage: {medicine.dosage} | Duration: {medicine.duration}
               </p>
+              {medicine.mealTiming ? (
+                <p className="mt-1 text-sm text-slate-600">
+                  Meal timing:{" "}
+                  {medicine.mealTiming === "BEFORE_FOOD"
+                    ? "Before food"
+                    : medicine.mealTiming === "AFTER_FOOD"
+                      ? "After food"
+                      : "With food"}
+                </p>
+              ) : null}
+              {medicine.intakeTimes?.length ? (
+                <p className="mt-1 text-sm text-slate-600">
+                  Suggested time: {medicine.intakeTimes.join(", ").toLowerCase()}
+                </p>
+              ) : null}
+              {medicine.exactTimings ? (
+                <p className="mt-1 text-sm text-slate-600">Exact timing: {medicine.exactTimings}</p>
+              ) : null}
               {medicine.instructions ? (
                 <p className="mt-1 text-sm text-slate-600">{medicine.instructions}</p>
               ) : null}

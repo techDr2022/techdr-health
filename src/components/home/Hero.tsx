@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { BadgeCheck, Shield, Star, Users, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FreeSlotsLeft } from "@/components/join/FreeSlotsLeft";
 
 function AnimatedCounter({
   to,
@@ -106,13 +107,16 @@ export function Hero() {
             Trusted teleconsultation platform for patients across India with
             HIPAA-style privacy practices.
           </p>
+          <p className="mt-4 inline-flex items-center rounded-full border border-emerald-200/60 bg-emerald-400/25 px-4 py-1.5 text-sm font-extrabold uppercase tracking-wide text-emerald-50 shadow-lg shadow-emerald-900/20">
+            First 500 Doctors Join Free - <FreeSlotsLeft fallback="500 free slots left" className="ml-1" />
+          </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button
               asChild
               size="lg"
               className="bg-[#0EA5E9] text-white hover:bg-[#0284C7] shadow-lg shadow-[#0EA5E9]/25"
             >
-              <Link href="/consult" data-analytics-event="book_consultation_hero">
+              <Link href="/book" data-analytics-event="book_consultation_hero">
                 Book Consultation Now
               </Link>
             </Button>
@@ -123,6 +127,14 @@ export function Hero() {
               className="border-white/30 bg-white/5 text-white hover:bg-white/10"
             >
               <Link href="/doctors">Browse Doctors</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="border-emerald-300/60 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20"
+            >
+              <Link href="/join">Claim Free Doctor Slot</Link>
             </Button>
           </div>
           <dl className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">

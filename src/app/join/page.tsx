@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PricingCards } from "@/components/join/PricingCards";
 import { PlatformFeeTransparency } from "@/components/join/PlatformFeeTransparency";
 import { EarningsCalculator } from "@/components/join/EarningsCalculator";
+import { FreeSlotsLeft } from "@/components/join/FreeSlotsLeft";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -100,20 +101,21 @@ export default async function JoinPage() {
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
           <div>
             <Badge className="bg-teal-500 text-white">Doctor Growth Program</Badge>
-            <p className="mt-3 inline-flex rounded-full border border-emerald-300/40 bg-emerald-400/20 px-3 py-1 text-xs font-semibold text-emerald-100">
-              First 500 listings get free annual subscription
+            <p className="mt-3 inline-flex rounded-full border border-emerald-200/60 bg-emerald-400/30 px-4 py-1.5 text-sm font-extrabold uppercase tracking-wide text-emerald-50 shadow-lg shadow-emerald-900/20">
+              First 500 Doctors Join Free - <FreeSlotsLeft fallback="500 free slots left" />
             </p>
             <h1 className="mt-5 max-w-4xl font-heading text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
               Grow Your Practice Online - Join India&apos;s Fastest-Growing
               Teleconsultation Platform
             </h1>
             <p className="mt-5 max-w-3xl text-lg text-slate-300">
-              1000+ doctors are already earning more by consulting patients online.
-              Join them on {SITE_NAME}.
+              First 500 doctors get a free annual subscription. 1000+ doctors are
+              already earning more by consulting patients online. Join them on{" "}
+              {SITE_NAME}.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" className="bg-teal-500 hover:bg-teal-600">
-                <Link href="#pricing">See Plans & Pricing</Link>
+                <Link href="#pricing">Claim Free Slot (First 500)</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="text-slate-950">
                 <Link href="/join/register">Register Now</Link>

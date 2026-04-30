@@ -6,6 +6,9 @@ type Medicine = {
   dosage: string;
   duration: string;
   instructions?: string;
+  mealTiming?: "BEFORE_FOOD" | "AFTER_FOOD" | "WITH_FOOD" | "";
+  intakeTimes?: Array<"MORNING" | "AFTERNOON" | "EVENING" | "NIGHT">;
+  exactTimings?: string;
 };
 
 export function PrescriptionIssuedEmail({
@@ -68,6 +71,26 @@ export function PrescriptionIssuedEmail({
           <Text style={{ margin: "0", color: "#334155", fontSize: "13px" }}>
             Dosage: {medicine.dosage} | Duration: {medicine.duration}
           </Text>
+          {medicine.mealTiming ? (
+            <Text style={{ margin: "4px 0 0", color: "#475569", fontSize: "12px" }}>
+              Meal timing:{" "}
+              {medicine.mealTiming === "BEFORE_FOOD"
+                ? "Before food"
+                : medicine.mealTiming === "AFTER_FOOD"
+                  ? "After food"
+                  : "With food"}
+            </Text>
+          ) : null}
+          {medicine.intakeTimes?.length ? (
+            <Text style={{ margin: "4px 0 0", color: "#475569", fontSize: "12px" }}>
+              Suggested time: {medicine.intakeTimes.join(", ").toLowerCase()}
+            </Text>
+          ) : null}
+          {medicine.exactTimings ? (
+            <Text style={{ margin: "4px 0 0", color: "#475569", fontSize: "12px" }}>
+              Exact timing: {medicine.exactTimings}
+            </Text>
+          ) : null}
           {medicine.instructions ? (
             <Text style={{ margin: "4px 0 0", color: "#475569", fontSize: "12px" }}>
               {medicine.instructions}

@@ -10,6 +10,7 @@ type BookingAcknowledgementEmailProps = {
   patientEmail: string;
   patientWhatsApp: string;
   concern: string;
+  labReportUrls?: string[];
   calendarUrl?: string;
   manageBookingUrl?: string;
 };
@@ -23,6 +24,7 @@ export function BookingAcknowledgementEmail({
   patientEmail,
   patientWhatsApp,
   concern,
+  labReportUrls = [],
   calendarUrl,
   manageBookingUrl,
 }: BookingAcknowledgementEmailProps) {
@@ -61,6 +63,19 @@ export function BookingAcknowledgementEmail({
           <Text>
             <strong>Concern:</strong> {concern}
           </Text>
+          {labReportUrls.length > 0 ? (
+            <Text>
+              <strong>Lab reports:</strong>{" "}
+              {labReportUrls.map((url, index) => (
+                <span key={url}>
+                  <a href={url} target="_blank" rel="noreferrer">
+                    Report {index + 1}
+                  </a>
+                  {index === labReportUrls.length - 1 ? "" : " | "}
+                </span>
+              ))}
+            </Text>
+          ) : null}
         </>
       ) : (
         <Text>

@@ -119,6 +119,30 @@ async function getOrCreatePatient(input: {
   });
 }
 
+function parseLabReportUrls(value: unknown) {
+  if (!Array.isArray(value)) return [] as string[];
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter((item) => /^https?:\/\//i.test(item))
+    .slice(0, 5);
+}
+
+function buildBookingNotes(input: { concern?: string; labReportUrls: string[] }) {
+  const lines: string[] = [];
+  const concern = (input.concern || "").trim();
+  if (concern) {
+    lines.push(`Chief complaint: ${concern}`);
+  }
+  if (input.labReportUrls.length > 0) {
+    lines.push("Lab reports:");
+    for (const reportUrl of input.labReportUrls) {
+      lines.push(`- ${reportUrl}`);
+    }
+  }
+  return lines.length > 0 ? lines.join("\n") : null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -130,6 +154,8 @@ export async function POST(req: NextRequest) {
     const patientName = String(body.patientName ?? "");
     const patientEmail = String(body.patientEmail ?? "");
     const patientPhone = String(body.patientPhone ?? "");
+    const concern = String(body.concern ?? "");
+    const labReportUrls = parseLabReportUrls(body.labReportUrls);
 
     if ((!doctorId && !doctorSlug) || !scheduledAt) {
       return NextResponse.json(
@@ -185,6 +211,7 @@ export async function POST(req: NextRequest) {
         gstINR: fee.gstOnPlatformFee,
         totalPatientPays: fee.totalPatientPays,
         cashfreeOrderId: order.order_id,
+        notes: buildBookingNotes({ concern, labReportUrls }),
       },
       select: { id: true, cashfreeOrderId: true, totalPatientPays: true },
     });
