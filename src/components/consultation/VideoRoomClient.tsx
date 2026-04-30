@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import PusherClient from "pusher-js";
 import { Circle, Mic, MicOff, PhoneOff, Video, VideoOff } from "lucide-react";
@@ -68,7 +68,7 @@ function VideoRoomClientInner({
     disconnect,
   } = useVideoRoom({ token, userName: participantName });
 
-  async function getToken() {
+  const getToken = useCallback(async () => {
     try {
       setIsLoadingToken(true);
       setTokenError(null);
@@ -91,11 +91,11 @@ function VideoRoomClientInner({
     } finally {
       setIsLoadingToken(false);
     }
-  }
+  }, [bookingId]);
 
   useEffect(() => {
     void getToken();
-  }, [bookingId]);
+  }, [getToken]);
 
   useEffect(() => {
     if (isConnected) timer.start();

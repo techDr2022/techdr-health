@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ensureAdminAccess } from "@/lib/admin-access";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminApplicationsPage() {
+  await ensureAdminAccess();
   const applications = await prisma.doctorProfile.findMany({
     include: { user: true, subscription: true },
     orderBy: { createdAt: "desc" },

@@ -33,6 +33,11 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 
+  if (isLoggedIn && isAdminRoute && session.user?.role !== "ADMIN") {
+    const fallback = session.user?.role === "DOCTOR" ? "/dashboard" : "/dashboard/patient";
+    return NextResponse.redirect(new URL(fallback, nextUrl));
+  }
+
   return NextResponse.next();
 });
 

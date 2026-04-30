@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { ensureAdminAccess } from "@/lib/admin-access";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminBookingsPage() {
+  await ensureAdminAccess();
   const bookings = await prisma.booking.findMany({
     orderBy: { createdAt: "desc" },
     include: { doctor: { select: { displayName: true } } },

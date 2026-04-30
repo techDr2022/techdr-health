@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ensureAdminAccess } from "@/lib/admin-access";
 import { SUBSCRIPTION_PLANS } from "@/lib/plans";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -48,6 +49,7 @@ async function getEarningsData() {
 }
 
 export default async function AdminEarningsPage() {
+  await ensureAdminAccess();
   const data = await getEarningsData();
 
   return (

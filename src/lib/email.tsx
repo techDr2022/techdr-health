@@ -11,6 +11,7 @@ import { BookingAcknowledgementEmail } from "@/emails/booking-acknowledgement";
 import { BookingStatusUpdateEmail } from "@/emails/booking-status-update";
 import { PayoutProcessedEmail } from "@/emails/payout-processed";
 import { PrescriptionIssuedEmail } from "@/emails/prescription-issued";
+import { WeeklyDoctorPayoutSummaryEmail } from "@/emails/weekly-doctor-payout-summary";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const from =
@@ -107,6 +108,27 @@ export async function sendPayoutProcessedEmail(
     to,
     subject: "Payout processed",
     react: <PayoutProcessedEmail {...details} />,
+  });
+}
+
+export async function sendWeeklyDoctorPayoutSummaryEmail(
+  to: string,
+  details: {
+    weekLabel: string;
+    rows: Array<{
+      doctorName: string;
+      doctorEmail: string;
+      consultations: number;
+      amountINR: number;
+    }>;
+    totalAmountINR: number;
+    totalConsultations: number;
+  }
+) {
+  await safeSend({
+    to,
+    subject: `Weekly doctor payout summary - ${details.weekLabel}`,
+    react: <WeeklyDoctorPayoutSummaryEmail {...details} />,
   });
 }
 

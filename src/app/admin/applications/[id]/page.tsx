@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ensureAdminAccess } from "@/lib/admin-access";
 import { ApplicationReviewActions } from "@/components/admin/ApplicationReviewActions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -11,6 +12,7 @@ export default async function AdminApplicationDetailPage({
 }: {
   params: { id: string };
 }) {
+  await ensureAdminAccess();
   const application = await prisma.doctorProfile.findUnique({
     where: { id: params.id },
     include: { subscription: true, user: true },

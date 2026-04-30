@@ -130,7 +130,7 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
     setMedicines((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function updateMedicine(index: number, field: keyof Medicine, value: string) {
+  function updateMedicine<K extends keyof Medicine>(index: number, field: K, value: Medicine[K]) {
     setMedicines((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -169,13 +169,13 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
       toast.error("Please enter a diagnosis");
       return;
     }
-    const preparedMedicines = medicines
-      .map((m) => ({
+    const preparedMedicines: Medicine[] = medicines
+      .map((m): Medicine => ({
         name: m.name.trim(),
         dosage: m.dosage.trim(),
         duration: m.duration.trim(),
         instructions: m.instructions.trim(),
-        mealTiming: m.mealTiming || "",
+        mealTiming: m.mealTiming ?? "",
         intakeTimes: m.intakeTimes || [],
         exactTimings: (m.exactTimings || "").trim(),
       }))
@@ -359,7 +359,7 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
             <div className="mt-2 grid grid-cols-2 gap-2">
               <select
                 value={medicine.mealTiming || ""}
-                onChange={(event) => updateMedicine(index, "mealTiming", event.target.value)}
+                onChange={(event) => updateMedicine(index, "mealTiming", event.target.value as Medicine["mealTiming"])}
                 className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-white/70 text-[11px] outline-none focus:border-blue-400"
               >
                 <option value="">Meal timing</option>
