@@ -15,7 +15,7 @@ export default async function PatientDashboardPage() {
 
   const bookings = await prisma.booking.findMany({
     where: { patientId: session.user.id },
-    include: { doctor: true, review: true },
+    include: { doctor: true, review: true, prescriptionRecord: { select: { id: true } } },
     orderBy: { scheduledAt: "desc" },
     take: 100,
   });
@@ -55,12 +55,22 @@ export default async function PatientDashboardPage() {
                 <td className="px-4 py-3">{booking.status}</td>
                 <td className="px-4 py-3">
                   {booking.status === "COMPLETED" ? (
-                    <Link
-                      href={`/dashboard/patient/review/${booking.id}`}
-                      className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
-                    >
-                      {booking.review ? "Edit Review" : "Write Review"}
-                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                      {booking.prescriptionRecord ? (
+                        <Link
+                          href={`/dashboard/patient/prescription/${booking.id}`}
+                          className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500"
+                        >
+                          View Prescription
+                        </Link>
+                      ) : null}
+                      <Link
+                        href={`/dashboard/patient/review/${booking.id}`}
+                        className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                      >
+                        {booking.review ? "Edit Review" : "Write Review"}
+                      </Link>
+                    </div>
                   ) : booking.consultType === "VIDEO" ? (
                     <Link
                       href={`/consultation/${booking.id}/waiting`}

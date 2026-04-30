@@ -65,7 +65,24 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
       toast.error("Please enter a diagnosis");
       return;
     }
-    if (medicines.some((m) => !m.name.trim())) {
+    const preparedMedicines = medicines
+      .map((m) => ({
+        name: m.name.trim(),
+        dosage: m.dosage.trim(),
+        duration: m.duration.trim(),
+        instructions: m.instructions.trim(),
+      }))
+      .filter((m) => m.name);
+
+    if (!preparedMedicines.length) {
+      toast.error("Please add at least one medicine");
+      return;
+    }
+    if (preparedMedicines.some((m) => !m.dosage || !m.duration)) {
+      toast.error("Please fill dosage and duration for each medicine");
+      return;
+    }
+    if (preparedMedicines.some((m) => !m.name.trim())) {
       toast.error("Please fill all medicine names");
       return;
     }
@@ -74,9 +91,9 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
     try {
       const payload = {
         bookingId,
-        diagnosis,
-        medicines,
-        instructions,
+        diagnosis: diagnosis.trim(),
+        medicines: preparedMedicines,
+        instructions: instructions.trim(),
         followUpDate: followUpDate || null,
       };
       const response = await fetch("/api/video/prescription", {
@@ -88,8 +105,8 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
 
       const nextData: PrescriptionData = {
         diagnosis,
-        medicines,
-        instructions,
+        medicines: preparedMedicines,
+        instructions: instructions.trim(),
         followUpDate: followUpDate || null,
         sentAt: new Date().toISOString(),
       };
@@ -117,6 +134,10 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
 
     return (
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="rounded-xl border border-blue-400/20 bg-blue-500/[0.07] px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-300">Digital Prescription</p>
+          <p className="text-[11px] text-white/70 mt-0.5">Review medicine plan and follow-up details below.</p>
+        </div>
         <div className="bg-green-500/[0.08] border border-green-400/15 rounded-xl p-3">
           <p className="text-green-400/80 text-[10px] font-semibold uppercase tracking-wide mb-1">
             Prescription from Doctor
@@ -164,6 +185,16 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
 
   return (
     <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">Prescription Builder</p>
+        <p className="text-[11px] text-white/65 mt-0.5">Patient receives this instantly in consultation panel.</p>
+      </div>
+      <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300">Clinical Note</p>
+        <p className="text-[11px] text-white/70 mt-0.5">
+          Confirm diagnosis, dosage, and follow-up before sending to patient.
+        </p>
+      </div>
       <div>
         <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wide mb-1.5">Diagnosis *</label>
         <input
@@ -205,6 +236,12 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
                 className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-white/70 text-[11px] outline-none focus:border-blue-400 transition-colors placeholder:text-white/15"
               />
             </div>
+            <input
+              value={medicine.instructions}
+              onChange={(event) => updateMedicine(index, "instructions", event.target.value)}
+              placeholder="Instructions (after food, before sleep, etc.)"
+              className="mt-2 w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-white/70 text-[11px] outline-none focus:border-blue-400 transition-colors placeholder:text-white/15"
+            />
           </div>
         ))}
         <button
@@ -238,6 +275,7 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
       <button
         onClick={sendPrescription}
         disabled={sending}
+        aria-label="Send prescription to patient"
         className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[13px] rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-60 mt-auto"
       >
         <Send className="w-4 h-4" />

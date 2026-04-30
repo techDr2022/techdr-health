@@ -10,6 +10,7 @@ import { SubscriptionExpiredEmail } from "@/emails/subscription-expired";
 import { BookingAcknowledgementEmail } from "@/emails/booking-acknowledgement";
 import { BookingStatusUpdateEmail } from "@/emails/booking-status-update";
 import { PayoutProcessedEmail } from "@/emails/payout-processed";
+import { PrescriptionIssuedEmail } from "@/emails/prescription-issued";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const from =
@@ -217,5 +218,32 @@ export async function sendMagicLoginEmail(to: string, magicLink: string) {
         <p style={{ margin: 0, color: "#475569" }}>If you did not request this, you can safely ignore this email.</p>
       </div>
     ),
+  });
+}
+
+export async function sendPrescriptionIssuedEmail(
+  to: string,
+  details: {
+    patientName: string;
+    doctorName: string;
+    specialty: string;
+    consultationDate: string;
+    diagnosis: string;
+    medicines: Array<{
+      name: string;
+      dosage: string;
+      duration: string;
+      instructions?: string;
+    }>;
+    instructions?: string | null;
+    followUpDate?: string | null;
+    viewPrescriptionUrl: string;
+    downloadPrescriptionUrl?: string;
+  }
+) {
+  await safeSend({
+    to,
+    subject: "Your prescription from TechDrHealth",
+    react: <PrescriptionIssuedEmail {...details} />,
   });
 }

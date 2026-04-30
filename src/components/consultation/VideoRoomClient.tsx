@@ -45,6 +45,8 @@ function VideoRoomClientInner({
 }: VideoRoomClientProps) {
   const router = useRouter();
   const [token, setToken] = useState("");
+  const [isLoadingToken, setIsLoadingToken] = useState(true);
+  const [tokenError, setTokenError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<"prescription" | "chat">("prescription");
   const [prescription, setPrescription] = useState<PrescriptionSnapshot | null>(existingPrescription || null);
   const [isEnding, setIsEnding] = useState(false);
@@ -66,18 +68,32 @@ function VideoRoomClientInner({
     disconnect,
   } = useVideoRoom({ token, userName: participantName });
 
-  useEffect(() => {
-    async function getToken() {
+  async function getToken() {
+    try {
+      setIsLoadingToken(true);
+      setTokenError(null);
       const response = await fetch("/api/video/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId }),
       });
-      if (!response.ok) return;
-      const data = (await response.json()) as { token: string };
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || "Unable to join consultation room.");
+      }
+      const data = (await response.json()) as { token?: string };
+      if (!data.token) throw new Error("Room token is missing. Please retry.");
       setToken(data.token);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to join consultation room.";
+      setTokenError(message);
+      setToken("");
+    } finally {
+      setIsLoadingToken(false);
     }
+  }
 
+  useEffect(() => {
     void getToken();
   }, [bookingId]);
 
@@ -87,8 +103,15 @@ function VideoRoomClientInner({
 
   useEffect(() => {
     if (role !== "patient") return;
-    const pusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+    if (!pusherKey || !pusherCluster) {
+      // Keep consultation usable even if realtime prescription env vars are missing.
+      return;
+    }
+
+    const pusher = new PusherClient(pusherKey, {
+      cluster: pusherCluster,
     });
     const channel = pusher.subscribe(`booking-${bookingId}`);
     channel.bind("prescription-update", (data: PrescriptionSnapshot) => {
@@ -116,26 +139,52 @@ function VideoRoomClientInner({
 
   const otherParticipant = useMemo(() => (role === "doctor" ? patientName : doctorName), [doctorName, patientName, role]);
 
-  if (!token) {
+  if (isLoadingToken) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center px-5">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/40 text-sm">Connecting to video room...</p>
+          <p className="text-white/60 text-sm font-medium">Joining your consultation...</p>
+          <p className="text-white/35 text-xs mt-1">Please keep this page open.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (tokenError) {
+    return (
+      <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center px-5">
+        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-center">
+          <p className="text-white text-base font-semibold">Unable to join consultation</p>
+          <p className="text-white/55 text-sm mt-2">{tokenError}</p>
+          <div className="mt-5 flex gap-2">
+            <button
+              onClick={() => void getToken()}
+              className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition-colors"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => router.push(role === "doctor" ? "/dashboard/bookings" : "/dashboard/patient")}
+              className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/85 hover:bg-white/[0.06] transition-colors"
+            >
+              Back
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-[#0a0a0f] flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 bg-black/60 backdrop-blur-xl border-b border-white/[0.06] flex-none">
-        <div className="flex items-center gap-3">
+    <div className="h-[100dvh] bg-[#0a0a0f] flex flex-col overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-black/60 backdrop-blur-xl border-b border-white/[0.06] flex-none">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="font-semibold text-[15px] text-white">
             TechDr<span className="text-blue-400">Health</span>
           </span>
           <div className="w-px h-4 bg-white/10" />
-          <span className="text-white/50 text-[12px]">
+          <span className="truncate text-white/50 text-[12px]">
             {role === "doctor" ? (
               <>
                 Consulting <strong className="text-white">{patientName}</strong>
@@ -148,7 +197,17 @@ function VideoRoomClientInner({
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              "rounded-full border px-2.5 py-1 text-[10px] font-semibold",
+              isConnected
+                ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-300"
+                : "border-amber-400/35 bg-amber-500/15 text-amber-300"
+            )}
+          >
+            {isConnected ? "Live" : "Connecting"}
+          </div>
           {role === "doctor" ? (
             <div className="flex items-center gap-1.5 bg-red-500/15 border border-red-400/25 rounded-lg px-2.5 py-1.5">
               <Circle className="w-2 h-2 fill-red-400 stroke-none animate-pulse" />
@@ -187,7 +246,7 @@ function VideoRoomClientInner({
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         <div className="flex-1 relative bg-[#0d0d18] overflow-hidden">
           <video ref={remoteVideoRef} autoPlay playsInline muted={false} className="absolute inset-0 h-full w-full object-cover bg-[#0d0d18]" />
           {!remoteParticipant ? (
@@ -210,16 +269,22 @@ function VideoRoomClientInner({
             autoPlay
             playsInline
             muted
-            className="absolute top-4 right-4 h-24 w-36 rounded-xl overflow-hidden border-2 border-white/10 bg-[#1c1c2e] object-cover"
+            className="absolute top-3 right-3 h-20 w-28 sm:h-24 sm:w-36 rounded-xl overflow-hidden border-2 border-white/10 bg-[#1c1c2e] object-cover"
           />
 
-          <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2">
+          <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/10">
             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-white text-[12px] font-semibold">{role === "doctor" ? doctorName : patientName}</span>
+            <span className="text-white text-[12px] font-semibold">
+              {isConnected ? "Connected" : "Waiting to connect"}
+            </span>
           </div>
         </div>
 
-        <div className="w-[320px] bg-[#0f0f1a] border-l border-white/[0.06] flex flex-col flex-none">
+        <div className="w-full lg:w-[340px] bg-[#0f0f1a] border-t lg:border-t-0 lg:border-l border-white/[0.06] flex flex-col flex-none max-h-[42vh] lg:max-h-none">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-3 py-2.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-white/45">Consultation tools</p>
+            <p className="text-[10px] text-white/35">{role === "doctor" ? "Doctor view" : "Patient view"}</p>
+          </div>
           <div className="flex border-b border-white/[0.06] flex-none">
             {[
               { id: "prescription", label: "Prescription" },
@@ -248,10 +313,11 @@ function VideoRoomClientInner({
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-3 px-6 py-3 bg-black/80 backdrop-blur-xl border-t border-white/[0.06] flex-none">
+      <div className="flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 bg-black/80 backdrop-blur-xl border-t border-white/[0.06] flex-none">
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={toggleCamera}
+            aria-label={isCameraOn ? "Turn camera off" : "Turn camera on"}
             className={cn(
               "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
               isCameraOn ? "bg-white/10 hover:bg-white/15 text-white" : "bg-red-500/20 border border-red-400/30 text-red-400"
@@ -265,6 +331,7 @@ function VideoRoomClientInner({
         <div className="flex flex-col items-center gap-1">
           <button
             onClick={toggleMic}
+            aria-label={isMicOn ? "Mute microphone" : "Unmute microphone"}
             className={cn(
               "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
               isMicOn ? "bg-white/10 hover:bg-white/15 text-white" : "bg-red-500/20 border border-red-400/30 text-red-400"
@@ -278,7 +345,8 @@ function VideoRoomClientInner({
         <button
           onClick={() => void handleEndCall()}
           disabled={isEnding}
-          className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold text-[13px] rounded-2xl transition-all shadow-lg shadow-red-600/30 disabled:opacity-60 ml-4"
+          aria-label={role === "doctor" ? "End consultation" : "Leave call"}
+          className="flex items-center gap-2 px-4 sm:px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold text-[13px] rounded-2xl transition-all shadow-lg shadow-red-600/30 disabled:opacity-60 ml-2 sm:ml-4"
         >
           <PhoneOff className="w-4 h-4" />
           {isEnding ? "Ending..." : role === "doctor" ? "End Consultation" : "Leave Call"}

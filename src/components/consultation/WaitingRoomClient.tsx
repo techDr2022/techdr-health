@@ -24,8 +24,11 @@ export function WaitingRoomClient({
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
-      <div className="bg-white/[0.04] border border-white/[0.08] rounded-3xl p-10 text-center max-w-md w-full">
+    <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center p-4">
+      <div className="bg-white/[0.04] border border-white/[0.08] rounded-3xl p-6 sm:p-10 text-center max-w-md w-full shadow-2xl shadow-black/30">
+        <p className="mb-3 inline-flex rounded-full border border-blue-400/30 bg-blue-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-300">
+          Secure Consultation Lobby
+        </p>
         <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-400 rounded-full animate-spin mx-auto mb-6" />
 
         <div className="w-16 h-16 bg-blue-500/15 border-2 border-blue-400/20 rounded-2xl flex items-center justify-center font-bold text-2xl text-blue-300 mx-auto mb-4">
@@ -38,6 +41,11 @@ export function WaitingRoomClient({
 
         <h1 className="font-semibold text-[22px] text-white mb-1">{booking.doctorName}</h1>
         <p className="text-white/40 text-[13px] mb-6">{booking.specialty}</p>
+        <p className="text-white/30 text-[12px] mb-6">
+          {role === "doctor"
+            ? `Patient: ${booking.patientName}`
+            : "You can join as soon as your doctor is ready."}
+        </p>
 
         <div className="space-y-3 mb-8">
           {[
@@ -45,7 +53,7 @@ export function WaitingRoomClient({
             { icon: Video, label: "Type", value: "Video Consultation Only" },
             { icon: Clock, label: "Duration", value: `${booking.duration} minutes` },
           ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="flex items-center justify-between bg-white/[0.04] rounded-xl px-4 py-3">
+            <div key={label} className="flex items-center justify-between bg-white/[0.04] border border-white/[0.06] rounded-xl px-4 py-3">
               <div className="flex items-center gap-2">
                 <Icon className="w-3.5 h-3.5 text-white/40" />
                 <span className="text-white/40 text-[11px]">{label}</span>
@@ -60,6 +68,12 @@ export function WaitingRoomClient({
           className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[16px] rounded-2xl transition-all shadow-xl shadow-blue-600/30 hover:shadow-blue-500/40 hover:-translate-y-0.5"
         >
           {role === "doctor" ? "Start Consultation" : "Join Video Call"} →
+        </button>
+        <button
+          onClick={() => router.push(role === "doctor" ? "/dashboard/bookings" : "/dashboard/patient")}
+          className="mt-3 w-full py-3 border border-white/15 hover:bg-white/[0.05] text-white/80 font-semibold text-[14px] rounded-2xl transition-colors"
+        >
+          Back to Dashboard
         </button>
 
         <p className="text-white/20 text-[11px] mt-4">
