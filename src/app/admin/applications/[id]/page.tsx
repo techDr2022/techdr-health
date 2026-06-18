@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminAccess } from "@/lib/admin-access";
-import { ApplicationReviewActions } from "@/components/admin/ApplicationReviewActions";
+import { ApplicationReviewForm } from "@/components/admin/ApplicationReviewForm";
+import { ApplicationDocumentPreviews } from "@/components/admin/ApplicationDocumentPreviews";
+import { loadApplicationDocumentPreviews } from "@/lib/storage-documents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -20,8 +22,16 @@ export default async function AdminApplicationDetailPage({
 
   if (!application) notFound();
 
+  const documentPreviews = await loadApplicationDocumentPreviews([
+    { label: "Medical Registration Certificate", value: application.medRegCertUrl },
+    { label: "Degree Certificate", value: application.degreeDocUrl },
+    { label: "Government ID", value: application.govIdUrl },
+    { label: "Profile Photo", value: application.photoUrl },
+    { label: "Cover Photo", value: application.coverPhotoUrl },
+  ]);
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-3xl font-semibold">Application Review</h1>
         <Link href="/admin/applications" className="text-sm text-primary hover:underline">
@@ -57,16 +67,12 @@ export default async function AdminApplicationDetailPage({
         <CardHeader>
           <CardTitle>Uploaded Documents</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-2 text-sm">
-          <DocRow label="Medical Registration Certificate" value={application.medRegCertUrl} />
-          <DocRow label="Degree Certificate" value={application.degreeDocUrl} />
-          <DocRow label="Government ID" value={application.govIdUrl} />
-          <DocRow label="Profile Photo" value={application.photoUrl} />
-          <DocRow label="Cover Photo" value={application.coverPhotoUrl} />
+        <CardContent>
+          <ApplicationDocumentPreviews documents={documentPreviews} />
         </CardContent>
       </Card>
 
-      <ApplicationReviewActions applicationId={application.id} />
+      <ApplicationReviewForm applicationId={application.id} />
     </div>
   );
 }
@@ -92,14 +98,5 @@ function InfoCard({
         ))}
       </CardContent>
     </Card>
-  );
-}
-
-function DocRow({ label, value }: { label: string; value: string | null }) {
-  return (
-    <div className="flex items-center justify-between border-b pb-2 last:border-0">
-      <p className="text-muted-foreground">{label}</p>
-      <p className="font-medium">{value || "Not uploaded"}</p>
-    </div>
   );
 }

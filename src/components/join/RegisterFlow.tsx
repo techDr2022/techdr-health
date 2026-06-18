@@ -73,7 +73,14 @@ const LANGUAGES = [
   "Bengali",
 ];
 
-const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/jpg"];
+const DOCUMENT_FILE_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+const IMAGE_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const DEFAULT_FORM_STATE: FormState = {
@@ -241,8 +248,14 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
       return;
     }
 
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      setError("Only PDF or JPG files are allowed.");
+    const allowedTypes =
+      key === "profilePhotoUrl" || key === "logoUrl" ? IMAGE_FILE_TYPES : DOCUMENT_FILE_TYPES;
+    if (!allowedTypes.includes(file.type)) {
+      setError(
+        key === "profilePhotoUrl" || key === "logoUrl"
+          ? "Only JPG, PNG, and WEBP images are allowed."
+          : "Only PDF, JPG, PNG, and WEBP files are allowed."
+      );
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -373,6 +386,35 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
     }
   }
 
+  async function uploadJoinDocument(
+    applicationId: string,
+    file: File,
+    documentType: "med-reg-cert" | "gov-id" | "profile-photo" | "logo"
+  ) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("documentType", documentType);
+
+    const response = await fetch(`/api/join/applications/${applicationId}/documents`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let message = "Unable to upload document.";
+      try {
+        const body = (await response.json()) as { error?: string };
+        if (body.error) message = body.error;
+      } catch {
+        // Keep fallback message.
+      }
+      throw new Error(message);
+    }
+
+    const data = (await response.json()) as { url: string; key: string };
+    return data.key;
+  }
+
   async function completeOnboarding() {
     try {
       setError(null);
@@ -390,17 +432,26 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
       }
 
       setIsBusy(true);
+
+      const [medRegCertUrl, govIdUrl, profilePhotoUrl] = await Promise.all([
+        uploadJoinDocument(applicationId, uploads.medRegCertUrl!, "med-reg-cert"),
+        uploadJoinDocument(applicationId, uploads.govIdUrl!, "gov-id"),
+        uploadJoinDocument(applicationId, uploads.profilePhotoUrl!, "profile-photo"),
+      ]);
+
       const response = await fetch(`/api/join/applications/${applicationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          medRegCertUrl: uploads.medRegCertUrl?.name ?? null,
-          govIdUrl: uploads.govIdUrl?.name ?? null,
+          medRegCertUrl,
+          govIdUrl,
           degreeDocUrl: null,
           clinicRegUrl: null,
-          profilePhotoUrl: uploads.profilePhotoUrl?.name ?? null,
-          logoUrl: uploads.logoUrl?.name ?? null,
+          profilePhotoUrl,
+          logoUrl: uploads.logoUrl
+            ? await uploadJoinDocument(applicationId, uploads.logoUrl, "logo")
+            : null,
         }),
       });
 
@@ -415,11 +466,11 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
       });
 
       if (signInResult?.error) {
-        router.push(`/login?callbackUrl=${encodeURIComponent("/dashboard/doctor")}`);
+        router.push(`/login?callbackUrl=${encodeURIComponent("/dashboard")}`);
         return;
       }
 
-      router.push("/dashboard/doctor");
+      router.push("/dashboard");
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to complete onboarding.";
@@ -702,22 +753,26 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                 <FileInput
                   label="Medical Registration Certificate *"
                   file={uploads.medRegCertUrl}
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
                   onChange={(event) => handleFileChange("medRegCertUrl", event)}
                 />
                 <FileInput
                   label="Government ID Proof *"
                   file={uploads.govIdUrl}
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
                   onChange={(event) => handleFileChange("govIdUrl", event)}
                 />
                 <FileInput
                   label="Profile Photo * (Used across all pages)"
                   file={uploads.profilePhotoUrl}
+                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                   onChange={(event) => handleFileChange("profilePhotoUrl", event)}
                 />
                 {form.planType !== "INDIVIDUAL" ? (
                   <FileInput
                     label="Clinic/Hospital Logo"
                     file={uploads.logoUrl}
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                     onChange={(event) => handleFileChange("logoUrl", event)}
                   />
                 ) : null}
@@ -762,16 +817,18 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
 function FileInput({
   label,
   file,
+  accept,
   onChange,
 }: {
   label: string;
   file: File | null;
+  accept: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input type="file" accept=".pdf,.jpg,.jpeg" onChange={onChange} />
+      <Input type="file" accept={accept} onChange={onChange} />
       {file ? <p className="text-xs text-muted-foreground">Selected: {file.name}</p> : null}
     </div>
   );

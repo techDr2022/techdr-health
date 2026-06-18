@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { sendBookingStatusUpdateEmail } from "@/lib/email";
 import { sendWhatsAppMessage } from "@/lib/sms";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
+import { buildConsultationJoinUrl } from "@/lib/consultation-join";
 import { getSiteUrl } from "@/lib/site-config";
 
 const schema = z
@@ -98,16 +99,20 @@ export async function POST(req: NextRequest) {
     const updated = await prisma.booking.update({
       where: { id: booking.id },
       data: updateData,
-      select: { id: true, status: true, scheduledAt: true, consultType: true },
+      select: { id: true, status: true, scheduledAt: true, endsAt: true, consultType: true },
     });
 
     const doctorName = booking.doctor.displayName;
     const patientName = booking.patient.name || "Patient";
     const scheduleText = updated.scheduledAt.toLocaleString("en-IN");
     const siteUrl = getSiteUrl();
-    const joinUrl =
-      notificationStatus === "CONFIRMED"
-        ? `${siteUrl}/consultation/${booking.id}/waiting`
+    const patientJoinUrl =
+      notificationStatus === "CONFIRMED" || notificationStatus === "RESCHEDULED"
+        ? buildConsultationJoinUrl(siteUrl, booking.id, "patient", updated.endsAt)
+        : undefined;
+    const doctorJoinUrl =
+      notificationStatus === "CONFIRMED" || notificationStatus === "RESCHEDULED"
+        ? buildConsultationJoinUrl(siteUrl, booking.id, "doctor", updated.endsAt)
         : undefined;
 
     const patientEmailPromise = booking.patient.email
@@ -118,7 +123,7 @@ export async function POST(req: NextRequest) {
           patientName,
           scheduledAt: scheduleText,
           reason,
-          joinUrl,
+          joinUrl: patientJoinUrl,
         })
       : Promise.resolve();
     const doctorEmailPromise = booking.doctor.user.email
@@ -129,7 +134,7 @@ export async function POST(req: NextRequest) {
           patientName,
           scheduledAt: scheduleText,
           reason,
-          joinUrl,
+          joinUrl: doctorJoinUrl,
         })
       : Promise.resolve();
 

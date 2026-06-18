@@ -27,8 +27,12 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Missing key." }, { status: 400 });
     }
 
-    // Restrict to profile image objects only.
-    if (!key.startsWith("profile-photos/")) {
+    // Public access is limited to profile images only.
+    const isPublicProfileImage =
+      key.startsWith("profile-photos/") ||
+      /^onboarding-docs\/[^/]+\/profile-photo-/.test(key);
+
+    if (!isPublicProfileImage) {
       return NextResponse.json({ error: "Invalid key." }, { status: 400 });
     }
 

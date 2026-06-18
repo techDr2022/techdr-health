@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createParticipantToken, createRoomForBooking } from "@/lib/hms";
+import {
+  isJoinableBookingStatus,
+  resolveConsultationAccess,
+} from "@/lib/consultation-access";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { bookingId } = (await req.json()) as { bookingId?: string };
+    const { bookingId, joinToken } = (await req.json()) as {
+      bookingId?: string;
+      joinToken?: string;
+    };
     if (!bookingId) {
       return NextResponse.json({ error: "bookingId is required" }, { status: 400 });
     }
@@ -24,11 +25,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    const isDoctor = booking.doctor.userId === session.user.id;
-    const isPatient = booking.patientId === session.user.id;
-    if (!isDoctor && !isPatient) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const access = await resolveConsultationAccess(
+      bookingId,
+      booking,
+      joinToken?.trim() || null
+    );
+    if (!access) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (!isJoinableBookingStatus(booking.status)) {
+      return NextResponse.json({ error: "This consultation is no longer active." }, { status: 400 });
+    }
+
+    const isDoctor = access.role === "doctor";
 
     let room = await prisma.consultationRoom.findUnique({ where: { bookingId } });
     if (!room) {
@@ -54,17 +63,27 @@ export async function POST(req: NextRequest) {
     });
 
     if (isDoctor && room.status === "WAITING") {
-      await prisma.consultationRoom.update({
-        where: { id: room.id },
-        data: { status: "ACTIVE", startedAt: new Date() },
-      });
+      await prisma.$transaction([
+        prisma.consultationRoom.update({
+          where: { id: room.id },
+          data: { status: "ACTIVE", startedAt: new Date() },
+        }),
+        ...(booking.status === "UPCOMING"
+          ? [
+              prisma.booking.update({
+                where: { id: bookingId },
+                data: { status: "ONGOING" },
+              }),
+            ]
+          : []),
+      ]);
     }
 
     return NextResponse.json({
       token,
       roomId: room.twilioRoomName,
       identity,
-      role: isDoctor ? "doctor" : "patient",
+      role: access.role,
     });
   } catch (error) {
     console.error("[video/token]", error);

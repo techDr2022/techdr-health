@@ -1,5 +1,9 @@
-const SITE_URL = "https://techdrhealth.com";
-const SITE_NAME = "TechDrHealth";
+import {
+  GLOBAL_LANGUAGES,
+  SITE_NAME,
+  SITE_URL,
+  WORLDWIDE_REGIONS_SERVED,
+} from "@/lib/site-config";
 
 function toSlug(value: string): string {
   return value
@@ -11,16 +15,22 @@ function toSlug(value: string): string {
     .replace(/-+/g, "-");
 }
 
+const areaServedSchema = WORLDWIDE_REGIONS_SERVED.map((region) => ({
+  "@type": "Country",
+  name: region,
+}));
+
 export function getMedicalOrgSchema() {
   return {
     "@context": "https://schema.org",
-    "@type": "MedicalOrganization",
+    "@type": ["MedicalOrganization", "MedicalBusiness"],
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/techdrhealth-logo.png`,
+    image: `${SITE_URL}/techdrhealth-logo.png`,
     description:
-      "India's trusted teleconsultation platform with 100+ verified doctors across 20+ specialities.",
+      "Global teleconsultation platform connecting patients worldwide with 1000+ verified doctors across 20+ medical specialties via secure HD video.",
     telephone: "+91-9032292171",
     email: "techdrtelehealth@gmail.com",
     address: {
@@ -32,9 +42,11 @@ export function getMedicalOrgSchema() {
       addressLocality: "Hyderabad",
       addressRegion: "Telangana",
     },
+    areaServed: areaServedSchema,
+    knowsLanguage: GLOBAL_LANGUAGES,
     sameAs: [
       "https://www.facebook.com/techdrhealth",
-      "https://twitter.com/techdrhealth",
+      "https://twitter.com/techdrtelehealth",
       "https://www.linkedin.com/company/techdrhealth",
       "https://www.instagram.com/techdrhealth",
     ],
@@ -47,19 +59,34 @@ export function getMedicalOrgSchema() {
       "Psychiatry",
       "Orthopedics",
       "Neurology",
+      "Diabetology",
+      "Nephrology",
+      "Pulmonology",
+      "Oncology",
     ],
-    availableService: {
-      "@type": "MedicalTherapy",
-      name: "Online Video Consultation",
-      description: "HD video consultation with verified specialist doctors",
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      reviewCount: "50000",
-      bestRating: "5",
-      worstRating: "1",
-    },
+    availableService: [
+      {
+        "@type": "MedicalTherapy",
+        name: "Online Video Consultation",
+        description:
+          "HD video consultation with verified specialist doctors available worldwide",
+        areaServed: areaServedSchema,
+      },
+      {
+        "@type": "Service",
+        name: "Global Teleconsultation",
+        serviceType: "Telemedicine",
+        provider: { "@id": `${SITE_URL}/#organization` },
+        areaServed: areaServedSchema,
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "INR",
+          price: "200",
+          description: "Consultation fees from ₹200 / $5 equivalent",
+          availability: "https://schema.org/InStock",
+        },
+      },
+    ],
   };
 }
 
@@ -70,11 +97,92 @@ export function getWebsiteSchema() {
     "@id": `${SITE_URL}/#website`,
     name: SITE_NAME,
     url: SITE_URL,
+    description:
+      "Worldwide online doctor consultation and telehealth platform with verified specialists.",
+    inLanguage: ["en", "en-IN", "hi"],
+    publisher: { "@id": `${SITE_URL}/#organization` },
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE_URL}/doctors?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
+  };
+}
+
+export function getTelehealthApplicationSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "@id": `${SITE_URL}/#application`,
+    name: `${SITE_NAME} Teleconsultation`,
+    url: SITE_URL,
+    applicationCategory: "HealthApplication",
+    operatingSystem: "Web, iOS, Android",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+      description: "Free to browse; consultation fees apply per doctor",
+    },
+    featureList: [
+      "HD video consultations",
+      "Digital prescriptions",
+      "Lab report upload",
+      "Multilingual doctors",
+      "Secure payment",
+      "24/7 booking",
+    ],
+    provider: { "@id": `${SITE_URL}/#organization` },
+  };
+}
+
+export function getHowToConsultSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to Book an Online Doctor Consultation on TechDrHealth",
+    description:
+      "Book a worldwide video consultation with a verified specialist in three simple steps.",
+    totalTime: "PT10M",
+    step: [
+      {
+        "@type": "HowToStep",
+        position: 1,
+        name: "Choose your specialty or symptom",
+        text: "Browse 20+ medical specialties or search by symptom to find the right doctor for your concern.",
+        url: `${SITE_URL}/specialties`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 2,
+        name: "Select a verified doctor and time slot",
+        text: "Compare doctor profiles, credentials, ratings, and available slots. Book securely online from anywhere in the world.",
+        url: `${SITE_URL}/doctors`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 3,
+        name: "Join your HD video consultation",
+        text: "Connect via secure HD video from your phone or laptop. Receive diagnosis, treatment plan, and digital prescription when appropriate.",
+        url: `${SITE_URL}/consult`,
+      },
+    ],
+  };
+}
+
+export function getSpeakableFAQSchema(faqs: { question: string; answer: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: [".faq-question", ".faq-answer"],
+    },
+    mainEntity: faqs.slice(0, 5).map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: { "@type": "Answer", text: answer },
+    })),
   };
 }
 
@@ -129,9 +237,9 @@ export function getDoctorSchema(doctor: {
     url: `${SITE_URL}/doctors/profile/${doctor.slug}`,
     mainEntityOfPage: `${SITE_URL}/doctors/profile/${doctor.slug}`,
     jobTitle: doctor.specialty,
-    description: `${doctor.specialty} with ${doctor.experience} years of experience. ${doctor.credentials}.`,
+    description: `${doctor.specialty} with ${doctor.experience} years of experience. ${doctor.credentials}. Available for worldwide video consultation.`,
     medicalSpecialty: doctor.specialty,
-    areaServed: "IN",
+    areaServed: areaServedSchema,
     knowsLanguage: doctor.languages,
     alumniOf: doctor.education.map((edu) => ({
       "@type": "EducationalOrganization",
@@ -151,7 +259,7 @@ export function getDoctorSchema(doctor: {
     availableService: {
       "@type": "MedicalTherapy",
       name: "Online Video Consultation",
-      description: "HD video consultation",
+      description: "HD video consultation available worldwide",
       offers: {
         "@type": "Offer",
         price: doctor.consultFee,
@@ -211,7 +319,7 @@ export function getSpecialtyPageSchema(specialty: string, doctorCount: number) {
     "@type": "MedicalWebPage",
     name: `Online ${specialty} Consultation`,
     url: `${SITE_URL}/doctors/${toSlug(specialty)}`,
-    description: `Consult verified ${specialty} doctors online. ${doctorCount}+ specialists available.`,
+    description: `Consult verified ${specialty} doctors online worldwide. ${doctorCount}+ specialists available.`,
     medicalAudience: {
       "@type": "MedicalAudience",
       audienceType: "Patient",
@@ -224,6 +332,30 @@ export function getSpecialtyPageSchema(specialty: string, doctorCount: number) {
       "@type": "MedicalOrganization",
       name: SITE_NAME,
       url: SITE_URL,
+    },
+    areaServed: areaServedSchema,
+  };
+}
+
+export function getRegionPageSchema(region: {
+  name: string;
+  slug: string;
+  description: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "MedicalWebPage",
+    name: `Online Doctor Consultation ${region.name}`,
+    url: `${SITE_URL}/teleconsultation/${region.slug}`,
+    description: region.description,
+    medicalAudience: {
+      "@type": "MedicalAudience",
+      audienceType: "Patient",
+    },
+    provider: { "@id": `${SITE_URL}/#organization` },
+    areaServed: {
+      "@type": "Country",
+      name: region.name,
     },
   };
 }
@@ -312,7 +444,8 @@ export function getArticleSchema(post: {
     url: `${SITE_URL}/blog/${post.slug}`,
     datePublished: post.publishedAt,
     dateModified: post.updatedAt || post.publishedAt,
-    image: post.imageUrl || `${SITE_URL}/og-default.png`,
+    image: post.imageUrl || `${SITE_URL}/techdrhealth-logo.png`,
+    inLanguage: "en",
     author: {
       "@type": "Person",
       name: post.authorName,

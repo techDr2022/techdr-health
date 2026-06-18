@@ -13,7 +13,15 @@ interface Message {
   time: string;
 }
 
-export function ChatPanel({ bookingId, role }: { bookingId: string; role: "doctor" | "patient" }) {
+export function ChatPanel({
+  bookingId,
+  role,
+  joinToken,
+}: {
+  bookingId: string;
+  role: "doctor" | "patient";
+  joinToken?: string | null;
+}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -21,13 +29,15 @@ export function ChatPanel({ bookingId, role }: { bookingId: string; role: "docto
 
   useEffect(() => {
     async function fetchHistory() {
-      const response = await fetch(`/api/video/chat?bookingId=${bookingId}`);
+      const query = new URLSearchParams({ bookingId });
+      if (joinToken) query.set("joinToken", joinToken);
+      const response = await fetch(`/api/video/chat?${query.toString()}`);
       if (!response.ok) return;
       const data = (await response.json()) as { messages?: Message[] };
       setMessages(data.messages || []);
     }
     void fetchHistory();
-  }, [bookingId]);
+  }, [bookingId, joinToken]);
 
   useEffect(() => {
     const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
@@ -46,7 +56,7 @@ export function ChatPanel({ bookingId, role }: { bookingId: string; role: "docto
       channel.unbind_all();
       pusher.unsubscribe(`chat-${bookingId}`);
     };
-  }, [bookingId]);
+  }, [bookingId, joinToken]);
 
   async function sendMessage() {
     const text = input.trim();
@@ -57,7 +67,12 @@ export function ChatPanel({ bookingId, role }: { bookingId: string; role: "docto
       await fetch("/api/video/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId, message: text, sender: role }),
+        body: JSON.stringify({
+          bookingId,
+          message: text,
+          sender: role,
+          joinToken: joinToken || undefined,
+        }),
       });
     } finally {
       setIsSending(false);

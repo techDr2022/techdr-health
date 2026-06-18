@@ -12,8 +12,11 @@ import { BookingStatusUpdateEmail } from "@/emails/booking-status-update";
 import { PayoutProcessedEmail } from "@/emails/payout-processed";
 import { PrescriptionIssuedEmail } from "@/emails/prescription-issued";
 import { WeeklyDoctorPayoutSummaryEmail } from "@/emails/weekly-doctor-payout-summary";
+import { NewDoctorJoinAdminEmail } from "@/emails/new-doctor-join";
 
 const resendApiKey = process.env.RESEND_API_KEY;
+const adminNotifyEmail =
+  process.env.ADMIN_NOTIFY_EMAIL?.trim() || "techdrhealth@gmail.com";
 const from =
   process.env.RESEND_FROM_EMAIL ||
   "techDr Tele Health <no-reply@vitalconsult.health>";
@@ -73,6 +76,38 @@ export async function sendApprovalEmail(to: string, entityName: string) {
     to,
     subject: "Your application is approved",
     react: <ApplicationApprovedEmail entityName={entityName} />,
+  });
+}
+
+export async function sendNewDoctorJoinAdminEmail(details: {
+  entityName: string;
+  email: string;
+  phone: string;
+  specialty: string;
+  plan: string;
+  isFreeListing: boolean;
+  profileId: string;
+}) {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://techdrhealth.com").replace(
+    /\/+$/,
+    ""
+  );
+  const reviewUrl = `${siteUrl}/admin/applications/${details.profileId}`;
+
+  return safeSend({
+    to: adminNotifyEmail,
+    subject: `New doctor joined: ${details.entityName}`,
+    react: (
+      <NewDoctorJoinAdminEmail
+        entityName={details.entityName}
+        email={details.email}
+        phone={details.phone}
+        specialty={details.specialty}
+        plan={details.plan}
+        isFreeListing={details.isFreeListing}
+        reviewUrl={reviewUrl}
+      />
+    ),
   });
 }
 

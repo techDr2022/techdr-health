@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -150,4 +151,21 @@ export async function fetchCashfreeOrder(orderId: string) {
   }
 
   return (await response.json()) as CashfreeOrderResponse;
+}
+
+export function verifyCashfreeWebhookSignature(args: {
+  rawBody: string;
+  signature: string;
+  timestamp: string;
+}) {
+  const { secretKey } = getCashfreeConfig();
+  const expected = createHmac("sha256", secretKey)
+    .update(args.timestamp + args.rawBody)
+    .digest("base64");
+
+  if (expected.length !== args.signature.length) {
+    return false;
+  }
+
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(args.signature));
 }

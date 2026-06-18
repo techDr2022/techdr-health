@@ -3,6 +3,19 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+function isValidPhotoUrl(value: string) {
+  if (!value) return true;
+  if (value.startsWith("/api/storage/r2-object")) return true;
+  if (value.startsWith("profile-photos/")) return true;
+  if (value.startsWith("onboarding-docs/") && /\/profile-photo-/.test(value)) return true;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const updateProfileSchema = z.object({
   displayName: z.string().min(2).max(120),
   specialty: z.string().min(2).max(120),
@@ -10,8 +23,7 @@ const updateProfileSchema = z.object({
   photoUrl: z
     .string()
     .trim()
-    .url("Photo URL must be a valid URL.")
-    .or(z.literal("")),
+    .refine(isValidPhotoUrl, "Photo URL must be a valid URL."),
 });
 
 export async function PATCH(req: Request) {

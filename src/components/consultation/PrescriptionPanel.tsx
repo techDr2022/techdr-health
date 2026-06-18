@@ -27,6 +27,7 @@ interface PrescriptionPanelProps {
   role: "doctor" | "patient";
   initialData?: PrescriptionData | null;
   onSent?: (data: PrescriptionData) => void;
+  joinToken?: string | null;
 }
 
 const EMPTY_MED: Medicine = {
@@ -106,7 +107,13 @@ const MEAL_TIMING_LABEL: Record<NonNullable<Medicine["mealTiming"]>, string> = {
   WITH_FOOD: "With food",
 };
 
-export function PrescriptionPanel({ bookingId, role, initialData, onSent }: PrescriptionPanelProps) {
+export function PrescriptionPanel({
+  bookingId,
+  role,
+  initialData,
+  onSent,
+  joinToken,
+}: PrescriptionPanelProps) {
   const [diagnosis, setDiagnosis] = useState(initialData?.diagnosis || "");
   const [medicines, setMedicines] = useState<Medicine[]>(initialData?.medicines || [EMPTY_MED]);
   const [instructions, setInstructions] = useState(initialData?.instructions || "");
@@ -202,6 +209,7 @@ export function PrescriptionPanel({ bookingId, role, initialData, onSent }: Pres
         medicines: preparedMedicines,
         instructions: instructions.trim(),
         followUpDate: followUpDate || null,
+        joinToken: joinToken || undefined,
       };
       const response = await fetch("/api/video/prescription", {
         method: "POST",

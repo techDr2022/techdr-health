@@ -2,14 +2,19 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WaitingRoomClient } from "@/components/consultation/WaitingRoomClient";
+import {
+  isJoinableBookingStatus,
+  resolveConsultationAccess,
+} from "@/lib/consultation-access";
 
 export default async function WaitingRoomPage({
   params,
+  searchParams,
 }: {
   params: { bookingId: string };
+  searchParams: { token?: string };
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const joinToken = searchParams.token?.trim() || null;
 
   const booking = await prisma.booking.findUnique({
     where: { id: params.bookingId },
@@ -18,11 +23,23 @@ export default async function WaitingRoomPage({
       patient: true,
     },
   });
-  if (!booking) redirect("/dashboard/bookings");
+  if (!booking) redirect("/");
 
-  const isPatient = booking.patientId === session.user.id;
-  const isDoctor = booking.doctor.userId === session.user.id;
-  if (!isPatient && !isDoctor) redirect("/dashboard/bookings");
+  const access = await resolveConsultationAccess(params.bookingId, booking, joinToken);
+  if (!access) {
+    const session = await auth();
+    if (!session?.user?.id) {
+      const callbackUrl = `/consultation/${params.bookingId}/waiting${
+        joinToken ? `?token=${encodeURIComponent(joinToken)}` : ""
+      }`;
+      redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    }
+    redirect("/dashboard/bookings");
+  }
+
+  if (!isJoinableBookingStatus(booking.status)) {
+    redirect("/");
+  }
 
   const duration = Math.max(
     1,
@@ -40,7 +57,8 @@ export default async function WaitingRoomPage({
         duration,
         patientName: booking.patient.name,
       }}
-      role={isDoctor ? "doctor" : "patient"}
+      role={access.role}
+      joinToken={joinToken}
     />
   );
 }

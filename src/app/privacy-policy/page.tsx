@@ -2,12 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { generateSEO } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site-config";
 
-export const metadata: Metadata = {
-  title: `Privacy Policy | ${SITE_NAME}`,
-  description: `Read the ${SITE_NAME} privacy policy for how we collect, use, and protect your personal and health-related information.`,
-};
+export const metadata: Metadata = generateSEO({
+  title: "Privacy Policy - Global Telehealth Data Protection",
+  description:
+    "Read the TechDrHealth privacy policy for how we collect, use, and protect your personal and health-related information across our worldwide teleconsultation platform.",
+  path: "/privacy-policy",
+  keywords: ["telehealth privacy", "health data protection", "GDPR telemedicine"],
+});
 
 export default function PrivacyPolicyPage() {
   const updatedOn = "30 April 2026";

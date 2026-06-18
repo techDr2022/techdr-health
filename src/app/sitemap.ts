@@ -1,9 +1,11 @@
 import type { MetadataRoute } from "next";
+import { GLOBAL_REGIONS } from "@/data/global-regions";
 import { SEO_KEYWORD_PAGES } from "@/data/seo-keywords";
 import { CITY_TARGETS, SYMPTOM_TARGETS } from "@/data/seo-targets";
 import { listSpecialtySlugs } from "@/data/specialties";
+import { getSiteUrl } from "@/lib/site-config";
 
-const SITE_URL = "https://techdrhealth.com";
+const SITE_URL = getSiteUrl();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -14,10 +16,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/specialties",
     "/blog",
     "/consult",
+    "/book",
     "/about",
     "/faq",
     "/contact",
     "/join",
+    "/teleconsultation",
+    "/privacy-policy",
+    "/terms-and-conditions",
+    "/surgery-guidance",
   ].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: now,
@@ -25,9 +32,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:
       path === ""
         ? 1
-        : path === "/doctors" || path === "/specialties" || path === "/blog"
+        : path === "/doctors" ||
+            path === "/specialties" ||
+            path === "/blog" ||
+            path === "/teleconsultation"
           ? 0.9
           : 0.8,
+  }));
+
+  const globalRegionPaths = GLOBAL_REGIONS.map((region) => ({
+    url: `${SITE_URL}/teleconsultation/${region.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.88,
   }));
 
   const specialtyPaths = listSpecialtySlugs().flatMap((slug) => [
@@ -68,6 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticPaths,
+    ...globalRegionPaths,
     ...specialtyPaths,
     ...symptomPaths,
     ...cityPaths,

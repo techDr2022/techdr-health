@@ -46,9 +46,10 @@ export function BookingStatusUpdateEmail({
           <strong>Note:</strong> {reason}
         </Text>
       ) : null}
-      {status === "CONFIRMED" && joinUrl ? (
+      {(status === "CONFIRMED" || status === "RESCHEDULED") && joinUrl ? (
         <Text>
-          <strong>Join consultation:</strong> <a href={joinUrl}>{joinUrl}</a>
+          <strong>Join consultation (no sign-in needed):</strong>{" "}
+          <a href={joinUrl}>{joinUrl}</a>
         </Text>
       ) : null}
       <Text>

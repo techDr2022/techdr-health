@@ -9,27 +9,30 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { FreeSlotsLeft } from "@/components/join/FreeSlotsLeft";
 import { cn } from "@/lib/utils";
+import { getDashboardPathForRole } from "@/lib/auth-redirect";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
+  { label: "Global", href: "/teleconsultation" },
   { label: "Book", href: "/book" },
-  { label: "Surgery Guidance", href: "/surgery-guidance" },
-  { label: "Consultations", href: "/consult" },
+  { label: "Consult", href: "/consult" },
   { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
 ];
+
+function JoinOfferLink({ className }: { className?: string }) {
+  return (
+    <Link href="/join" className={className}>
+      Join Free as a Doctor
+    </Link>
+  );
+}
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { data: session, status } = useSession();
   const isLoggedIn = Boolean(session?.user);
   const role = session?.user?.role;
-  const dashboardHref =
-    role === "DOCTOR"
-      ? "/dashboard"
-      : role === "ADMIN"
-        ? "/admin"
-        : "/dashboard/patient";
+  const dashboardHref = getDashboardPathForRole(role);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 16);
@@ -48,9 +51,11 @@ export function Navbar() {
     >
       <Link
         href="/join"
-        className="flex h-9 w-full items-center justify-center border-b border-emerald-200 bg-emerald-600 px-4 text-center text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-emerald-500 sm:text-xs"
+        className="flex h-8 w-full items-center justify-center gap-1.5 border-b border-emerald-200 bg-emerald-600 px-3 text-center text-[11px] font-bold text-white transition-colors hover:bg-emerald-500 sm:text-xs"
       >
-        First 500 Doctors Join Free · <FreeSlotsLeft className="ml-1" fallback="500 free slots left" />
+        <span>500 free entries</span>
+        <span aria-hidden="true">·</span>
+        <FreeSlotsLeft compact fallback="join now" />
       </Link>
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center">
@@ -84,9 +89,9 @@ export function Navbar() {
             <Button
               asChild
               size="sm"
-              className="rounded-full bg-emerald-600 px-5 text-[13px] font-semibold text-white shadow-md shadow-emerald-600/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-500"
+              className="rounded-full bg-emerald-600 px-4 text-[13px] font-semibold text-white shadow-md shadow-emerald-600/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-500"
             >
-              <Link href="/join">Join as Doctor / Clinic / Hospital</Link>
+              <JoinOfferLink />
             </Button>
           ) : null}
           {isLoggedIn ? (
@@ -123,7 +128,7 @@ export function Navbar() {
             size="sm"
             className="rounded-full bg-slate-900 px-5 text-[13px] font-semibold text-white shadow-md shadow-slate-900/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800"
           >
-            <Link href="/book">Schedule Consultation</Link>
+            <Link href="/book">Book Now</Link>
           </Button>
         </div>
 
@@ -141,9 +146,9 @@ export function Navbar() {
             <nav className="mt-8 flex flex-col gap-1">
               <Link
                 href="/join"
-                className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-center text-xs font-extrabold uppercase tracking-wide text-emerald-800"
+                className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-sm font-semibold text-emerald-800"
               >
-                First 500 Doctors Join Free · <FreeSlotsLeft fallback="500 free slots left" />
+                500 free entries · <FreeSlotsLeft compact fallback="join now" />
               </Link>
               {NAV_LINKS.map(({ label, href }) => (
                 <Link
@@ -155,14 +160,6 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4">
-                {!isLoggedIn ? (
-                  <Button
-                    className="w-full rounded-full bg-emerald-600 text-white hover:bg-emerald-500"
-                    asChild
-                  >
-                    <Link href="/join">Join as Doctor / Clinic / Hospital</Link>
-                  </Button>
-                ) : null}
                 {isLoggedIn ? (
                   <>
                     <Button variant="outline" className="w-full" asChild>
@@ -182,7 +179,7 @@ export function Navbar() {
                   </Button>
                 ) : null}
                 <Button className="w-full rounded-full bg-slate-900 text-white hover:bg-slate-800" asChild>
-                  <Link href="/book">Schedule Consultation</Link>
+                  <Link href="/book">Book Now</Link>
                 </Button>
               </div>
             </nav>

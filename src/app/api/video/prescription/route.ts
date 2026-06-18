@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import Pusher from "pusher";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { resolveConsultationAccess } from "@/lib/consultation-access";
 import { sendPrescriptionIssuedEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site-config";
 import { generatePrescriptionPdf } from "@/lib/generatePrescriptionPdf";
@@ -25,17 +25,14 @@ function getPusherClient() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== "DOCTOR") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { bookingId, diagnosis, medicines, instructions, followUpDate } = (await req.json()) as {
+    const { bookingId, diagnosis, medicines, instructions, followUpDate, joinToken } =
+      (await req.json()) as {
       bookingId?: string;
       diagnosis?: string;
       medicines?: unknown;
       instructions?: string;
       followUpDate?: string;
+      joinToken?: string;
     };
 
     if (!bookingId || !diagnosis || !Array.isArray(medicines)) {
@@ -49,8 +46,14 @@ export async function POST(req: NextRequest) {
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
-    if (booking.doctor.userId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const access = await resolveConsultationAccess(
+      bookingId,
+      booking,
+      joinToken?.trim() || null
+    );
+    if (!access || access.role !== "doctor") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const parsedFollowUpDate = followUpDate ? new Date(followUpDate) : null;

@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 function parseJsonArray(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((v) => typeof v === "string");
   return [];

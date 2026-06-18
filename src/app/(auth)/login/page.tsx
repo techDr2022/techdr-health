@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { z } from "zod";
 import { OTPInput, REGEXP_ONLY_DIGITS } from "input-otp";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { ArrowLeft, Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getDashboardPathForRole, sanitizeCallbackUrl } from "@/lib/auth-redirect";
 
 type AuthMode = "choose" | "email-password" | "email-otp-enter" | "email-otp-verify";
 
@@ -23,7 +24,7 @@ const emailSchema = z.object({
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = "/dashboard";
+  const callbackUrl = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
   const year = new Date().getFullYear();
 
   const [mode, setMode] = useState<AuthMode>("choose");
@@ -131,8 +132,7 @@ function LoginPageContent() {
       }
 
       toast.success("Logged in successfully!");
-      const destination =
-        data.role === "DOCTOR" ? "/dashboard/doctor" : data.role === "ADMIN" ? "/admin" : "/dashboard/patient";
+      const destination = getDashboardPathForRole(data.role);
       router.push(destination);
     } finally {
       setLoading(false);
@@ -164,7 +164,8 @@ function LoginPageContent() {
         return;
       }
       toast.success("Logged in successfully!");
-      router.push(callbackUrl);
+      const session = await getSession();
+      router.push(sanitizeCallbackUrl(callbackUrl, session?.user?.role));
     } finally {
       setLoading(false);
     }
@@ -220,8 +221,7 @@ function LoginPageContent() {
         }
 
         toast.success("Signed in with magic link.");
-        const destination =
-          data.role === "DOCTOR" ? "/dashboard/doctor" : data.role === "ADMIN" ? "/admin" : "/dashboard/patient";
+        const destination = getDashboardPathForRole(data.role);
         router.replace(destination);
       } catch {
         setEmailOtpError("Magic link verification failed.");

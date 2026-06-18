@@ -7,13 +7,14 @@ const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
   "image/jpeg",
+  "image/jpg",
   "image/png",
   "image/webp",
 ]);
 
 function extensionForType(type: string) {
   if (type === "application/pdf") return "pdf";
-  if (type === "image/jpeg") return "jpg";
+  if (type === "image/jpeg" || type === "image/jpg") return "jpg";
   if (type === "image/png") return "png";
   if (type === "image/webp") return "webp";
   return null;

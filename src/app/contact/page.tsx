@@ -1,38 +1,35 @@
-"use client";
-
-import Image from "next/image";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { ContactForm, ContactHeroImage } from "@/components/contact/ContactForm";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { generateSEO } from "@/lib/seo";
+import { getBreadcrumbSchema } from "@/lib/schema";
 
-const schema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  message: z.string().min(20),
+export const metadata: Metadata = generateSEO({
+  title: "Contact Us - Worldwide Teleconsultation Support",
+  description:
+    "Contact TechDrHealth for patient support, doctor partnerships, hospital integrations, and medical tourism assistance. Serving patients in 15+ countries worldwide.",
+  path: "/contact",
+  keywords: [
+    "contact telehealth",
+    "medical tourism support",
+    "teleconsultation help",
+    "global healthcare contact",
+  ],
 });
 
-type FormValues = z.infer<typeof schema>;
-
 export default function ContactPage() {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", message: "" },
-  });
-
-  function onSubmit(data: FormValues) {
-    console.info("contact_submit", data);
-    alert("Thanks - our team routes enterprise & patient inquiries within one business day (demo).");
-    form.reset();
-  }
-
   return (
     <>
+      <JsonLd
+        data={[
+          getBreadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: "Contact", path: "/contact" },
+          ]),
+        ]}
+      />
       <Navbar />
       <main className="bg-gradient-to-b from-white via-emerald-50/30 to-white pt-20">
         <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
@@ -41,39 +38,20 @@ export default function ContactPage() {
               Contact our care team
             </h1>
             <p className="mt-4 text-muted-foreground">
-              Partnerships, hospital integrations, or patient support - route
-              your note here and we will get back quickly.
+              Partnerships, hospital integrations, medical tourism, or patient
+              support — reach our global care team and we will respond quickly.
             </p>
+            <div className="mt-6 space-y-2 text-sm text-slate-600">
+              <p>Email: techdrtelehealth@gmail.com</p>
+              <p>Phone: +91-90322-92171</p>
+              <p>Hyderabad, Telangana, India — serving patients worldwide</p>
+            </div>
           </div>
-          <div className="relative h-52 overflow-hidden rounded-2xl border border-emerald-100 shadow-sm sm:h-60">
-            <Image
-              src="/images/placeholders/care-hero.svg"
-              alt="Patient support specialist"
-              fill
-              className="object-cover"
-              sizes="(max-width:1024px) 100vw, 50vw"
-            />
-          </div>
+          <ContactHeroImage />
         </section>
 
         <section className="mx-auto max-w-xl px-4 pb-16 sm:px-6 lg:px-8">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" {...form.register("name")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" {...form.register("email")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
-              <Textarea id="message" rows={5} {...form.register("message")} />
-            </div>
-            <Button type="submit" size="lg" className="w-full">
-              Send message
-            </Button>
-          </form>
+          <ContactForm />
         </section>
       </main>
       <Footer />

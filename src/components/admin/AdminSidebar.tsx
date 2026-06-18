@@ -19,7 +19,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full flex-col bg-slate-950 px-3 py-4 text-slate-100 sm:px-4">
+    <div className="flex min-h-[220px] flex-col bg-slate-950 px-3 py-4 text-slate-100 sm:min-h-[320px] sm:px-4 lg:min-h-[calc(100vh-40px)]">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">Admin Console</p>
         <h2 className="mt-2 text-lg font-semibold">techDr Control Panel</h2>
@@ -53,6 +53,6 @@ export function AdminSidebar() {
         <LogOut className="h-4 w-4" />
         Sign out
       </button>
-    </aside>
+    </div>
   );
 }

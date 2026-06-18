@@ -10,13 +10,18 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { HOME_FAQ } from "@/data/faq-home";
-import { SITE_NAME } from "@/lib/site-config";
+import { generateSEO } from "@/lib/seo";
+import { getSpeakableFAQSchema } from "@/lib/schema";
 import Link from "next/link";
 
 const extra = [
   {
-    q: "How does techDr Tele Health compare to hospital OPD?",
-    a: "We complement-not replace-in-person care. Ideal for follow-ups, second opinions, and timely access; physical exams and emergencies still belong in clinics or ERs.",
+    q: "Can I consult a doctor online from outside India?",
+    a: "Yes. TechDrHealth serves patients in 15+ countries including the US, UK, UAE, Canada, Australia, Singapore, and more. Book a video consultation from anywhere with internet access.",
+  },
+  {
+    q: "How does TechDrHealth compare to hospital OPD?",
+    a: "We complement—not replace—in-person care. Ideal for follow-ups, second opinions, and timely access worldwide; physical exams and emergencies still belong in clinics or ERs.",
   },
   {
     q: "Do you store my medical records?",
@@ -24,33 +29,41 @@ const extra = [
   },
 ];
 
-export const metadata: Metadata = {
-  title: `FAQ | ${SITE_NAME}`,
+export const metadata: Metadata = generateSEO({
+  title: "FAQ - Worldwide Teleconsultation Questions Answered",
   description:
-    "Answers about teleconsultation India coverage, prescriptions, privacy, languages, and clinical limits.",
-};
+    "Answers about global teleconsultation coverage, prescriptions, privacy, languages, international patients, and clinical limits on TechDrHealth.",
+  path: "/faq",
+  keywords: [
+    "teleconsultation FAQ",
+    "online doctor questions",
+    "global telehealth FAQ",
+  ],
+});
 
 export default function FaqPage() {
   const all = [...HOME_FAQ.map((f) => ({ q: f.question, a: f.answer })), ...extra];
 
-  const faqLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: all.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: f.a,
-      },
-    })),
-  };
+  const faqItems = all.map((f) => ({ question: f.q, answer: f.a }));
 
   return (
     <>
       <Navbar />
       <main className="bg-gradient-to-b from-white via-emerald-50/30 to-white pt-20">
-        <JsonLd data={faqLd} />
+        <JsonLd
+          data={[
+            {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: faqItems.map((f) => ({
+                "@type": "Question",
+                name: f.question,
+                acceptedAnswer: { "@type": "Answer", text: f.answer },
+              })),
+            },
+            getSpeakableFAQSchema(faqItems),
+          ]}
+        />
         <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
           <div>
             <h1 className="font-heading text-4xl font-semibold text-[#0A1628] sm:text-5xl">
@@ -79,10 +92,10 @@ export default function FaqPage() {
           <Accordion type="single" collapsible className="rounded-2xl border border-emerald-100 bg-white px-5 shadow-sm">
             {all.map((item, i) => (
               <AccordionItem key={item.q} value={`faq-${i}`}>
-                <AccordionTrigger className="text-left font-medium text-[#0A1628]">
+                <AccordionTrigger className="faq-question text-left font-medium text-[#0A1628]">
                   {item.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed">
+                <AccordionContent className="faq-answer text-muted-foreground leading-relaxed">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>

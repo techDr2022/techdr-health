@@ -1,0 +1,56 @@
+TECHDR HEALTH — DOCTOR BULK IMPORT TEMPLATE GUIDE
+=================================================
+
+File to fill: doctor-bulk-import-template.csv
+(Open in Google Sheets or Excel — one row per doctor)
+
+REQUIRED FIELDS
+---------------
+S.no               Row number (1, 2, 3...)
+planType           INDIVIDUAL, CLINIC, or HOSPITAL
+entityName         Doctor or clinic display name (e.g. Dr. Ramesh Kumar)
+email              Unique login email
+phone              10-digit mobile (unique per doctor)
+password           Login password (min 6 chars)
+specialty          Specialty name (e.g. Cardiology, Dermatology)
+experience         Years of experience (number)
+Credentials        Degrees (e.g. MBBS, MD (Cardiology))
+ConsultationFee    Consultation fee in INR (number only)
+languages          Comma-separated (e.g. English,Hindi,Telugu)
+
+OPTIONAL FIELDS
+---------------
+subSpecialties, whatsapp Number, clinic Name, hospital Name, address, city,
+pincode, number Of Doctors, med Reg Cert Url, gov Id
+
+FORMAT RULES
+------------
+subSpecialties     → Comma-separated list
+languages          → Comma-separated list
+planType           → INDIVIDUAL, CLINIC, or HOSPITAL
+med Reg Cert Url   → Full URL to uploaded medical registration document
+gov Id             → Full URL to uploaded government ID document
+
+VALID planType VALUES
+---------------------
+INDIVIDUAL
+CLINIC
+HOSPITAL
+
+VALID SPECIALTIES
+-----------------
+Cardiology, Dermatology, Gynecology, Pediatrics, Psychiatry, Orthopedics,
+Neurology, Endocrinology, Gastroenterology, Pulmonology, Ophthalmology, ENT,
+Urology, Nephrology, Oncology, General Medicine, Diabetology,
+Allergy & Immunology, Rheumatology, Fertility & IVF
+
+IMPORTANT
+---------
+- Every email and phone must be UNIQUE across all rows
+- Delete the 2 sample rows before submitting real data
+- Doctors log in at /login with email + password
+- Profiles stay hidden until admin makes them visible after photo upload
+
+WHEN DONE
+---------
+Upload the filled CSV or Excel file from Founder Dashboard → Doctors → Bulk upload.

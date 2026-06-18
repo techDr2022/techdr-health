@@ -31,7 +31,7 @@ export default async function AdminOverviewPage({
   const noShowPct = Math.max(0, 100 - completedPct - cancelledPct);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="space-y-6">
       <section className="rounded-2xl border bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-6 text-white shadow-xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

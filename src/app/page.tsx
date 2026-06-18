@@ -16,6 +16,7 @@ import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getHomepageSEO } from "@/lib/seo";
 import {
   getFAQSchema,
+  getSpeakableFAQSchema,
 } from "@/lib/schema";
 
 export const metadata: Metadata = getHomepageSEO();
@@ -28,6 +29,7 @@ export default async function HomePage() {
       <JsonLd
         data={[
           getFAQSchema(HOME_FAQ),
+          getSpeakableFAQSchema(HOME_FAQ),
         ]}
       />
       <Navbar />

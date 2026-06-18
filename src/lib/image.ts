@@ -13,12 +13,28 @@ const ALLOWED_PUBLIC_ROOT_IMAGES = new Set([
   "/young-asia-female-doctor-white-medical-uniform-with-stethoscope-using-computer-laptop-talking-video-conference-call.webp",
 ]);
 
+const STORAGE_PROXY_PREFIX = "/api/storage/r2-object";
+
 export function getSafeImageSrc(
   value: string | null | undefined,
   fallback: string
 ): string {
   const src = (value ?? "").trim();
   if (!src) return fallback;
+
+  if (src.startsWith(STORAGE_PROXY_PREFIX)) {
+    return src;
+  }
+
+  const onboardingProfileMarker = "/onboarding-docs/";
+  const onboardingIndex = src.indexOf(onboardingProfileMarker);
+  if (onboardingIndex >= 0 && /\/profile-photo-/.test(src)) {
+    const key = `onboarding-docs/${src.slice(onboardingIndex + onboardingProfileMarker.length)}`;
+    return `/api/storage/r2-object?key=${encodeURIComponent(key)}`;
+  }
+  if (src.startsWith("onboarding-docs/") && /\/profile-photo-/.test(src)) {
+    return `/api/storage/r2-object?key=${encodeURIComponent(src)}`;
+  }
 
   const marker = "/profile-photos/";
   const markerIndex = src.indexOf(marker);

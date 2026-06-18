@@ -2,12 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { generateSEO } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site-config";
 
-export const metadata: Metadata = {
-  title: `Terms & Conditions | ${SITE_NAME}`,
-  description: `Read the ${SITE_NAME} terms and conditions for using our website, teleconsultation platform, and related services.`,
-};
+export const metadata: Metadata = generateSEO({
+  title: "Terms & Conditions - Worldwide Teleconsultation",
+  description:
+    "Read the TechDrHealth terms and conditions for using our worldwide teleconsultation platform, video consultations, and related healthcare services.",
+  path: "/terms-and-conditions",
+  keywords: ["telehealth terms", "online doctor terms", "telemedicine agreement"],
+});
 
 export default function TermsAndConditionsPage() {
   const updatedOn = "30 April 2026";

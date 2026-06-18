@@ -2,6 +2,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { VideoRoomClient } from "@/components/consultation/VideoRoomClient";
+import {
+  isJoinableBookingStatus,
+  resolveConsultationAccess,
+} from "@/lib/consultation-access";
 
 type Medicine = {
   name: string;
@@ -12,11 +16,12 @@ type Medicine = {
 
 export default async function VideoRoomPage({
   params,
+  searchParams,
 }: {
   params: { bookingId: string };
+  searchParams: { token?: string };
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const joinToken = searchParams.token?.trim() || null;
 
   const booking = await prisma.booking.findUnique({
     where: { id: params.bookingId },
@@ -26,11 +31,23 @@ export default async function VideoRoomPage({
       prescriptionRecord: true,
     },
   });
-  if (!booking) redirect("/dashboard/bookings");
+  if (!booking) redirect("/");
 
-  const isDoctor = booking.doctor.userId === session.user.id;
-  const isPatient = booking.patientId === session.user.id;
-  if (!isDoctor && !isPatient) redirect("/dashboard/bookings");
+  const access = await resolveConsultationAccess(params.bookingId, booking, joinToken);
+  if (!access) {
+    const session = await auth();
+    if (!session?.user?.id) {
+      const callbackUrl = `/consultation/${params.bookingId}/room${
+        joinToken ? `?token=${encodeURIComponent(joinToken)}` : ""
+      }`;
+      redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    }
+    redirect("/dashboard/bookings");
+  }
+
+  if (!isJoinableBookingStatus(booking.status)) {
+    redirect("/");
+  }
 
   const duration = Math.max(
     1,
@@ -50,12 +67,13 @@ export default async function VideoRoomPage({
   return (
     <VideoRoomClient
       bookingId={booking.id}
-      role={isDoctor ? "doctor" : "patient"}
+      role={access.role}
       doctorName={booking.doctor.displayName}
       patientName={booking.patient.name}
       specialty={booking.doctor.specialty}
       duration={duration}
       existingPrescription={existingPrescription}
+      joinToken={joinToken}
     />
   );
 }

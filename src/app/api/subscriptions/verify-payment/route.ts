@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { sendSubscriptionConfirmationEmail } from "@/lib/email";
-import { fetchCashfreeOrder } from "@/lib/cashfree";
+import { activateSubscriptionPayment } from "@/lib/payment-capture";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,47 +14,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const order = await fetchCashfreeOrder(orderId);
-    if (order.order_status !== "PAID") {
-      return NextResponse.json({ error: "Payment is not completed yet." }, { status: 400 });
+    const result = await activateSubscriptionPayment(orderId, doctorId);
+    if (!result.ok) {
+      const status = result.error.includes("not found") ? 404 : 400;
+      return NextResponse.json({ error: result.error }, { status });
     }
 
-    const subscription = await prisma.subscription.updateMany({
-      where: { cashfreeOrderId: orderId, doctorId },
-      data: {
-        status: "ACTIVE",
-        cashfreePaymentId: order.order_id,
-        cashfreeSignature: "cashfree-verified",
-        purchasedAt: new Date(),
-        activatedAt: new Date(),
-        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-        renewalReminderSent: false,
-        expiredEmailSent: false,
-      },
-    });
-
-    if (!subscription.count) {
-      return NextResponse.json({ error: "Subscription not found." }, { status: 404 });
-    }
-
-    // Keep profile hidden until onboarding details/documents are completed.
-    await prisma.doctorProfile.update({
-      where: { id: doctorId },
-      data: { isVisible: false },
-    });
-
-    const doctor = await prisma.doctorProfile.findUnique({
-      where: { id: doctorId },
-      include: { user: { select: { email: true } } },
-    });
-    if (doctor?.user.email) {
-      await sendSubscriptionConfirmationEmail(
-        doctor.user.email,
-        doctor.displayName
-      );
-    }
-
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, alreadyActive: result.alreadyActive });
   } catch (error) {
     console.error("verify payment error", error);
     return NextResponse.json(

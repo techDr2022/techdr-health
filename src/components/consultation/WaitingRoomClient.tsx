@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Clock, Video } from "lucide-react";
+import { withJoinToken } from "@/lib/consultation-join-utils";
 
 interface WaitingRoomBooking {
   id: string;
@@ -17,9 +18,11 @@ interface WaitingRoomBooking {
 export function WaitingRoomClient({
   booking,
   role,
+  joinToken,
 }: {
   booking: WaitingRoomBooking;
   role: "doctor" | "patient";
+  joinToken?: string | null;
 }) {
   const router = useRouter();
 
@@ -64,20 +67,26 @@ export function WaitingRoomClient({
         </div>
 
         <button
-          onClick={() => router.push(`/consultation/${booking.id}/room`)}
+          onClick={() =>
+            router.push(withJoinToken(`/consultation/${booking.id}/room`, joinToken))
+          }
           className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[16px] rounded-2xl transition-all shadow-xl shadow-blue-600/30 hover:shadow-blue-500/40 hover:-translate-y-0.5"
         >
           {role === "doctor" ? "Start Consultation" : "Join Video Call"} →
         </button>
-        <button
-          onClick={() => router.push(role === "doctor" ? "/dashboard/bookings" : "/dashboard/patient")}
-          className="mt-3 w-full py-3 border border-white/15 hover:bg-white/[0.05] text-white/80 font-semibold text-[14px] rounded-2xl transition-colors"
-        >
-          Back to Dashboard
-        </button>
+        {!joinToken ? (
+          <button
+            onClick={() => router.push(role === "doctor" ? "/dashboard/bookings" : "/dashboard/patient")}
+            className="mt-3 w-full py-3 border border-white/15 hover:bg-white/[0.05] text-white/80 font-semibold text-[14px] rounded-2xl transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        ) : null}
 
         <p className="text-white/20 text-[11px] mt-4">
-          Allow camera and microphone access when prompted.
+          {joinToken
+            ? "No sign-in needed. Allow camera and microphone access when prompted."
+            : "Allow camera and microphone access when prompted."}
         </p>
       </div>
     </div>

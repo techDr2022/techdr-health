@@ -5,7 +5,17 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { getMedicalOrgSchema, getWebsiteSchema } from "@/lib/schema";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site-config";
+import {
+  getHowToConsultSchema,
+  getMedicalOrgSchema,
+  getTelehealthApplicationSchema,
+  getWebsiteSchema,
+} from "@/lib/schema";
 
 const interDisplay = Inter({
   subsets: ["latin"],
@@ -23,20 +33,64 @@ const interBody = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "TechDrHealth - Online Doctor Consultation | 1000+ Specialists",
-    template: "%s | TechDrHealth",
+    default: `${SITE_NAME} - Worldwide Online Doctor Consultation | 1000+ Specialists`,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Consult verified doctors online via video in minutes. 1000+ specialists across 20+ specialities. Book teleconsultation now on techdrhealth.com.",
-  metadataBase: new URL("https://techdrhealth.com"),
+  description: SITE_DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",
     apple: "/favicon.png",
   },
+  alternates: {
+    canonical: SITE_URL,
+    languages: {
+      en: SITE_URL,
+      "en-IN": SITE_URL,
+      "x-default": SITE_URL,
+    },
+  },
   openGraph: {
-    siteName: "TechDrHealth",
+    title: `${SITE_NAME} - Worldwide Online Doctor Consultation`,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     type: "website",
+    locale: "en",
+    alternateLocale: ["en_IN", "en_US", "en_GB", "en_AE"],
+    images: [
+      {
+        url: `${SITE_URL}/techdrhealth-logo.png`,
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} - Global Teleconsultation Platform`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} - Worldwide Teleconsultation`,
+    description: SITE_DESCRIPTION,
+    images: [`${SITE_URL}/techdrhealth-logo.png`],
+    site: "@techdrtelehealth",
+    creator: "@techdrtelehealth",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  other: {
+    "geo.region": "WORLD",
+    "geo.placename": "Worldwide",
+    language: "en",
   },
 };
 
@@ -48,6 +102,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${interDisplay.variable} ${interBody.variable}`}>
       <head>
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
         <Script
           strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=G-09WZSV2Q9L"
@@ -61,7 +116,14 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <Providers>
-          <JsonLd data={[getMedicalOrgSchema(), getWebsiteSchema()]} />
+          <JsonLd
+            data={[
+              getMedicalOrgSchema(),
+              getWebsiteSchema(),
+              getTelehealthApplicationSchema(),
+              getHowToConsultSchema(),
+            ]}
+          />
           {children}
           <Toaster richColors position="top-center" />
         </Providers>

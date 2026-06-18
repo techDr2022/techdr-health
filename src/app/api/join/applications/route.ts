@@ -4,6 +4,9 @@ import { PlanType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { FREE_LISTING_LIMIT, SUBSCRIPTION_PLANS } from "@/lib/plans";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
+import { sendNewDoctorJoinAdminEmail } from "@/lib/email";
+
+export const dynamic = "force-dynamic";
 
 function parseJsonArray(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((v) => typeof v === "string");
@@ -121,7 +124,19 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return { profile, userEmail: user.email, isFreeListingGranted, freeSlotsClaimed };
+      return { profile, userEmail: user.email, userPhone: phone, isFreeListingGranted, freeSlotsClaimed };
+    });
+
+    sendNewDoctorJoinAdminEmail({
+      entityName,
+      email: created.userEmail,
+      phone: created.userPhone,
+      specialty: payload.specialty ? String(payload.specialty) : "General Medicine",
+      plan: normalizedPlan,
+      isFreeListing: created.isFreeListingGranted,
+      profileId: created.profile.id,
+    }).catch((error) => {
+      console.error("admin join notification email failed", error);
     });
 
     return NextResponse.json(

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import Pusher from "pusher";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  isJoinableBookingStatus,
+  resolveConsultationAccess,
+} from "@/lib/consultation-access";
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID!,
@@ -19,12 +22,8 @@ type ChatMessage = {
 };
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const bookingId = req.nextUrl.searchParams.get("bookingId");
+  const joinToken = req.nextUrl.searchParams.get("joinToken");
   if (!bookingId) {
     return NextResponse.json({ error: "bookingId is required" }, { status: 400 });
   }
@@ -37,9 +36,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
 
-  const allowed = booking.patientId === session.user.id || booking.doctor.userId === session.user.id;
-  if (!allowed) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const access = await resolveConsultationAccess(
+    bookingId,
+    booking,
+    joinToken?.trim() || null
+  );
+  if (!access) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!isJoinableBookingStatus(booking.status)) {
+    return NextResponse.json({ error: "This consultation is no longer active." }, { status: 400 });
   }
 
   const room = await prisma.consultationRoom.findUnique({ where: { bookingId } });
@@ -48,15 +54,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { bookingId, message, sender } = (await req.json()) as {
+  const { bookingId, message, sender, joinToken } = (await req.json()) as {
     bookingId?: string;
     message?: string;
     sender?: "doctor" | "patient";
+    joinToken?: string;
   };
 
   if (!bookingId || !message || !sender) {
@@ -71,14 +73,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
 
-  const isDoctor = booking.doctor.userId === session.user.id;
-  const isPatient = booking.patientId === session.user.id;
-  if (!isDoctor && !isPatient) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const access = await resolveConsultationAccess(
+    bookingId,
+    booking,
+    joinToken?.trim() || null
+  );
+  if (!access) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!isJoinableBookingStatus(booking.status)) {
+    return NextResponse.json({ error: "This consultation is no longer active." }, { status: 400 });
   }
 
-  const expectedSender = isDoctor ? "doctor" : "patient";
-  if (sender !== expectedSender) {
+  if (sender !== access.role) {
     return NextResponse.json({ error: "Invalid sender role" }, { status: 400 });
   }
 

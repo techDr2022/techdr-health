@@ -10,9 +10,11 @@ type FreeSlotsState = {
 export function FreeSlotsLeft({
   className,
   fallback = `${FREE_LISTING_LIMIT} free slots left`,
+  compact = false,
 }: {
   className?: string;
   fallback?: string;
+  compact?: boolean;
 }) {
   const [remaining, setRemaining] = useState<number | null>(null);
 
@@ -42,6 +44,11 @@ export function FreeSlotsLeft({
     };
   }, []);
 
-  const label = remaining === null ? fallback : `${remaining} free slots left`;
+  const label =
+    remaining === null
+      ? fallback
+      : compact
+        ? `${remaining} left`
+        : `${remaining} free slots left`;
   return <span className={className}>{label}</span>;
 }

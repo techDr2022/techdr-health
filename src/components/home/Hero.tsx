@@ -102,7 +102,7 @@ export function Hero() {
             Online Doctor Consultation India - 1000+ Verified Specialists
           </h1>
           <p className="mt-5 max-w-xl text-lg text-slate-300 leading-relaxed">
-            Book video doctor consultation with verified physicians across
+            Book HD video consultations with verified physicians across
             cardiology, dermatology, mental health, and 20+ specialties.
             Trusted teleconsultation platform for patients across India with
             HIPAA-style privacy practices.

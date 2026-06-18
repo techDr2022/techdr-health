@@ -1,4 +1,4 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 type R2Config = {
   accountId: string;
@@ -59,4 +59,30 @@ export function buildR2PublicUrl(objectKey: string) {
   }
 
   return `/api/storage/r2-object?key=${encodeURIComponent(normalizedKey)}`;
+}
+
+export async function getR2ObjectBuffer(objectKey: string) {
+  const normalizedKey = objectKey.replace(/^\/+/, "");
+  const config = getR2Config();
+
+  const object = await getR2Client().send(
+    new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: normalizedKey,
+    })
+  );
+
+  if (!object.Body) return null;
+
+  const bytes =
+    "transformToByteArray" in object.Body && typeof object.Body.transformToByteArray === "function"
+      ? await object.Body.transformToByteArray()
+      : null;
+
+  if (!bytes) return null;
+
+  return {
+    buffer: Buffer.from(bytes),
+    contentType: object.ContentType || "application/octet-stream",
+  };
 }

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { getDashboardPathForRole } from "@/lib/auth-redirect";
 
 export async function ensureAdminAccess() {
   const session = await auth();
@@ -7,7 +8,7 @@ export async function ensureAdminAccess() {
     redirect("/login");
   }
   if (session.user.role !== "ADMIN") {
-    redirect(session.user.role === "DOCTOR" ? "/dashboard" : "/dashboard/patient");
+    redirect(getDashboardPathForRole(session.user.role));
   }
   return session;
 }

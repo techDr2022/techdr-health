@@ -127,14 +127,15 @@ function ProfileForm({ initialProfile }: { initialProfile: InitialProfile }) {
         body: formData,
       });
 
-      const body = (await response.json()) as { url?: string; error?: string };
-      if (!response.ok || !body.url) {
+      const body = (await response.json()) as { url?: string; key?: string; error?: string };
+      const storedPhoto = body.key || body.url;
+      if (!response.ok || !storedPhoto) {
         toast.error(body.error || "Unable to upload photo.");
         return;
       }
 
-      setPhotoUrl(body.url);
-      setPreviewUrl(body.url);
+      setPhotoUrl(storedPhoto);
+      setPreviewUrl(body.url || storedPhoto);
       setPhotoFile(null);
       toast.success("Photo uploaded. Click save to update profile.");
     } catch {

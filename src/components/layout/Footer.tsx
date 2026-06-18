@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { GLOBAL_REGIONS } from "@/data/global-regions";
 import { SEO_KEYWORD_PAGES } from "@/data/seo-keywords";
 
 export function Footer() {
@@ -25,17 +26,40 @@ export function Footer() {
           </div>
         </div>
 
+        <div className="mt-10 rounded-2xl border border-emerald-100 bg-white p-5">
+          <p className="font-display text-xs font-[700] uppercase tracking-[0.12em] text-slate-800">
+            Worldwide Teleconsultation
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] leading-5 text-slate-600">
+            {GLOBAL_REGIONS.map((region) => (
+              <Link
+                key={region.slug}
+                href={`/teleconsultation/${region.slug}`}
+                className="hover:text-emerald-700 hover:underline"
+              >
+                {region.flag} {region.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Image src="/techdrhealth-logo.png" alt="techDrHealth" width={180} height={48} className="h-10 w-auto" />
             <p className="mt-3 max-w-xs font-body text-sm leading-relaxed text-slate-600">
-              Fast, secure teleconsultation with verified specialists across India. Consult in minutes from anywhere.
+              Fast, secure worldwide teleconsultation with 1000+ verified specialists.
+              Consult from anywhere — India, US, UK, UAE, and 15+ countries.
             </p>
           </div>
 
           <div>
             <p className="font-display text-[16px] font-[700] text-slate-900">Patients</p>
             <ul className="mt-4 space-y-2 font-body text-sm text-slate-600">
+              <li>
+                <Link href="/teleconsultation" className="hover:text-emerald-700">
+                  Global Teleconsultation
+                </Link>
+              </li>
               <li>
                 <Link href="/consult" className="hover:text-emerald-700">
                   Book Consultation
@@ -150,6 +174,7 @@ export function Footer() {
           <div className="flex flex-wrap gap-2.5">
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">🔒 Secure</span>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">✅ Verified</span>
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">🌍 Worldwide</span>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">🇮🇳 Made in India</span>
           </div>
         </div>

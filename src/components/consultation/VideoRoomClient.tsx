@@ -32,6 +32,7 @@ interface VideoRoomClientProps {
   specialty: string;
   duration: number;
   existingPrescription?: PrescriptionSnapshot | null;
+  joinToken?: string | null;
 }
 
 function VideoRoomClientInner({
@@ -42,6 +43,7 @@ function VideoRoomClientInner({
   specialty,
   duration,
   existingPrescription,
+  joinToken,
 }: VideoRoomClientProps) {
   const router = useRouter();
   const [token, setToken] = useState("");
@@ -75,7 +77,7 @@ function VideoRoomClientInner({
       const response = await fetch("/api/video/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId }),
+        body: JSON.stringify({ bookingId, joinToken: joinToken || undefined }),
       });
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -91,7 +93,7 @@ function VideoRoomClientInner({
     } finally {
       setIsLoadingToken(false);
     }
-  }, [bookingId]);
+  }, [bookingId, joinToken]);
 
   useEffect(() => {
     void getToken();
@@ -130,10 +132,14 @@ function VideoRoomClientInner({
     await fetch("/api/video/end", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId }),
+      body: JSON.stringify({ bookingId, joinToken: joinToken || undefined }),
     });
 
-    const redirectPath = role === "doctor" ? "/dashboard/bookings" : "/dashboard/patient";
+    const redirectPath = joinToken
+      ? "/"
+      : role === "doctor"
+        ? "/dashboard/bookings"
+        : "/dashboard/patient";
     router.push(redirectPath);
   }
 
@@ -165,7 +171,15 @@ function VideoRoomClientInner({
               Retry
             </button>
             <button
-              onClick={() => router.push(role === "doctor" ? "/dashboard/bookings" : "/dashboard/patient")}
+              onClick={() =>
+                router.push(
+                  joinToken
+                    ? "/"
+                    : role === "doctor"
+                      ? "/dashboard/bookings"
+                      : "/dashboard/patient"
+                )
+              }
               className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/85 hover:bg-white/[0.06] transition-colors"
             >
               Back
@@ -306,9 +320,15 @@ function VideoRoomClientInner({
           </div>
 
           {activePanel === "prescription" ? (
-            <PrescriptionPanel bookingId={bookingId} role={role} initialData={prescription} onSent={setPrescription} />
+            <PrescriptionPanel
+              bookingId={bookingId}
+              role={role}
+              initialData={prescription}
+              onSent={setPrescription}
+              joinToken={joinToken}
+            />
           ) : (
-            <ChatPanel bookingId={bookingId} role={role} />
+            <ChatPanel bookingId={bookingId} role={role} joinToken={joinToken} />
           )}
         </div>
       </div>
