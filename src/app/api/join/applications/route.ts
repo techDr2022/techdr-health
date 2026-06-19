@@ -4,6 +4,10 @@ import { PlanType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { FREE_LISTING_LIMIT, SUBSCRIPTION_PLANS } from "@/lib/plans";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
+import {
+  defaultConditionsForSpecialty,
+  resolveCanonicalSpecialtyName,
+} from "@/lib/doctor-specialty";
 import { sendNewDoctorJoinAdminEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +68,9 @@ export async function POST(req: NextRequest) {
     const entityName = String(payload.entityName).trim();
     const slugBase = entityName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     const slug = `dr-${slugBase}-${Date.now().toString().slice(-6)}`;
+    const specialty = resolveCanonicalSpecialtyName(
+      payload.specialty ? String(payload.specialty) : "General Medicine"
+    );
 
     const created = await prisma.$transaction(async (tx) => {
       const freeSlotsClaimed = await tx.subscription.count({
@@ -89,7 +96,7 @@ export async function POST(req: NextRequest) {
           slug,
           displayName: entityName,
           photoUrl: payload.profilePhotoUrl ? String(payload.profilePhotoUrl) : null,
-          specialty: payload.specialty ? String(payload.specialty) : "General Medicine",
+          specialty,
           subSpecialties: parseJsonArray(payload.subSpecialties),
           credentials: payload.credentials ? String(payload.credentials) : "MBBS",
           medRegNumber: payload.medRegNumber ? String(payload.medRegNumber) : `PENDING-${user.id.slice(-6)}`,
@@ -98,7 +105,7 @@ export async function POST(req: NextRequest) {
           hospitalAffils: [payload.clinicName, payload.hospitalName].filter((v): v is string => Boolean(v)).map(String),
           bio: payload.bio ? String(payload.bio) : null,
           languages: parseJsonArray(payload.languages),
-          conditions: [],
+          conditions: defaultConditionsForSpecialty(specialty),
           consultFee: payload.consultationFee ? Number(payload.consultationFee) : 500,
           followUpFee: payload.followUpFee ? Number(payload.followUpFee) : 0,
           consultDuration: CONSULTATION_SLOT_MINUTES,

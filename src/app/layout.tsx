@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
+import { HealthChatWidget } from "@/components/ai/HealthChatWidget";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   SITE_DESCRIPTION,
@@ -125,6 +126,7 @@ export default function RootLayout({
             ]}
           />
           {children}
+          <HealthChatWidget />
           <Toaster richColors position="top-center" />
         </Providers>
       </body>

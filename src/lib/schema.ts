@@ -164,7 +164,7 @@ export function getHowToConsultSchema() {
         position: 3,
         name: "Join your HD video consultation",
         text: "Connect via secure HD video from your phone or laptop. Receive diagnosis, treatment plan, and digital prescription when appropriate.",
-        url: `${SITE_URL}/consult`,
+        url: `${SITE_URL}/book`,
       },
     ],
   };

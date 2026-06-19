@@ -19,10 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { SmartConsultForm } from "@/components/ai/SmartConsultForm";
 
 type DoctorOption = {
   slug: string;
   name: string;
+  specialty: string;
 };
 
 type UploadedReport = {
@@ -137,6 +139,9 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
       event.target.value = "";
     }
   }
+
+  const selectedDoctorSlug = form.watch("doctorSlug");
+  const selectedDoctor = doctors.find((doctor) => doctor.slug === selectedDoctorSlug);
 
   async function onSubmit(data: FormValues) {
     setSubmitError(null);
@@ -304,6 +309,24 @@ function ConsultFormInner({ doctors }: { doctors: DoctorOption[] }) {
         </div>
 
         <div className="space-y-2">
+          {selectedDoctor ? (
+            <SmartConsultForm
+              doctorSpecialty={selectedDoctor.specialty}
+              onApply={(prefill) => {
+                const combined = [
+                  prefill.chiefComplaint,
+                  prefill.duration ? `Duration: ${prefill.duration}` : "",
+                  prefill.severity ? `Severity: ${prefill.severity}` : "",
+                  prefill.relevantHistory ? `History: ${prefill.relevantHistory}` : "",
+                ]
+                  .filter(Boolean)
+                  .join("\n");
+                form.setValue("chiefComplaint", combined, { shouldValidate: true });
+              }}
+              className="mb-4 rounded-xl border border-cyan-100 bg-cyan-50/40 p-4"
+            />
+          ) : null}
+
           <Label htmlFor="chiefComplaint" className="text-sm font-semibold text-slate-700">
             Chief complaint / notes
           </Label>

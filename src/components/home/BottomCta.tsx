@@ -20,7 +20,7 @@ export function BottomCta() {
             size="lg"
             className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white shadow-lg"
           >
-            <Link href="/consult" data-analytics-event="book_bottom_cta">
+            <Link href="/book" data-analytics-event="book_bottom_cta">
               Book consultation
             </Link>
           </Button>

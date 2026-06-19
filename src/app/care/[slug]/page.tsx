@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getSeoKeywordPage, SEO_KEYWORD_PAGES } from "@/data/seo-keywords";
 import { generateSEO } from "@/lib/seo";
+import { MEDICAL_TOURS_INDIA_URL } from "@/lib/site-config";
 
 type Props = { params: { slug: string } };
 
@@ -29,6 +30,7 @@ export default function CareKeywordPage({ params }: Props) {
   const page = getSeoKeywordPage(params.slug);
   if (!page) notFound();
 
+  const isMedicalTourismPage = page.slug === "medical-tourism-teleconsultation-india";
   const relatedPages = SEO_KEYWORD_PAGES.filter((item) => item.slug !== page.slug).slice(0, 6);
   const faqItems = [
     {
@@ -125,7 +127,7 @@ export default function CareKeywordPage({ params }: Props) {
 
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
-              href="/consult"
+              href="/book"
               className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
             >
               Book Consultation
@@ -142,6 +144,16 @@ export default function CareKeywordPage({ params }: Props) {
             >
               View Specialties
             </Link>
+            {isMedicalTourismPage ? (
+              <a
+                href={MEDICAL_TOURS_INDIA_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+              >
+                Get Treatment Estimate
+              </a>
+            ) : null}
           </div>
         </section>
 

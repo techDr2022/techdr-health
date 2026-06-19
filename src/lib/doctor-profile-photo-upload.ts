@@ -1,16 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { buildR2PublicUrl, getR2Client, getR2Config } from "@/lib/r2";
+import {
+  extensionForProfilePhotoType,
+  PROFILE_PHOTO_MAX_BYTES,
+  PROFILE_PHOTO_MIME_TYPES,
+} from "@/lib/doctor-profile-photo";
 
-export const PROFILE_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
-export const PROFILE_PHOTO_MIME_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
-
-export function extensionForProfilePhotoType(type: string) {
-  if (type === "image/jpeg" || type === "image/jpg") return "jpg";
-  if (type === "image/png") return "png";
-  if (type === "image/webp") return "webp";
-  return null;
-}
+export { PROFILE_PHOTO_MAX_BYTES, PROFILE_PHOTO_MIME_TYPES } from "@/lib/doctor-profile-photo";
 
 export async function uploadDoctorProfilePhotoToR2(file: File, userId: string) {
   if (!PROFILE_PHOTO_MIME_TYPES.has(file.type)) {

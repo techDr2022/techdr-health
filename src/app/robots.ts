@@ -14,7 +14,7 @@ const PRIVATE_PATHS = [
   "/admin/",
   "/api/",
   "/consultation/",
-  "/consult/payment",
+  "/book/payment",
   "/login",
   "/register",
   "/forgot-password",
@@ -31,7 +31,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "Googlebot",
         allow: "/",
-        disallow: ["/dashboard/", "/admin/", "/api/", "/consultation/", "/consult/payment"],
+        disallow: ["/dashboard/", "/admin/", "/api/", "/consultation/", "/book/payment"],
       },
       // Allow AI crawlers on public content for AEO/GEO visibility
       {

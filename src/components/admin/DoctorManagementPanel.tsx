@@ -1,14 +1,24 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getSafeImageSrc } from "@/lib/image";
+import { Textarea } from "@/components/ui/textarea";
+import { SPECIALTIES } from "@/data/specialties";
+import { AdminDoctorPhotoUpload } from "@/components/admin/AdminDoctorPhotoUpload";
+import { normalizeIndianPhoneDigits } from "@/lib/admin-doctor-schema";
+import { resolveCanonicalSpecialtyName } from "@/lib/doctor-specialty";
+import { ResumeAutofillUpload } from "@/components/join/ResumeAutofillUpload";
+import {
+  formatParsedEducation,
+  joinParsedList,
+  type ParsedDoctorResume,
+} from "@/lib/doctor-resume-parse";
 
 type BulkImportRowResult = {
   rowNumber: number;
@@ -31,6 +41,63 @@ type BulkImportErrorResponse = {
   hint?: string;
   detectedHeaders?: string[];
 };
+
+type AdminCreateDoctorForm = {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  specialty: string;
+  credentials: string;
+  medRegNumber: string;
+  experience: string;
+  languages: string;
+  subSpecialties: string;
+  hospitalAffils: string;
+  bio: string;
+  education: string;
+  consultFee: string;
+  isVisible: boolean;
+};
+
+const DEFAULT_CREATE_FORM: AdminCreateDoctorForm = {
+  name: "",
+  email: "",
+  phone: "",
+  password: "techDr",
+  specialty: "General Medicine",
+  credentials: "MBBS",
+  medRegNumber: "",
+  experience: "",
+  languages: "",
+  subSpecialties: "",
+  hospitalAffils: "",
+  bio: "",
+  education: "",
+  consultFee: "500",
+  isVisible: true,
+};
+
+function splitCommaList(value: string) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseEducationLines(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [degree, institution, yearText] = line.split("|").map((part) => part.trim());
+      const year = Number(yearText);
+      if (!degree || !institution || !Number.isFinite(year)) return null;
+      return { degree, institution, year };
+    })
+    .filter((entry): entry is { degree: string; institution: string; year: number } => entry !== null);
+}
 
 export type AdminDoctorRow = {
   id: string;
@@ -55,27 +122,65 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importResults, setImportResults] = useState<BulkImportResponse | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "techDr",
-    specialty: "General Medicine",
-    credentials: "MBBS",
-    consultFee: "500",
-    isVisible: true,
-  });
+  const [form, setForm] = useState<AdminCreateDoctorForm>(DEFAULT_CREATE_FORM);
+
+  function applyResumeData(data: ParsedDoctorResume, filledFields: number) {
+    setForm((prev) => ({
+      ...prev,
+      name: data.entityName || prev.name,
+      email: data.email || prev.email,
+      phone: data.phone || prev.phone,
+      specialty: data.specialty || prev.specialty,
+      credentials: data.credentials || prev.credentials,
+      medRegNumber: data.medRegNumber || prev.medRegNumber,
+      experience: data.experience || prev.experience,
+      languages: joinParsedList(data.languages) || prev.languages,
+      subSpecialties: joinParsedList(data.subSpecialties) || prev.subSpecialties,
+      hospitalAffils: joinParsedList(data.hospitalAffils) || prev.hospitalAffils,
+      bio: data.bio || prev.bio,
+      education: formatParsedEducation(data.education) || prev.education,
+      consultFee: data.consultationFee || prev.consultFee,
+    }));
+    setMessage(`Resume analyzed — ${filledFields} field(s) auto-filled. Review before creating.`);
+    setUploadError(null);
+  }
 
   async function createDoctor() {
     setIsCreating(true);
     setMessage(null);
+
+    const phone = normalizeIndianPhoneDigits(form.phone);
+    if (!form.name.trim() || !form.email.trim()) {
+      setMessage("Full name and email are required.");
+      setIsCreating(false);
+      return;
+    }
+    if (phone.length !== 10) {
+      setMessage("Enter a valid 10-digit phone number.");
+      setIsCreating(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/doctors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone,
+          password: form.password,
+          specialty: resolveCanonicalSpecialtyName(form.specialty.trim()),
+          credentials: form.credentials.trim(),
+          medRegNumber: form.medRegNumber.trim() || undefined,
+          experience: form.experience ? Number(form.experience) : 0,
+          bio: form.bio.trim() || null,
+          languages: splitCommaList(form.languages),
+          subSpecialties: splitCommaList(form.subSpecialties),
+          hospitalAffils: splitCommaList(form.hospitalAffils),
+          education: parseEducationLines(form.education),
           consultFee: Number(form.consultFee),
+          isVisible: form.isVisible,
         }),
       });
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -84,16 +189,7 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
       setMessage("Doctor added successfully.");
       setUploadError(null);
       setShowForm(false);
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-        password: "techDr",
-        specialty: "General Medicine",
-        credentials: "MBBS",
-        consultFee: "500",
-        isVisible: true,
-      });
+      setForm(DEFAULT_CREATE_FORM);
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to create doctor.");
@@ -296,7 +392,9 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">Add, hide, or remove doctors from the platform.</p>
+        <p className="text-sm text-muted-foreground">
+          Add, edit, hide, or remove doctors from the platform without touching code.
+        </p>
         <Button type="button" onClick={() => setShowForm((value) => !value)}>
           {showForm ? "Close form" : "Add doctor"}
         </Button>
@@ -304,23 +402,79 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
 
       {showForm ? (
         <div className="grid gap-3 rounded-xl border bg-slate-50 p-4 md:grid-cols-2">
+          <ResumeAutofillUpload
+            variant="admin"
+            disabled={isCreating}
+            onParsed={applyResumeData}
+            onError={(errorMessage) => {
+              setUploadError(errorMessage);
+              setMessage(null);
+            }}
+          />
           <Field label="Full name">
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </Field>
           <Field label="Email">
             <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </Field>
-          <Field label="Phone">
-            <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Field label="Phone *">
+            <Input
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="10-digit mobile number"
+            />
           </Field>
           <Field label="Password">
             <Input value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </Field>
           <Field label="Specialty">
-            <Input value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} />
+            <select
+              value={form.specialty}
+              onChange={(e) => setForm({ ...form, specialty: e.target.value })}
+              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/40"
+            >
+              {SPECIALTIES.map((item) => (
+                <option key={item.slug} value={item.name}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Credentials">
             <Input value={form.credentials} onChange={(e) => setForm({ ...form, credentials: e.target.value })} />
+          </Field>
+          <Field label="Medical registration number">
+            <Input
+              value={form.medRegNumber}
+              onChange={(e) => setForm({ ...form, medRegNumber: e.target.value })}
+            />
+          </Field>
+          <Field label="Experience (years)">
+            <Input
+              type="number"
+              min={0}
+              value={form.experience}
+              onChange={(e) => setForm({ ...form, experience: e.target.value })}
+            />
+          </Field>
+          <Field label="Languages (comma-separated)">
+            <Input
+              value={form.languages}
+              onChange={(e) => setForm({ ...form, languages: e.target.value })}
+              placeholder="English, Hindi, Telugu"
+            />
+          </Field>
+          <Field label="Sub-specialties (comma-separated)">
+            <Input
+              value={form.subSpecialties}
+              onChange={(e) => setForm({ ...form, subSpecialties: e.target.value })}
+            />
+          </Field>
+          <Field label="Hospital affiliations (comma-separated)">
+            <Input
+              value={form.hospitalAffils}
+              onChange={(e) => setForm({ ...form, hospitalAffils: e.target.value })}
+            />
           </Field>
           <Field label="Consultation fee (INR)">
             <Input
@@ -329,6 +483,25 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
               onChange={(e) => setForm({ ...form, consultFee: e.target.value })}
             />
           </Field>
+          <div className="md:col-span-2">
+            <Field label="Professional bio">
+              <Textarea
+                rows={4}
+                value={form.bio}
+                onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              />
+            </Field>
+          </div>
+          <div className="md:col-span-2">
+            <Field label="Education (one per line: Degree | Institution | Year)">
+              <Textarea
+                rows={4}
+                value={form.education}
+                placeholder="MBBS | AIIMS Delhi | 2010"
+                onChange={(e) => setForm({ ...form, education: e.target.value })}
+              />
+            </Field>
+          </div>
           <label className="flex items-center gap-2 self-end text-sm">
             <input
               type="checkbox"
@@ -366,9 +539,12 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
             {doctors.map((doctor) => (
               <tr key={doctor.id} className="border-b last:border-0">
                 <td className="px-4 py-3">
-                  <DoctorPhotoUpload
-                    doctor={doctor}
+                  <AdminDoctorPhotoUpload
+                    doctorId={doctor.id}
+                    displayName={doctor.displayName}
+                    photoUrl={doctor.photoUrl}
                     disabled={busyId === doctor.id}
+                    compact
                     onUploaded={() => router.refresh()}
                   />
                 </td>
@@ -386,6 +562,9 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
                 <td className="px-4 py-3">{doctor.approvalStatus}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" variant="default" asChild>
+                      <Link href={`/admin/doctors/${doctor.id}`}>Edit</Link>
+                    </Button>
                     <Button
                       type="button"
                       size="sm"
@@ -411,91 +590,6 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
-
-function DoctorPhotoUpload({
-  doctor,
-  disabled,
-  onUploaded,
-}: {
-  doctor: AdminDoctorRow;
-  disabled: boolean;
-  onUploaded: () => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [photoUrl, setPhotoUrl] = useState(doctor.photoUrl);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setPhotoUrl(doctor.photoUrl);
-  }, [doctor.photoUrl]);
-
-  async function uploadPhoto(file: File) {
-    setIsUploading(true);
-    setError(null);
-
-    try {
-      const formData = new FormData();
-      formData.append("photo", file);
-
-      const response = await fetch(`/api/admin/doctors/${doctor.id}/photo`, {
-        method: "POST",
-        body: formData,
-      });
-      const payload = (await response.json().catch(() => null)) as {
-        photoUrl?: string;
-        error?: string;
-      } | null;
-
-      if (!response.ok) throw new Error(payload?.error || "Unable to upload photo.");
-
-      setPhotoUrl(payload?.photoUrl ?? photoUrl);
-      onUploaded();
-    } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Unable to upload photo.");
-    } finally {
-      setIsUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  }
-
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-2">
-        <div className="relative h-11 w-11 overflow-hidden rounded-full bg-slate-200">
-          <Image
-            src={getSafeImageSrc(photoUrl, "/images/placeholders/doctor-avatar.svg")}
-            alt={doctor.displayName}
-            fill
-            className="object-cover"
-            sizes="44px"
-          />
-        </div>
-        <input
-          ref={inputRef}
-          id={`doctor-photo-${doctor.id}`}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
-          disabled={disabled || isUploading}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void uploadPhoto(file);
-          }}
-        />
-        <label
-          htmlFor={`doctor-photo-${doctor.id}`}
-          className={`inline-flex h-8 cursor-pointer items-center rounded-lg border border-input bg-white px-2.5 text-xs font-medium hover:bg-slate-50 ${
-            disabled || isUploading ? "pointer-events-none opacity-50" : ""
-          }`}
-        >
-          {isUploading ? "Uploading..." : photoUrl ? "Change" : "Upload"}
-        </label>
-      </div>
-      {error ? <p className="max-w-[140px] text-[11px] text-red-600">{error}</p> : null}
     </div>
   );
 }

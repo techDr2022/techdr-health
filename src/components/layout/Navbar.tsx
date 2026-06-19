@@ -15,7 +15,6 @@ const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Global", href: "/teleconsultation" },
   { label: "Book", href: "/book" },
-  { label: "Consult", href: "/consult" },
   { label: "About", href: "/about" },
 ];
 

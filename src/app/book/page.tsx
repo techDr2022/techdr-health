@@ -1,13 +1,22 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { BookHero } from "@/components/book/BookHero";
+import { BookSearchHub } from "@/components/book/BookSearchHub";
+import { BookDoctorResults } from "@/components/book/BookDoctorResults";
+import { BookHowItWorks } from "@/components/book/BookHowItWorks";
+import { SymptomChecker } from "@/components/ai/SymptomChecker";
 import { DoctorCard } from "@/components/doctors/DoctorCard";
 import { Button } from "@/components/ui/button";
-import { filterDoctors } from "@/lib/queries";
+import { filterDoctors, getSpecialtyTitle } from "@/lib/queries";
+import {
+  getLiveDoctorCatalog,
+  getLiveDoctorCountBySpecialty,
+} from "@/lib/doctor-catalog";
+import type { DoctorRecord } from "@/types/catalog";
 import { SPECIALTIES } from "@/data/specialties";
-import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateSEO } from "@/lib/seo";
 
@@ -30,24 +39,77 @@ function first(v: string | string[] | undefined): string | undefined {
   return v;
 }
 
-function getFeaturedSpecialists(doctors: Awaited<ReturnType<typeof getLiveDoctorCatalog>>, limit = 6) {
+function getFeaturedSpecialists(
+  doctors: Awaited<ReturnType<typeof getLiveDoctorCatalog>>,
+  limit = 6
+) {
   return [...doctors]
     .sort((a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount)
     .slice(0, limit);
 }
 
+function sortForBooking(doctors: DoctorRecord[]) {
+  return [...doctors].sort((a, b) => {
+    if (a.isAvailable !== b.isAvailable) return a.isAvailable ? -1 : 1;
+    return b.rating * b.reviewCount - a.rating * a.reviewCount;
+  });
+}
+
+function SearchHubFallback() {
+  return (
+    <div className="relative -mt-6 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="h-[140px] animate-pulse rounded-2xl border border-emerald-100 bg-white shadow-lg" />
+    </div>
+  );
+}
+
 export default async function BookPage({ searchParams }: { searchParams: SP }) {
-  const doctors = await getLiveDoctorCatalog();
+  const [doctors, counts] = await Promise.all([
+    getLiveDoctorCatalog(),
+    getLiveDoctorCountBySpecialty(),
+  ]);
+
   const specialty = first(searchParams.specialty);
   const query = first(searchParams.q)?.trim();
+  const lang = first(searchParams.lang);
+  const minRating = Number(first(searchParams.rating));
+  const maxFee = Number(first(searchParams.maxFee));
+  const hasFilters = Boolean(
+    specialty || query || lang || (minRating > 0 && Number.isFinite(minRating)) || (maxFee > 0 && maxFee < 3000 && Number.isFinite(maxFee))
+  );
+  const specialtyTitle = getSpecialtyTitle(specialty);
 
-  const specialists = filterDoctors({
-    specialty: specialty || undefined,
-    query: query || undefined,
-    availableOnly: true,
-  }, doctors);
+  const specialists = sortForBooking(
+    filterDoctors(
+      {
+        specialty: specialty || undefined,
+        query: query || undefined,
+        lang: lang || undefined,
+        minRating:
+          Number.isFinite(minRating) && minRating > 0 ? minRating : undefined,
+        maxFee:
+          Number.isFinite(maxFee) && maxFee > 0 && maxFee < 3000
+            ? maxFee
+            : undefined,
+      },
+      doctors
+    )
+  );
 
   const featured = getFeaturedSpecialists(doctors);
+  const bookableTotal = doctors.length;
+
+  const resultsHeading = specialtyTitle
+    ? `${specialtyTitle} specialists`
+    : query
+      ? `Results for "${query}"`
+      : "Available doctors";
+
+  const resultsSubtext = specialtyTitle
+    ? `Verified ${specialtyTitle.toLowerCase()} doctors with open video slots.`
+    : query
+      ? "Compare profiles, fees, and book instantly."
+      : `${bookableTotal} verified specialists ready for video consultation.`;
 
   return (
     <>
@@ -63,119 +125,58 @@ export default async function BookPage({ searchParams }: { searchParams: SP }) {
           inLanguage: "en-IN",
         }}
       />
-      <main className="bg-gradient-to-b from-white via-emerald-50/40 to-white pt-20">
-        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <Breadcrumb
-            items={[
-              { label: "Home", href: "/" },
-              { label: "Book" },
-            ]}
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 pt-16">
+        <BookHero
+          availableCount={bookableTotal}
+          specialtyCount={SPECIALTIES.length}
+        />
+
+        <Suspense fallback={<SearchHubFallback />}>
+          <BookSearchHub
+            counts={counts}
+            initialQuery={query}
+            initialSpecialty={specialty}
+            resultCount={hasFilters ? specialists.length : 0}
+            hasFilters={hasFilters}
           />
-
-          <div className="mt-5 max-w-3xl">
-            <h1 className="font-heading text-4xl font-semibold text-[#0A1628] sm:text-5xl">
-              Book a specialist consultation
-            </h1>
-            <p className="mt-3 text-muted-foreground">
-              Select a specialist, search doctors, and book instantly.
-            </p>
-          </div>
-
-          <form
-            action="/book"
-            method="get"
-            className="mt-8 grid gap-4 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm md:grid-cols-[1fr_1fr_auto]"
-          >
-            <div className="space-y-2">
-              <label
-                htmlFor="specialty"
-                className="text-sm font-medium text-muted-foreground"
-              >
-                Select specialist
-              </label>
-              <select
-                id="specialty"
-                name="specialty"
-                defaultValue={specialty ?? ""}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="">All specialties</option>
-                {SPECIALTIES.map((item) => (
-                  <option key={item.slug} value={item.slug}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="q" className="text-sm font-medium text-muted-foreground">
-                Search specialist
-              </label>
-              <input
-                id="q"
-                name="q"
-                defaultValue={query ?? ""}
-                placeholder="Doctor name or keyword"
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              />
-            </div>
-
-            <div className="flex items-end gap-2">
-              <Button type="submit" className="h-10 px-6">
-                Search
-              </Button>
-              <Button asChild type="button" variant="outline" className="h-10">
-                <Link href="/book">Clear</Link>
-              </Button>
-            </div>
-          </form>
-        </section>
+        </Suspense>
 
         <section className="mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="font-heading text-2xl font-semibold text-[#0A1628]">
-              Specialists available for booking
-            </h2>
-            <p className="text-sm text-muted-foreground">{specialists.length} found</p>
-          </div>
+          <SymptomChecker variant="compact" />
+        </section>
 
-          {specialists.length > 0 ? (
-            <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {specialists.map((doctor) => (
-                <DoctorCard key={doctor.slug} doctor={doctor} />
+        {hasFilters ? (
+          <BookDoctorResults
+            doctors={specialists}
+            heading={resultsHeading}
+            subtext={resultsSubtext}
+          />
+        ) : null}
+
+        {!hasFilters ? (
+          <section className="mx-auto max-w-7xl px-4 pb-10 pt-2 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="font-heading text-xl font-semibold text-[#0A1628] sm:text-2xl">
+                  Top-rated this week
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Highly trusted specialists across India.
+                </p>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/doctors">Full directory</Link>
+              </Button>
+            </div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((doctor) => (
+                <DoctorCard key={doctor.slug} doctor={doctor} variant="compact" />
               ))}
             </div>
-          ) : (
-            <div className="mt-6 rounded-xl border border-dashed border-emerald-200 bg-white p-8 text-center">
-              <p className="text-muted-foreground">
-                No specialists matched your search. Try another specialty or keyword.
-              </p>
-            </div>
-          )}
-        </section>
+          </section>
+        ) : null}
 
-        <section className="mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="font-heading text-2xl font-semibold text-[#0A1628] sm:text-3xl">
-                Featured specialists
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Top-rated specialists trusted by patients.
-              </p>
-            </div>
-            <Button asChild variant="outline">
-              <Link href="/doctors">View full directory</Link>
-            </Button>
-          </div>
-
-          <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {featured.map((doctor) => (
-              <DoctorCard key={doctor.slug} doctor={doctor} variant="compact" />
-            ))}
-          </div>
-        </section>
+        <BookHowItWorks />
       </main>
       <Footer />
     </>

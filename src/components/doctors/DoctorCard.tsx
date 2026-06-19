@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Clock } from "lucide-react";
 import type { DoctorRecord } from "@/types/catalog";
+import { DoctorLanguages } from "@/components/doctors/DoctorLanguages";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { AvailabilityBadge } from "@/components/ui/AvailabilityBadge";
 import { ConsultationFeeTag } from "@/components/ui/ConsultationFeeTag";
@@ -59,9 +61,13 @@ export function DoctorCard({
               </span>
               <AvailabilityBadge available={doctor.isAvailable} />
             </div>
-            <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-              {doctor.experience}+ yrs · {doctor.languages.slice(0, 2).join(", ")}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                <Clock className="h-3 w-3" aria-hidden />
+                {doctor.experience}+ yrs
+              </span>
+              <DoctorLanguages languages={doctor.languages} variant="compact" />
+            </div>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">

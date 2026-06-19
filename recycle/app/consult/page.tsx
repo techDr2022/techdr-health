@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ConsultForm } from "./ConsultForm";
 import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { resolveCanonicalSpecialtyName } from "@/lib/doctor-specialty";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -23,6 +24,7 @@ export default async function ConsultPage() {
   const doctorOptions = doctors.map((doctor) => ({
     slug: doctor.slug,
     name: doctor.name,
+    specialty: resolveCanonicalSpecialtyName(doctor.specialtySlug),
   }));
 
   return (

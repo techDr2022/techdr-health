@@ -31,6 +31,15 @@ if (r2PublicBaseUrl) {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ["pdf-parse"],
+  },
+  async redirects() {
+    return [
+      { source: "/consult", destination: "/book", permanent: true },
+      { source: "/consult/payment", destination: "/book/payment", permanent: true },
+    ];
+  },
   images: {
     remotePatterns,
     formats: ["image/avif", "image/webp"],

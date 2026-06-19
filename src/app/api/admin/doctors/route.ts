@@ -5,19 +5,14 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
+import {
+  defaultConditionsForSpecialty,
+  resolveCanonicalSpecialtyName,
+} from "@/lib/doctor-specialty";
+import { adminCreateDoctorSchema, formatAdminDoctorSchemaError } from "@/lib/admin-doctor-schema";
+import { revalidateDoctorPublicPages } from "@/lib/revalidate-doctors";
 
 export const dynamic = "force-dynamic";
-
-const createDoctorSchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  email: z.string().trim().email(),
-  phone: z.string().trim().min(10).max(15),
-  password: z.string().min(6).max(120),
-  specialty: z.string().trim().min(2).max(120),
-  credentials: z.string().trim().min(2).max(120),
-  consultFee: z.number().int().min(0).max(100000),
-  isVisible: z.boolean().optional(),
-});
 
 async function requireAdmin() {
   const session = await auth();
@@ -35,9 +30,10 @@ export async function POST(req: NextRequest) {
   if (authResult.error) return authResult.error;
 
   try {
-    const payload = createDoctorSchema.parse(await req.json());
+    const payload = adminCreateDoctorSchema.parse(await req.json());
     const email = payload.email.toLowerCase();
     const phone = payload.phone.trim();
+    const specialty = resolveCanonicalSpecialtyName(payload.specialty);
     const slugBase = payload.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     const slug = `dr-${slugBase}-${Date.now().toString().slice(-6)}`;
     const passwordHash = await bcrypt.hash(payload.password, 12);
@@ -61,15 +57,16 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           slug,
           displayName: payload.name,
-          specialty: payload.specialty,
-          subSpecialties: [],
+          specialty,
+          subSpecialties: payload.subSpecialties ?? [],
           credentials: payload.credentials,
-          medRegNumber: `ADMIN-${user.id.slice(-6)}`,
-          experience: 0,
-          education: [],
-          hospitalAffils: [],
-          languages: ["English"],
-          conditions: [],
+          medRegNumber: payload.medRegNumber?.trim() || `ADMIN-${user.id.slice(-6)}`,
+          experience: payload.experience ?? 0,
+          education: payload.education ?? [],
+          hospitalAffils: payload.hospitalAffils ?? [],
+          bio: payload.bio ?? null,
+          languages: payload.languages?.length ? payload.languages : ["English"],
+          conditions: defaultConditionsForSpecialty(specialty),
           consultFee: payload.consultFee,
           followUpFee: 0,
           consultDuration: CONSULTATION_SLOT_MINUTES,
@@ -94,10 +91,12 @@ export async function POST(req: NextRequest) {
       return { profileId: profile.id, userId: user.id, slug: profile.slug };
     });
 
+    revalidateDoctorPublicPages(specialty);
+
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues[0]?.message ?? "Invalid doctor data." }, { status: 400 });
+      return NextResponse.json({ error: formatAdminDoctorSchemaError(error) }, { status: 400 });
     }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return NextResponse.json({ error: "Email or phone is already registered." }, { status: 409 });

@@ -5,6 +5,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/cron/health-nudges",
+      "schedule": "0 10 * * *"
+    },
+    {
       "path": "/api/cron/weekly-doctor-payout-summary",
       "schedule": "30 3 * * 1"
     }

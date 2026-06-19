@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MEDICAL_TOURS_INDIA_URL } from "@/lib/site-config";
 import Image from "next/image";
 import { GLOBAL_REGIONS } from "@/data/global-regions";
 import { SEO_KEYWORD_PAGES } from "@/data/seo-keywords";
@@ -61,7 +62,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/consult" className="hover:text-emerald-700">
+                <Link href="/book" className="hover:text-emerald-700">
                   Book Consultation
                 </Link>
               </li>
@@ -142,12 +143,22 @@ export function Footer() {
                 trusted doctors, hospitals, and personalized care coordination.
               </p>
             </div>
-            <Link
-              href="/contact"
-              className="inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
-            >
-              Get Assistance
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={MEDICAL_TOURS_INDIA_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
+              >
+                Get Treatment Estimate
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-white/50 bg-white/10 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/20"
+              >
+                Get Assistance
+              </Link>
+            </div>
           </div>
         </div>
 

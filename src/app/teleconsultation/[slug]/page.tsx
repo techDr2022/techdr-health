@@ -81,7 +81,7 @@ export default function RegionTeleconsultationPage({ params }: Props) {
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/consult"
+              href="/book"
               className="inline-flex h-11 items-center rounded-full bg-emerald-600 px-6 text-sm font-semibold text-white hover:bg-emerald-700"
             >
               Book Consultation

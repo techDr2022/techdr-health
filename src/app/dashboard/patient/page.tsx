@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { LabReportAnalyser } from "@/components/ai/LabReportAnalyser";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,24 @@ export default async function PatientDashboardPage() {
         <StatCard label="Total Bookings" value={String(bookings.length)} />
         <StatCard label="Upcoming" value={String(bookings.filter((b) => b.status === "UPCOMING").length)} />
         <StatCard label="Completed" value={String(bookings.filter((b) => b.status === "COMPLETED").length)} />
+      </div>
+
+      <div className="rounded-xl border border-emerald-100 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Lab Report Analyser</h2>
+            <p className="text-sm text-muted-foreground">
+              Upload a PDF to get AI insights and specialist recommendations.
+            </p>
+          </div>
+          <Link
+            href="/lab-report-analyser"
+            className="text-sm font-semibold text-emerald-700 hover:underline"
+          >
+            Open full page →
+          </Link>
+        </div>
+        <LabReportAnalyser patientId={session.user.id} className="mt-4" />
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">

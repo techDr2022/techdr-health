@@ -105,6 +105,7 @@ model User {
 
   doctorProfile     DoctorProfile?
   bookingsAsPatient Booking[]       @relation("PatientBookings")
+  healthNudges      HealthNudge[]
   sessions          Session[]
   authSessions      AuthSession[]
   blogPosts         BlogPost[]
@@ -267,6 +268,7 @@ model Booking {
   notes              String?       @db.Text
   prescription       Json?
   diagnosis          String?
+  labReportAnalysis  Json?
 
   followUpDate       DateTime?
 
@@ -320,9 +322,24 @@ model Prescription {
   pdfUrl        String?
   sentAt        DateTime?
   viewedAt      DateTime?
+  aiDraft       Json?
+  aiUsed        Boolean   @default(false)
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model HealthNudge {
+  id        String   @id @default(cuid())
+  patientId String
+  bookingId String?
+  nudgeType String
+  message   String   @db.Text
+  sentAt    DateTime @default(now())
+  opened    Boolean  @default(false)
+  patient   User     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, nudgeType, sentAt])
 }
 
 model Review {

@@ -5,6 +5,8 @@ import { getSpecialtyBySlug, listSpecialtySlugs } from "@/data/specialties";
 import { SITE_NAME } from "@/lib/site-config";
 import { getSiteUrl } from "@/lib/site-config";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: { name: string } };
 
 export function generateStaticParams() {

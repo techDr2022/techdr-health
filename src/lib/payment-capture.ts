@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { fetchCashfreeOrder } from "@/lib/cashfree";
 import { sendBookingStatusUpdateEmail, sendSubscriptionConfirmationEmail } from "@/lib/email";
 import { buildConsultationJoinUrl } from "@/lib/consultation-join";
+import { revalidateDoctorPublicPages } from "@/lib/revalidate-doctors";
 import { getSiteUrl } from "@/lib/site-config";
 
 type BookingCaptureResult =
@@ -151,25 +152,28 @@ export async function activateSubscriptionPayment(
   const alreadyActive = subscription.status === "ACTIVE" && Boolean(subscription.activatedAt);
 
   if (!alreadyActive) {
-    await prisma.$transaction([
-      prisma.subscription.update({
-        where: { id: subscription.id },
-        data: {
-          status: "ACTIVE",
-          cashfreePaymentId: order.order_id,
-          cashfreeSignature: "cashfree-verified",
-          purchasedAt: new Date(),
-          activatedAt: new Date(),
-          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-          renewalReminderSent: false,
-          expiredEmailSent: false,
-        },
-      }),
-      prisma.doctorProfile.update({
+    await prisma.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        status: "ACTIVE",
+        cashfreePaymentId: order.order_id,
+        cashfreeSignature: "cashfree-verified",
+        purchasedAt: new Date(),
+        activatedAt: new Date(),
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        renewalReminderSent: false,
+        expiredEmailSent: false,
+      },
+    });
+
+    const doctor = subscription.doctor;
+    if (doctor.approvalStatus === "APPROVED") {
+      await prisma.doctorProfile.update({
         where: { id: subscription.doctorId },
-        data: { isVisible: false },
-      }),
-    ]);
+        data: { isVisible: true },
+      });
+      revalidateDoctorPublicPages(doctor.specialty);
+    }
 
     if (subscription.doctor.user.email) {
       await sendSubscriptionConfirmationEmail(

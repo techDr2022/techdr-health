@@ -26,6 +26,8 @@ export const KEYWORDS_DEFAULT = [
 
 export const ORG_TWITTER_HANDLE = "@techdrtelehealth";
 
+export const MEDICAL_TOURS_INDIA_URL = "https://landing.medicaltoursindia.com/";
+
 export const GLOBAL_LANGUAGES = [
   "English",
   "Hindi",

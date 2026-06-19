@@ -167,7 +167,7 @@ export function BookNowModal({
         autopay: "1",
       });
       setOpen(false);
-      router.push(`/consult/payment?${paymentParams.toString()}`);
+      router.push(`/book/payment?${paymentParams.toString()}`);
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : "Unable to submit booking."

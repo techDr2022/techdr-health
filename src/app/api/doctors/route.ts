@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { PUBLIC_DOCTOR_FILTER } from "@/lib/doctor-specialty";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,10 +10,7 @@ export async function GET(request: Request) {
 
   try {
     const doctors = await prisma.doctorProfile.findMany({
-      where: {
-        isVisible: true,
-        approvalStatus: "APPROVED",
-      },
+      where: PUBLIC_DOCTOR_FILTER,
       orderBy: [{ createdAt: "desc" }],
       take: limit,
       include: {

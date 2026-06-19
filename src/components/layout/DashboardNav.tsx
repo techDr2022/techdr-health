@@ -30,7 +30,7 @@ const DOCTOR_DASHBOARD_LINKS = [
 
 const PATIENT_DASHBOARD_LINKS = [
   { href: "/dashboard/patient", label: "Overview", icon: Home },
-  { href: "/consult", label: "Book Consultation", icon: CalendarDays },
+  { href: "/book", label: "Book Consultation", icon: CalendarDays },
   { href: "/dashboard/patient", label: "My Consultations", icon: Activity },
   { href: "/profile", label: "Profile", icon: User },
 ];

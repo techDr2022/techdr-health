@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ResumeAutofillUpload } from "@/components/join/ResumeAutofillUpload";
+import type { ParsedDoctorResume } from "@/lib/doctor-resume-parse";
 
 type RegisterStep = 1 | 2 | 3 | 4;
 type UploadValue = File | null;
@@ -143,6 +145,7 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
   const [isFreeListingGranted, setIsFreeListingGranted] = useState(false);
   const [freeSlotsRemaining, setFreeSlotsRemaining] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [resumeMessage, setResumeMessage] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   useEffect(() => {
     let isMounted = true;
@@ -182,6 +185,33 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
       ? arr.filter((item) => item !== value)
       : [...arr, value];
     setForm((prev) => ({ ...prev, [key]: next as FormState[K] }));
+  }
+
+  function applyResumeData(data: ParsedDoctorResume, filledFields?: number) {
+    setForm((prev) => ({
+      ...prev,
+      entityName: data.entityName || prev.entityName,
+      email: data.email || prev.email,
+      phone: data.phone || prev.phone,
+      specialty: data.specialty || prev.specialty,
+      subSpecialties: data.subSpecialties?.length ? data.subSpecialties : prev.subSpecialties,
+      experience: data.experience || prev.experience,
+      credentials: data.credentials || prev.credentials,
+      medRegNumber: data.medRegNumber || prev.medRegNumber,
+      languages: data.languages?.length ? data.languages : prev.languages,
+      consultationFee: data.consultationFee || prev.consultationFee,
+      whatsappNumber: data.whatsappNumber || data.phone || prev.whatsappNumber,
+      clinicName: data.clinicName || prev.clinicName,
+      hospitalName: data.hospitalName || prev.hospitalName,
+      address: data.address || prev.address,
+      city: data.city || prev.city,
+      pincode: data.pincode || prev.pincode,
+      numberOfDoctors: data.numberOfDoctors || prev.numberOfDoctors,
+    }));
+    setError(null);
+    if (typeof filledFields === "number") {
+      setResumeMessage(`Resume analyzed — ${filledFields} field(s) auto-filled. Review before continuing.`);
+    }
   }
 
   function validateStep1() {
@@ -546,6 +576,14 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
 
             {step === 2 ? (
               <div className="grid gap-4 md:grid-cols-2">
+                <ResumeAutofillUpload
+                  disabled={isBusy}
+                  onParsed={(data, filledFields) => applyResumeData(data, filledFields)}
+                  onError={(message) => {
+                    setError(message);
+                    setResumeMessage(null);
+                  }}
+                />
                 <div className="space-y-2">
                   <Label>Full Name / Entity Name *</Label>
                   <Input
@@ -627,6 +665,14 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
 
             {step === 3 ? (
               <div className="grid gap-4 md:grid-cols-2">
+                <ResumeAutofillUpload
+                  disabled={isBusy}
+                  onParsed={(data, filledFields) => applyResumeData(data, filledFields)}
+                  onError={(message) => {
+                    setError(message);
+                    setResumeMessage(null);
+                  }}
+                />
                 <div className="space-y-2">
                   <Label>Specialty *</Label>
                   <select
@@ -669,6 +715,14 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                     Note: 25% will be platform fee. If consultation fee is INR 1000, INR 250 will be platform charges
                     to maintain high-security servers.
                   </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Medical Registration Number</Label>
+                  <Input
+                    value={form.medRegNumber}
+                    onChange={(e) => updateField("medRegNumber", e.target.value)}
+                    placeholder="State medical council registration"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>WhatsApp Number *</Label>
@@ -785,6 +839,12 @@ export function RegisterFlow({ initialPlanId }: { initialPlanId?: string }) {
                   appear across doctor listing, profile, and related pages.
                 </p>
               </div>
+            ) : null}
+
+            {resumeMessage ? (
+              <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                {resumeMessage}
+              </p>
             ) : null}
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}

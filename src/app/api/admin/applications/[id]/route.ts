@@ -43,6 +43,9 @@ export async function PATCH(
         },
       });
 
+      const { revalidateDoctorPublicPages } = await import("@/lib/revalidate-doctors");
+      revalidateDoctorPublicPages(application.specialty);
+
       await sendApprovalEmail(application.user.email, application.displayName);
 
       return NextResponse.json({ ok: true, status: "APPROVED" });

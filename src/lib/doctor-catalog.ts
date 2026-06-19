@@ -1,5 +1,10 @@
 import type { DoctorRecord, ReviewEntry } from "@/types/catalog";
 import { SPECIALTIES } from "@/data/specialties";
+import { sanitizeDoctorBioForPublic } from "@/lib/doctor-bio";
+import {
+  PUBLIC_DOCTOR_FILTER,
+  resolveSpecialtySlug,
+} from "@/lib/doctor-specialty";
 import { prisma } from "@/lib/prisma";
 
 const dayMap: Record<string, number> = {
@@ -11,23 +16,6 @@ const dayMap: Record<string, number> = {
   FRI: 5,
   SAT: 6,
 };
-
-function normalizeSpecialtySlug(value: string) {
-  const raw = (value || "").trim();
-  if (!raw) return "general-medicine";
-
-  const lowered = raw.toLowerCase();
-  const bySlug = SPECIALTIES.find((item) => item.slug === lowered);
-  if (bySlug) return bySlug.slug;
-
-  const compact = lowered.replace(/[^a-z0-9]+/g, "");
-  const byName = SPECIALTIES.find(
-    (item) => item.name.toLowerCase().replace(/[^a-z0-9]+/g, "") === compact
-  );
-  if (byName) return byName.slug;
-
-  return lowered.replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "general-medicine";
-}
 
 function parseEducation(value: unknown): DoctorRecord["education"] {
   if (!Array.isArray(value)) return [];
@@ -78,6 +66,7 @@ function formatReviews(
 export async function getLiveDoctorCatalog(): Promise<DoctorRecord[]> {
   try {
     const doctors = await prisma.doctorProfile.findMany({
+      where: PUBLIC_DOCTOR_FILTER,
       include: {
         timings: {
           include: {
@@ -126,18 +115,19 @@ export async function getLiveDoctorCatalog(): Promise<DoctorRecord[]> {
         slug: doctor.slug,
         name: doctor.displayName,
         credentials: doctor.credentials || "MBBS",
-        specialtySlug: normalizeSpecialtySlug(doctor.specialty),
+        specialtySlug: resolveSpecialtySlug(doctor.specialty),
         subSpecialties: doctor.subSpecialties ?? [],
         experience: doctor.experience ?? 0,
         bio:
-          doctor.bio?.trim() ||
+          sanitizeDoctorBioForPublic(doctor.bio) ||
           `${doctor.displayName} is available for online specialist consultation.`,
         photoUrl: doctor.photoUrl || "/images/placeholders/doctor-avatar.svg",
         languages: doctor.languages?.length ? doctor.languages : ["English"],
         consultFee: doctor.consultFee ?? 0,
         rating,
         reviewCount,
-        isAvailable: availabilities.length > 0,
+        // Listed doctors are bookable via platform time slots in BookNowModal.
+        isAvailable: true,
         conditions: doctor.conditions ?? [],
         education: parseEducation(doctor.education),
         hospitalAffils: doctor.hospitalAffils ?? [],

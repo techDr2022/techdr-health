@@ -1,6 +1,11 @@
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  defaultConditionsForSpecialty,
+  resolveCanonicalSpecialtyName,
+} from "@/lib/doctor-specialty";
+import { revalidateDoctorPublicPages } from "@/lib/revalidate-doctors";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +51,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Missing required documents." }, { status: 400 });
     }
 
+    const specialty = resolveCanonicalSpecialtyName(String(payload.specialty));
+    const shouldBeVisible = profile.subscription?.status === "ACTIVE";
+
     await prisma.$transaction(async (tx) => {
       const nextUserData: {
         name: string;
@@ -73,7 +81,7 @@ export async function PATCH(
         data: {
           displayName: entityName,
           photoUrl: payload.profilePhotoUrl ? String(payload.profilePhotoUrl) : null,
-          specialty: String(payload.specialty),
+          specialty,
           subSpecialties: parseJsonArray(payload.subSpecialties),
           credentials: String(payload.credentials),
           medRegNumber: payload.medRegNumber
@@ -84,16 +92,22 @@ export async function PATCH(
             .filter((v): v is string => Boolean(v))
             .map(String),
           languages: parseJsonArray(payload.languages),
+          conditions:
+            profile.conditions.length > 0
+              ? profile.conditions
+              : defaultConditionsForSpecialty(specialty),
           consultFee: Number(payload.consultationFee ?? 500),
           medRegCertUrl: payload.medRegCertUrl ? String(payload.medRegCertUrl) : null,
           degreeDocUrl: payload.degreeDocUrl ? String(payload.degreeDocUrl) : null,
           govIdUrl: payload.govIdUrl ? String(payload.govIdUrl) : null,
           approvalStatus: "APPROVED",
           rejectionReason: null,
-          isVisible: profile.subscription?.status === "ACTIVE",
+          isVisible: shouldBeVisible,
         },
       });
     });
+
+    revalidateDoctorPublicPages(specialty);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

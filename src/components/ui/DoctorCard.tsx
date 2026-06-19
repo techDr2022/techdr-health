@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Star, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DoctorLanguages } from "@/components/doctors/DoctorLanguages";
 import { cn } from "@/lib/utils";
 
 interface DoctorCardProps {
@@ -91,15 +92,8 @@ export function DoctorCard(props: DoctorCardProps) {
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-1.5">
-          {languages.slice(0, 3).map((language) => (
-            <span
-              key={language}
-              className="rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 font-body text-[10px] font-[600] text-blue-700"
-            >
-              {language}
-            </span>
-          ))}
+        <div className="mb-4">
+          <DoctorLanguages languages={languages} variant="inline" />
         </div>
 
         {nextSlot ? (

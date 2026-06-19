@@ -28,7 +28,9 @@ export default async function AdminDoctorsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-3xl font-semibold">Doctors</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Manage doctor accounts on the platform.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage doctor accounts, edit full profiles, and control visibility from the founder dashboard.
+        </p>
       </div>
       <DoctorManagementPanel doctors={rows} />
     </div>

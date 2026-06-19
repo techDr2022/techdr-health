@@ -44,7 +44,7 @@ export default async function AboutPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild>
-              <Link href="/consult">Book Consultation</Link>
+              <Link href="/book">Book Consultation</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href="/teleconsultation">Global Coverage</Link>

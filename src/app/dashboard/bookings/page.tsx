@@ -112,6 +112,14 @@ export default async function DashboardBookingsPage() {
                           Start Consultation
                         </Link>
                       ) : null}
+                      {booking.status === "COMPLETED" ? (
+                        <Link
+                          href={`/dashboard/doctor/prescriptions/${booking.id}`}
+                          className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                        >
+                          AI Prescription Review
+                        </Link>
+                      ) : null}
                       <BookingActionControls
                         bookingId={booking.id}
                         status={booking.status}

@@ -13,6 +13,7 @@ import { PayoutProcessedEmail } from "@/emails/payout-processed";
 import { PrescriptionIssuedEmail } from "@/emails/prescription-issued";
 import { WeeklyDoctorPayoutSummaryEmail } from "@/emails/weekly-doctor-payout-summary";
 import { NewDoctorJoinAdminEmail } from "@/emails/new-doctor-join";
+import { HealthNudgeEmail } from "@/lib/email/nudge-template";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const adminNotifyEmail =
@@ -304,5 +305,23 @@ export async function sendPrescriptionIssuedEmail(
     to,
     subject: "Your prescription from TechDrHealth",
     react: <PrescriptionIssuedEmail {...details} />,
+  });
+}
+
+export async function sendHealthNudgeEmail(
+  to: string,
+  details: {
+    patientName: string;
+    subjectLine: string;
+    message: string;
+    healthTip: string;
+    specialty?: string;
+    rebookUrl: string;
+  }
+) {
+  return safeSend({
+    to,
+    subject: details.subjectLine,
+    react: <HealthNudgeEmail {...details} />,
   });
 }

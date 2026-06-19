@@ -16,6 +16,8 @@ import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateSEO } from "@/lib/seo";
 
+export const dynamic = "force-dynamic";
+
 export function generateMetadata({
   searchParams,
 }: {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { resolveCanonicalSpecialtyName } from "@/lib/doctor-specialty";
 
 function isValidPhotoUrl(value: string) {
   if (!value) return true;
@@ -48,7 +49,7 @@ export async function PATCH(req: Request) {
         where: { userId: session.user!.id },
         data: {
           displayName: data.displayName.trim(),
-          specialty: data.specialty.trim(),
+          specialty: resolveCanonicalSpecialtyName(data.specialty),
           languages: data.languages.map((value) => value.trim()).filter(Boolean),
           photoUrl: data.photoUrl.trim() ? data.photoUrl.trim() : null,
         },

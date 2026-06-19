@@ -3,6 +3,10 @@ import bcrypt from "bcryptjs";
 import { ConsultType, PlanType, Prisma, WeekDay } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { CONSULTATION_SLOT_MINUTES } from "@/lib/consultation";
+import {
+  defaultConditionsForSpecialty,
+  resolveCanonicalSpecialtyName,
+} from "@/lib/doctor-specialty";
 
 const VALID_CONSULT_TYPES: ConsultType[] = ["VIDEO", "AUDIO", "CHAT"];
 const VALID_PLAN_TYPES: PlanType[] = ["INDIVIDUAL", "CLINIC", "HOSPITAL"];
@@ -189,7 +193,6 @@ function buildLocationBio(parts: {
   address: string;
   city: string;
   pincode: string;
-  whatsapp: string;
   numberOfDoctors: string;
   existingBio: string;
 }): string | null {
@@ -198,7 +201,6 @@ function buildLocationBio(parts: {
   if (parts.address) lines.push(`Address: ${parts.address}`);
   if (parts.city) lines.push(`City: ${parts.city}`);
   if (parts.pincode) lines.push(`Pincode: ${parts.pincode}`);
-  if (parts.whatsapp) lines.push(`WhatsApp: ${parts.whatsapp}`);
   if (parts.numberOfDoctors) lines.push(`Number of doctors: ${parts.numberOfDoctors}`);
   return lines.length > 0 ? lines.join(" | ") : null;
 }
@@ -252,7 +254,9 @@ export function parseBulkImportFileDetailed(buffer: Buffer, filename = ""): Pars
       email,
       phone: pickCell(normalized, "phone"),
       password: pickCell(normalized, "password"),
-      specialty: pickCell(normalized, "specialty") || "General Medicine",
+      specialty: resolveCanonicalSpecialtyName(
+        pickCell(normalized, "specialty") || "General Medicine"
+      ),
       subSpecialties: splitList(pickCell(normalized, "subSpecialties", "sub_specialties", "subspecialties")),
       credentials: pickCell(normalized, "Credentials", "credentials") || "MBBS",
       experienceYears: Number(pickCell(normalized, "experience", "experience_years", "experienceyears")) || 0,
@@ -261,7 +265,6 @@ export function parseBulkImportFileDetailed(buffer: Buffer, filename = ""): Pars
         address: pickCell(normalized, "address"),
         city: pickCell(normalized, "city"),
         pincode: pickCell(normalized, "pincode"),
-        whatsapp: pickCell(normalized, "whatsapp Number", "whatsapp_number", "whatsapp"),
         numberOfDoctors: pickCell(normalized, "number Of Doctors", "number_of_doctors", "numberofdoctors"),
         existingBio: pickCell(normalized, "bio"),
       }),
@@ -272,7 +275,7 @@ export function parseBulkImportFileDetailed(buffer: Buffer, filename = ""): Pars
       followUpFeeInr: Number(pickCell(normalized, "follow_up_fee_inr", "followupfee")) || 0,
       consultTypes: parseConsultTypes(pickCell(normalized, "consult_types", "consulttypes")),
       availability: parseAvailability(pickCell(normalized, "availability")),
-      isVisible: parseYesNo(pickCell(normalized, "is_visible", "isvisible"), false),
+      isVisible: parseYesNo(pickCell(normalized, "is_visible", "isvisible"), true),
       medRegCertUrl: pickCell(normalized, "med Reg Cert Url", "med_reg_cert_url", "medregcerturl") || null,
       govIdUrl: pickCell(normalized, "gov Id", "gov_id", "govid", "gov_id_url") || null,
     });
@@ -329,7 +332,7 @@ export async function importDoctorRow(row: ParsedDoctorRow): Promise<ImportRowRe
           hospitalAffils: row.hospitalAffils,
           bio: row.bio,
           languages: row.languages,
-          conditions: [],
+          conditions: defaultConditionsForSpecialty(row.specialty),
           consultFee: row.consultFeeInr,
           followUpFee: row.followUpFeeInr,
           consultDuration: CONSULTATION_SLOT_MINUTES,

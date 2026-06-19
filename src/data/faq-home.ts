@@ -57,6 +57,6 @@ export const HOME_FAQ = [
   {
     question: "Is TechDrHealth suitable for medical tourism patients?",
     answer:
-      "Yes. International patients planning treatment in India can consult specialists online for pre-travel assessments, second opinions, and post-procedure follow-ups.",
+      "Yes. International patients planning treatment in India can consult specialists online for pre-travel assessments, second opinions, and post-procedure follow-ups. For hospital packages and travel coordination, request a free treatment estimate at https://landing.medicaltoursindia.com/.",
   },
 ];

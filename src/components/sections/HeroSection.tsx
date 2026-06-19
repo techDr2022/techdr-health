@@ -179,7 +179,7 @@ export function HeroSection() {
 
           <motion.div {...fadeUp(0.24)} className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
-              href="/consult"
+              href="/book"
               className="inline-flex h-12 items-center justify-center rounded-full bg-cyan-400 px-6 text-sm font-bold text-slate-950 shadow-lg shadow-cyan-400/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-cyan-300"
             >
               Schedule Consultation

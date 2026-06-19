@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminAccess } from "@/lib/admin-access";
+import { revalidateDoctorPublicPages } from "@/lib/revalidate-doctors";
 import { sendApprovalEmail, sendRejectionEmail } from "@/lib/email";
 
 export type ReviewApplicationState = {
@@ -37,6 +38,8 @@ export async function approveApplication(
         isVisible: application.subscription?.status === "ACTIVE",
       },
     });
+
+    revalidateDoctorPublicPages(application.specialty);
 
     try {
       await sendApprovalEmail(application.user.email, application.displayName);
@@ -84,6 +87,8 @@ export async function rejectApplication(
         isVisible: false,
       },
     });
+
+    revalidateDoctorPublicPages(application.specialty);
 
     try {
       await sendRejectionEmail(application.user.email, application.displayName, reason);

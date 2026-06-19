@@ -5,8 +5,8 @@ import { notFound } from "next/navigation";
 import {
   BriefcaseMedical,
   Building2,
+  Clock,
   GraduationCap,
-  Languages,
   ShieldCheck,
   Star,
 } from "lucide-react";
@@ -15,6 +15,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { BookingWidget } from "@/components/doctors/BookingWidget";
 import { DoctorCard } from "@/components/doctors/DoctorCard";
+import { DoctorLanguages } from "@/components/doctors/DoctorLanguages";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { getSpecialtyBySlug } from "@/data/specialties";
@@ -136,11 +137,12 @@ export default async function DoctorProfilePage({ params }: Props) {
                 <p className="mt-2 text-sm text-muted-foreground">{doctor.credentials}</p>
 
                 <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                  <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 shadow-sm">
+                    <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                      <Clock className="h-3.5 w-3.5" />
                       Experience
                     </p>
-                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                    <p className="mt-1 text-base font-bold text-amber-900">
                       {doctor.experience}+ years
                     </p>
                   </div>
@@ -180,21 +182,30 @@ export default async function DoctorProfilePage({ params }: Props) {
 
           <section className="mt-8 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <Languages className="h-4 w-4" />
-                Languages
-              </p>
-              <p className="mt-2 text-sm text-slate-700">{doctor.languages.join(", ")}</p>
+              <DoctorLanguages languages={doctor.languages} variant="profile" />
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <BriefcaseMedical className="h-4 w-4" />
-                Practice Focus
+            <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/80 to-white p-5 shadow-sm">
+              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                <Clock className="h-4 w-4" />
+                Clinical experience
               </p>
-              <p className="mt-2 text-sm text-slate-700 line-clamp-2">
-                {doctor.conditions.slice(0, 4).join(", ")}
+              <p className="mt-3 text-2xl font-bold text-amber-900">
+                {doctor.experience}+ years
+              </p>
+              <p className="mt-1 text-sm text-amber-800/80">
+                Specialist care with {doctor.experience} years of hands-on practice
               </p>
             </div>
+          </section>
+
+          <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <BriefcaseMedical className="h-4 w-4" />
+              Practice focus
+            </p>
+            <p className="mt-2 text-sm text-slate-700">
+              {doctor.conditions.slice(0, 6).join(", ")}
+            </p>
           </section>
 
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

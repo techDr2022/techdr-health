@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
       customerName: patient.name || "Patient",
       customerEmail: patient.email,
       customerPhone: patient.phone || patientPhone || "9999999999",
-      returnUrl: `${getSiteUrl()}/consult/payment`,
+      returnUrl: `${getSiteUrl()}/book/payment`,
       notes: {
         doctorId: doctor.id,
         consultationType,

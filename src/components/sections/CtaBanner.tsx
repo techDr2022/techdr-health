@@ -28,7 +28,7 @@ export function CtaBanner() {
 
             <div className="flex w-full flex-col gap-3 md:w-[240px]">
               <Button asChild className="h-11 bg-blue-500 text-white shadow-lg shadow-blue-500/35 hover:bg-blue-400">
-                <Link href="/consult">Book Consultation</Link>
+                <Link href="/book">Book Consultation</Link>
               </Button>
               <Button
                 asChild

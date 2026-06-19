@@ -7,6 +7,8 @@ import { getSpecialtyBySlug, listSpecialtySlugs } from "@/data/specialties";
 import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getSpecialtyPageSEO } from "@/lib/seo";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: { specialty: string } };
 
 export function generateStaticParams() {
