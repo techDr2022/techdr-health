@@ -19,7 +19,7 @@ export function isValidNmcRegNumberFormat(medRegNumber: string): boolean {
 }
 
 export function buildNmcRegistrySearchUrl(medRegNumber: string): string {
-  const query = encodeURIComponent(medRegNumber.trim());
+  void medRegNumber;
   return `https://www.nmc.org.in/information-desk/indian-medical-register`;
 }
 

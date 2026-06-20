@@ -58,7 +58,6 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get("file");
-    const patientId = String(formData.get("patientId") ?? "").trim() || undefined;
     const bookingId = String(formData.get("bookingId") ?? "").trim() || undefined;
 
     if (!(file instanceof File)) {

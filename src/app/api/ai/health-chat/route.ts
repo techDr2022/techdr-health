@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { messages, patientId, language } = parsed.data;
+    const { messages, language } = parsed.data;
     const lang = normalizeLanguage(language);
 
     const conversation = messages

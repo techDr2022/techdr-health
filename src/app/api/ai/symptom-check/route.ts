@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { symptoms, patientAge, patientGender, patientId, language } = parsed.data;
+    const { symptoms, patientAge, patientGender, language } = parsed.data;
     const lang = normalizeLanguage(language);
 
     const contextParts = [`Symptoms: ${symptoms.trim()}`, `Preferred response language: ${lang}`];
