@@ -9,12 +9,13 @@ const schema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   phone: z.string().regex(/^[6-9]\d{9}$/).optional(),
   role: z.enum(["PATIENT", "DOCTOR"]),
+  marketingConsent: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, password, phone, role } = schema.parse(body);
+    const { name, email, password, phone, role, marketingConsent } = schema.parse(body);
 
     const existing = await prisma.user.findFirst({
       where: { OR: [{ email }, ...(phone ? [{ phone }] : [])] },
@@ -37,6 +38,8 @@ export async function POST(req: NextRequest) {
         passwordHash,
         role,
         authProvider: "email",
+        marketingconsent: marketingConsent === true,
+        marketingconsentat: marketingConsent === true ? new Date() : null,
       },
     });
 

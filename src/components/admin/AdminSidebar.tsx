@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { BarChart3, CalendarDays, CreditCard, FileCheck2, LogOut, Stethoscope, Users } from "lucide-react";
+import { BarChart3, CalendarDays, CreditCard, FileCheck2, Gift, LogOut, Stethoscope, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ADMIN_LINKS = [
@@ -13,6 +13,7 @@ const ADMIN_LINKS = [
   { href: "/admin/earnings", label: "Earnings", icon: CreditCard },
   { href: "/admin/doctors", label: "Doctors", icon: Stethoscope },
   { href: "/admin/applications", label: "Applications", icon: FileCheck2 },
+  { href: "/admin/referrals", label: "Referrals", icon: Gift },
 ];
 
 export function AdminSidebar() {

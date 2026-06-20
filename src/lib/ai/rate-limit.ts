@@ -1,41 +1,52 @@
 // AI-POWERED
-type RateLimitEntry = { count: number; resetAt: number };
+import type { NextRequest } from "next/server";
+import { enforceRateLimit, buildRateLimitIdentifierFromRequest } from "@/lib/rate-limit";
 
-const store = new Map<string, RateLimitEntry>();
-const WINDOW_MS = 60 * 60 * 1000;
-const MAX_REQUESTS = 10;
-
-export function checkAiRateLimit(key: string): { ok: boolean; retryAfter?: number } {
-  const now = Date.now();
-  const entry = store.get(key);
-
-  if (!entry || entry.resetAt <= now) {
-    store.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return { ok: true };
-  }
-
-  if (entry.count >= MAX_REQUESTS) {
-    return { ok: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
-  }
-
-  entry.count += 1;
-  return { ok: true };
+export function getRateLimitKey(req: Request, userId?: string): string {
+  const pathname = new URL(req.url).pathname;
+  return buildRateLimitIdentifierFromRequest(req, pathname, userId);
 }
 
-export function getRateLimitKey(req: Request, patientId?: string): string {
-  if (patientId?.trim()) return `patient:${patientId.trim()}`;
-  const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const realIp = req.headers.get("x-real-ip")?.trim();
-  return `ip:${forwarded || realIp || "unknown"}`;
-}
+export async function enforceAiRateLimit(req: Request, userId?: string) {
+  const pathname = new URL(req.url).pathname;
+  const identifier = buildRateLimitIdentifierFromRequest(req, pathname, userId);
+  const result = await enforceRateLimit({
+    limiterKey: "ai",
+    identifier,
+    pathname,
+  });
 
-export function enforceAiRateLimit(req: Request, patientId?: string) {
-  const key = getRateLimitKey(req, patientId);
-  const result = checkAiRateLimit(key);
-  if (!result.ok) {
+  if (result.blocked) {
     return {
       blocked: true as const,
-      retryAfter: result.retryAfter ?? 3600,
+      retryAfter: result.retryAfter,
+    };
+  }
+  return { blocked: false as const };
+}
+
+export async function enforceAiRateLimitFromRequest(req: NextRequest, userId?: string | null) {
+  const pathname = req.nextUrl.pathname;
+  const limiterKey =
+    pathname === "/api/ai/differential-dx" ||
+    pathname === "/api/ai/drug-interactions" ||
+    pathname === "/api/ai/clinical-guidelines"
+      ? ("copilot" as const)
+      : ("ai" as const);
+  const identifier = userId?.trim()
+    ? `user:${userId.trim()}`
+    : `ip:${req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip") ?? "unknown"}`;
+
+  const result = await enforceRateLimit({
+    limiterKey,
+    identifier,
+    pathname,
+  });
+
+  if (result.blocked) {
+    return {
+      blocked: true as const,
+      retryAfter: result.retryAfter,
     };
   }
   return { blocked: false as const };

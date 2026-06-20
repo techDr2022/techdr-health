@@ -10,6 +10,10 @@ import { useConsultTimer } from "@/hooks/useConsultTimer";
 import { cn } from "@/lib/utils";
 import { ChatPanel } from "@/components/consultation/ChatPanel";
 import { PrescriptionPanel } from "@/components/consultation/PrescriptionPanel";
+import { SOAPNoteEditor } from "@/components/consultation/SOAPNoteEditor";
+import { DoctorAICopilot } from "@/components/consultation/DoctorAICopilot";
+import { SecondOpinionRecordsPanel } from "@/components/consultation/SecondOpinionRecordsPanel";
+import type { SoapNoteClient } from "@/lib/soap-notes";
 
 type PrescriptionSnapshot = {
   diagnosis?: string;
@@ -31,8 +35,14 @@ interface VideoRoomClientProps {
   patientName: string;
   specialty: string;
   duration: number;
+  consultType: string;
   existingPrescription?: PrescriptionSnapshot | null;
+  initialSoapNote?: SoapNoteClient | null;
   joinToken?: string | null;
+  patientAge?: number | null;
+  patientGender?: string | null;
+  isSecondOpinion?: boolean;
+  secondOpinionShareConsent?: boolean;
 }
 
 function VideoRoomClientInner({
@@ -42,15 +52,28 @@ function VideoRoomClientInner({
   patientName,
   specialty,
   duration,
+  consultType,
   existingPrescription,
+  initialSoapNote,
   joinToken,
+  patientAge,
+  patientGender,
+  isSecondOpinion = false,
+  secondOpinionShareConsent = false,
 }: VideoRoomClientProps) {
   const router = useRouter();
   const [token, setToken] = useState("");
   const [isLoadingToken, setIsLoadingToken] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
-  const [activePanel, setActivePanel] = useState<"prescription" | "chat">("prescription");
+  const [activePanel, setActivePanel] = useState<"soap" | "prescription" | "chat">(
+    role === "doctor" ? "soap" : "prescription"
+  );
   const [prescription, setPrescription] = useState<PrescriptionSnapshot | null>(existingPrescription || null);
+  const [prescriptionPrefillKey, setPrescriptionPrefillKey] = useState(0);
+  const [prescriptionPrefill, setPrescriptionPrefill] = useState<{
+    diagnosis?: string;
+    instructions?: string;
+  }>({});
   const [isEnding, setIsEnding] = useState(false);
   const participantName = role === "doctor" ? doctorName : patientName;
 
@@ -144,6 +167,25 @@ function VideoRoomClientInner({
   }
 
   const otherParticipant = useMemo(() => (role === "doctor" ? patientName : doctorName), [doctorName, patientName, role]);
+
+  const showSoapTab =
+    role === "doctor" || (role === "patient" && Boolean(initialSoapNote?.patientshared));
+
+  const panelTabs = useMemo(() => {
+    const tabs: Array<{ id: "soap" | "prescription" | "chat"; label: string }> = [];
+    if (showSoapTab) tabs.push({ id: "soap", label: "SOAP" });
+    tabs.push({ id: "prescription", label: "Prescription" }, { id: "chat", label: "Chat" });
+    return tabs;
+  }, [showSoapTab]);
+
+  function handleSoapFinalized(note: SoapNoteClient) {
+    setPrescriptionPrefill({
+      diagnosis: note.assessment?.trim() || undefined,
+      instructions: note.plan?.trim() || undefined,
+    });
+    setPrescriptionPrefillKey((k) => k + 1);
+    setActivePanel("prescription");
+  }
 
   if (isLoadingToken) {
     return (
@@ -263,6 +305,19 @@ function VideoRoomClientInner({
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         <div className="flex-1 relative bg-[#0d0d18] overflow-hidden">
           <video ref={remoteVideoRef} autoPlay playsInline muted={false} className="absolute inset-0 h-full w-full object-cover bg-[#0d0d18]" />
+          {role === "doctor" ? (
+            <DoctorAICopilot
+              bookingId={bookingId}
+              patientAge={patientAge}
+              patientGender={patientGender}
+            />
+          ) : null}
+          {role === "doctor" && isSecondOpinion ? (
+            <SecondOpinionRecordsPanel
+              bookingId={bookingId}
+              enabled={secondOpinionShareConsent}
+            />
+          ) : null}
           {!remoteParticipant ? (
             <div className="absolute inset-0 w-full h-full flex items-center justify-center">
               <div className="text-center">
@@ -300,13 +355,10 @@ function VideoRoomClientInner({
             <p className="text-[10px] text-white/35">{role === "doctor" ? "Doctor view" : "Patient view"}</p>
           </div>
           <div className="flex border-b border-white/[0.06] flex-none">
-            {[
-              { id: "prescription", label: "Prescription" },
-              { id: "chat", label: "Chat" },
-            ].map(({ id, label }) => (
+            {panelTabs.map(({ id, label }) => (
               <button
                 key={id}
-                onClick={() => setActivePanel(id as "prescription" | "chat")}
+                onClick={() => setActivePanel(id)}
                 className={cn(
                   "flex-1 py-3 text-[11px] font-semibold transition-all border-b-2",
                   activePanel === id
@@ -319,13 +371,25 @@ function VideoRoomClientInner({
             ))}
           </div>
 
-          {activePanel === "prescription" ? (
+          {activePanel === "soap" && showSoapTab ? (
+            <SOAPNoteEditor
+              bookingId={bookingId}
+              role={role}
+              consultType={consultType}
+              initialNote={initialSoapNote}
+              joinToken={joinToken}
+              onFinalized={role === "doctor" ? handleSoapFinalized : undefined}
+            />
+          ) : activePanel === "prescription" ? (
             <PrescriptionPanel
               bookingId={bookingId}
               role={role}
               initialData={prescription}
               onSent={setPrescription}
               joinToken={joinToken}
+              prefillKey={prescriptionPrefillKey}
+              prefillDiagnosis={prescriptionPrefill.diagnosis}
+              prefillInstructions={prescriptionPrefill.instructions}
             />
           ) : (
             <ChatPanel bookingId={bookingId} role={role} joinToken={joinToken} />

@@ -3,10 +3,17 @@
 import type { DoctorRecord } from "@/types/catalog";
 import { Calendar } from "lucide-react";
 import { BookNowModal } from "@/components/doctors/BookNowModal";
+import type { SecondOpinionPrefill } from "@/lib/second-opinion";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export function BookingWidget({ doctor }: { doctor: DoctorRecord }) {
+export function BookingWidget({
+  doctor,
+  secondOpinion = null,
+}: {
+  doctor: DoctorRecord;
+  secondOpinion?: SecondOpinionPrefill | null;
+}) {
   const slots = [...doctor.availabilities].sort(
     (a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime)
   );
@@ -42,7 +49,8 @@ export function BookingWidget({ doctor }: { doctor: DoctorRecord }) {
       <div className="mt-6 grid gap-3">
         <BookNowModal
           doctor={doctor}
-          triggerLabel="Book video consultation"
+          secondOpinion={secondOpinion}
+          triggerLabel={secondOpinion ? "Book Second Opinion" : "Book video consultation"}
           triggerSize="lg"
           triggerClassName="w-full"
         />

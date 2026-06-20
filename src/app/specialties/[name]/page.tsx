@@ -5,16 +5,17 @@ import { getSpecialtyBySlug, listSpecialtySlugs } from "@/data/specialties";
 import { SITE_NAME } from "@/lib/site-config";
 import { getSiteUrl } from "@/lib/site-config";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
-type Props = { params: { name: string } };
+type Props = { params: Promise<{ name: string }> };
 
 export function generateStaticParams() {
   return listSpecialtySlugs().map((name) => ({ name }));
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const s = getSpecialtyBySlug(params.name);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { name } = await params;
+  const s = getSpecialtyBySlug(name);
   if (!s) return { title: "Specialty" };
   const title = `Book Online ${s.name} Consultation | ${SITE_NAME}`;
   const description = `${s.shortIntro} Consult verified ${s.name.toLowerCase()} doctors via video teleconsultation in India-conditions treated, FAQs, and transparent fees.`;
@@ -22,12 +23,13 @@ export function generateMetadata({ params }: Props): Metadata {
   return {
     title,
     description: description.slice(0, 155),
-    alternates: { canonical: `${base}/specialties/${params.name}` },
-    openGraph: { title, description: description.slice(0, 155), url: `${base}/specialties/${params.name}` },
+    alternates: { canonical: `${base}/specialties/${name}` },
+    openGraph: { title, description: description.slice(0, 155), url: `${base}/specialties/${name}` },
   };
 }
 
-export default function SpecialtyPage({ params }: Props) {
-  if (!getSpecialtyBySlug(params.name)) notFound();
-  return <SpecialtyDetailView slug={params.name} />;
+export default async function SpecialtyPage({ params }: Props) {
+  const { name } = await params;
+  if (!getSpecialtyBySlug(name)) notFound();
+  return <SpecialtyDetailView slug={name} />;
 }

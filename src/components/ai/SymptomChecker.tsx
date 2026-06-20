@@ -1,7 +1,7 @@
 // AI-POWERED
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -19,7 +19,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { ConsultationFeeTag } from "@/components/ui/ConsultationFeeTag";
+import { AiCrossBorderNotice } from "@/components/consent/AiCrossBorderNotice";
+import { LanguageSelector } from "@/components/i18n/LanguageSelector";
 import { getSafeImageSrc } from "@/lib/image";
+import { AppLanguage, getStoredLanguage, normalizeLanguage, storeLanguage, t } from "@/lib/i18n";
+import { VoiceSymptomInput } from "@/components/ai/VoiceSymptomInput";
 import { cn } from "@/lib/utils";
 
 type MatchedDoctor = {
@@ -44,22 +48,10 @@ type SymptomResult = {
 
 type Step = "input" | "loading" | "results";
 
-const URGENCY_CONFIG = {
-  emergency: {
-    label: "Emergency",
-    className: "bg-red-600 text-white",
-    banner: "If you are experiencing a medical emergency, call 112 or go to the nearest emergency room immediately.",
-  },
-  urgent: {
-    label: "Urgent",
-    className: "bg-amber-500 text-white",
-    banner: null,
-  },
-  routine: {
-    label: "Routine",
-    className: "bg-emerald-600 text-white",
-    banner: null,
-  },
+const URGENCY_KEYS = {
+  emergency: "urgencyEmergency",
+  urgent: "urgencyUrgent",
+  routine: "urgencyRoutine",
 } as const;
 
 type SymptomCheckerProps = {
@@ -68,6 +60,7 @@ type SymptomCheckerProps = {
 };
 
 export function SymptomChecker({ variant = "default", className }: SymptomCheckerProps) {
+  const [language, setLanguage] = useState<AppLanguage>("en");
   const [step, setStep] = useState<Step>("input");
   const [symptoms, setSymptoms] = useState("");
   const [patientAge, setPatientAge] = useState("");
@@ -75,14 +68,43 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
   const [result, setResult] = useState<SymptomResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fallback, setFallback] = useState(false);
+  const [aiAcknowledged, setAiAcknowledged] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (symptoms.trim().length < 10) {
-      setError("Please describe your symptoms in at least 10 characters.");
+  useEffect(() => {
+    setLanguage(getStoredLanguage());
+    void fetch("/api/patient/preferred-lang")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { language?: string } | null) => {
+        if (data?.language) {
+          const lang = normalizeLanguage(data.language);
+          storeLanguage(lang);
+          setLanguage(lang);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const urgencyStyles = useMemo(
+    () => ({
+      emergency: { className: "bg-red-600 text-white" },
+      urgent: { className: "bg-amber-500 text-white" },
+      routine: { className: "bg-emerald-600 text-white" },
+    }),
+    []
+  );
+
+  async function submitSymptoms(symptomText?: string) {
+    const trimmed = (symptomText ?? symptoms).trim();
+    if (!aiAcknowledged) {
+      setError(t(language, "consentRequired"));
+      return;
+    }
+    if (trimmed.length < 10) {
+      setError(t(language, "symptomsTooShort"));
       return;
     }
 
+    setSymptoms(trimmed);
     setError(null);
     setFallback(false);
     setStep("loading");
@@ -92,9 +114,10 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          symptoms: symptoms.trim(),
+          symptoms: trimmed,
           patientAge: patientAge ? Number(patientAge) : undefined,
           patientGender: patientGender.trim() || undefined,
+          language,
         }),
       });
 
@@ -105,7 +128,7 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
 
       if (!response.ok || data.fallback) {
         setFallback(true);
-        setError(data.error ?? "AI is temporarily unavailable. Browse specialists manually.");
+        setError(data.error ?? t(language, "symptomUnavailable"));
         setStep("input");
         return;
       }
@@ -114,9 +137,14 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
       setStep("results");
     } catch {
       setFallback(true);
-      setError("Unable to analyse symptoms right now. Please try again or browse doctors manually.");
+      setError(t(language, "symptomUnavailable"));
       setStep("input");
     }
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    await submitSymptoms();
   }
 
   function handleReset() {
@@ -126,7 +154,7 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
     setFallback(false);
   }
 
-  const urgency = result ? URGENCY_CONFIG[result.urgencyLevel] : null;
+  const urgency = result ? urgencyStyles[result.urgencyLevel] : null;
 
   return (
     <section
@@ -135,33 +163,45 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
         variant === "compact" ? "p-4 sm:p-5" : "p-6 sm:p-8",
         className
       )}
-      aria-label="AI symptom checker"
+      aria-label={t(language, "symptomCheckerTitle")}
     >
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-          <Sparkles className="h-5 w-5" aria-hidden />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+            <Sparkles className="h-5 w-5" aria-hidden />
+          </div>
+          <div>
+            <h2 className="font-heading text-lg font-semibold text-[#0A1628] sm:text-xl">
+              {t(language, "symptomCheckerTitle")}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t(language, "symptomCheckerSubtitle")}
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-heading text-lg font-semibold text-[#0A1628] sm:text-xl">
-            AI Symptom Checker
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Describe how you feel — we&apos;ll suggest the right specialist. Not a diagnosis tool.
-          </p>
-        </div>
+        <LanguageSelector value={language} onChange={setLanguage} />
       </div>
 
       {step === "input" && (
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <Label htmlFor="symptoms" className="text-sm font-medium">
-              What symptoms are you experiencing?
-            </Label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label htmlFor="symptoms" className="text-sm font-medium">
+                {t(language, "symptomsLabel")}
+              </Label>
+              <VoiceSymptomInput
+                language={language}
+                disabled={!aiAcknowledged}
+                minSubmitLength={10}
+                onTranscript={(text) => setSymptoms(text)}
+                onSilenceSubmit={(text) => void submitSymptoms(text)}
+              />
+            </div>
             <Textarea
               id="symptoms"
               value={symptoms}
               onChange={(event) => setSymptoms(event.target.value)}
-              placeholder="e.g. Persistent headache for 3 days, sensitivity to light, mild nausea..."
+              placeholder={t(language, "symptomsPlaceholder")}
               className="mt-1.5 min-h-[100px] rounded-xl"
               aria-describedby={error ? "symptom-error" : undefined}
             />
@@ -170,7 +210,7 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="patientAge" className="text-sm font-medium">
-                Age (optional)
+                {t(language, "ageLabel")}
               </Label>
               <Input
                 id="patientAge"
@@ -185,13 +225,13 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
             </div>
             <div>
               <Label htmlFor="patientGender" className="text-sm font-medium">
-                Gender (optional)
+                {t(language, "genderLabel")}
               </Label>
               <Input
                 id="patientGender"
                 value={patientGender}
                 onChange={(event) => setPatientGender(event.target.value)}
-                placeholder="e.g. Female"
+                placeholder={t(language, "genderPlaceholder")}
                 className="mt-1.5 rounded-xl"
               />
             </div>
@@ -215,9 +255,11 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
             </div>
           ) : null}
 
-          <Button type="submit" className="w-full rounded-xl sm:w-auto">
+          <AiCrossBorderNotice onAcknowledgedChange={setAiAcknowledged} />
+
+          <Button type="submit" className="w-full rounded-xl sm:w-auto" disabled={!aiAcknowledged}>
             <Stethoscope className="mr-2 h-4 w-4" />
-            Find matching doctors
+            {t(language, "findDoctors")}
           </Button>
         </form>
       )}
@@ -225,8 +267,8 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
       {step === "loading" && (
         <div className="mt-8 flex flex-col items-center justify-center py-10 text-center" aria-live="polite">
           <Loader2 className="h-8 w-8 animate-spin text-emerald-600" aria-hidden />
-          <p className="mt-3 text-sm font-medium text-slate-700">Analysing your symptoms...</p>
-          <p className="mt-1 text-xs text-muted-foreground">This usually takes a few seconds</p>
+          <p className="mt-3 text-sm font-medium text-slate-700">{t(language, "analysing")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t(language, "analysingHint")}</p>
         </div>
       )}
 
@@ -239,15 +281,17 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
             >
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden />
               <div>
-                <p className="font-semibold">Emergency attention may be needed</p>
-                <p className="mt-1">{urgency.banner}</p>
-                <p className="mt-1 font-medium">India emergency helpline: 112</p>
+                <p className="font-semibold">{t(language, "emergencyTitle")}</p>
+                <p className="mt-1">{t(language, "emergencyBanner")}</p>
+                <p className="mt-1 font-medium">{t(language, "emergencyHelpline")}</p>
               </div>
             </div>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className={urgency.className}>{urgency.label}</Badge>
+            <Badge className={urgency.className}>
+              {t(language, URGENCY_KEYS[result.urgencyLevel])}
+            </Badge>
             {result.specialties.map((specialty) => (
               <Badge key={specialty} variant="outline">
                 {specialty}
@@ -259,7 +303,7 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
 
           {result.recommendedDoctors.length > 0 ? (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-900">Recommended doctors</h3>
+              <h3 className="text-sm font-semibold text-slate-900">{t(language, "recommendedDoctors")}</h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 {result.recommendedDoctors.map((doctor) => (
                   <Card key={doctor.id} className="overflow-hidden border-border/80">
@@ -292,7 +336,7 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
                       <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
                         <ConsultationFeeTag inr={doctor.consultFee} />
                         <Button asChild size="sm" className="rounded-lg">
-                          <Link href={`/book?doctor=${doctor.slug}`}>Book Now</Link>
+                          <Link href={`/book?doctor=${doctor.slug}`}>{t(language, "bookNow")}</Link>
                         </Button>
                       </div>
                     </CardContent>
@@ -302,15 +346,15 @@ export function SymptomChecker({ variant = "default", className }: SymptomChecke
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-muted-foreground">
-              No matching doctors available right now.{" "}
+              {t(language, "noDoctors")}{" "}
               <Link href="/book" className="font-semibold text-emerald-700 hover:underline">
-                Browse all specialists
+                {t(language, "browseAll")}
               </Link>
             </div>
           )}
 
           <Button variant="outline" onClick={handleReset} className="rounded-xl">
-            Check different symptoms
+            {t(language, "checkDifferent")}
           </Button>
         </div>
       ) : null}

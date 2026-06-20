@@ -9,6 +9,13 @@ import {
   resolveCanonicalSpecialtyName,
 } from "@/lib/doctor-specialty";
 import { sendNewDoctorJoinAdminEmail } from "@/lib/email";
+import {
+  applyReferralRewardWhenDoctorJoins,
+  ensureDoctorReferralCode,
+  recordDoctorReferral,
+  resolveReferrerDoctorId,
+} from "@/lib/doctor-referral";
+import { isValidNmcRegNumberFormat } from "@/lib/nmc-verification";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +79,19 @@ export async function POST(req: NextRequest) {
       payload.specialty ? String(payload.specialty) : "General Medicine"
     );
 
+    const referralCodeInput = payload.referralCode ? String(payload.referralCode).trim() : "";
+    const referrerDoctorId = referralCodeInput
+      ? await resolveReferrerDoctorId(referralCodeInput)
+      : null;
+
+    const medRegNumberRaw = payload.medRegNumber ? String(payload.medRegNumber).trim() : "";
+    if (medRegNumberRaw && !isValidNmcRegNumberFormat(medRegNumberRaw)) {
+      return NextResponse.json(
+        { error: "Enter a valid NMC registration number (letters, numbers, / or -)." },
+        { status: 400 }
+      );
+    }
+
     const created = await prisma.$transaction(async (tx) => {
       const freeSlotsClaimed = await tx.subscription.count({
         where: { priceINR: 0, status: "ACTIVE" },
@@ -99,7 +119,7 @@ export async function POST(req: NextRequest) {
           specialty,
           subSpecialties: parseJsonArray(payload.subSpecialties),
           credentials: payload.credentials ? String(payload.credentials) : "MBBS",
-          medRegNumber: payload.medRegNumber ? String(payload.medRegNumber) : `PENDING-${user.id.slice(-6)}`,
+          medRegNumber: medRegNumberRaw || `PENDING-${user.id.slice(-6)}`,
           experience: payload.experience ? Number(payload.experience) : 0,
           education: payload.education && typeof payload.education === "object" ? payload.education : [],
           hospitalAffils: [payload.clinicName, payload.hospitalName].filter((v): v is string => Boolean(v)).map(String),
@@ -110,8 +130,9 @@ export async function POST(req: NextRequest) {
           followUpFee: payload.followUpFee ? Number(payload.followUpFee) : 0,
           consultDuration: CONSULTATION_SLOT_MINUTES,
           consultTypes: ["VIDEO"],
-          approvalStatus: "APPROVED",
+          approvalStatus: "PENDING",
           isVisible: false,
+          nmcverified: false,
           medRegCertUrl: payload.medRegCertUrl ? String(payload.medRegCertUrl) : null,
           degreeDocUrl: payload.degreeDocUrl ? String(payload.degreeDocUrl) : null,
           govIdUrl: payload.govIdUrl ? String(payload.govIdUrl) : null,
@@ -130,6 +151,15 @@ export async function POST(req: NextRequest) {
           expiresAt: isFreeListingGranted ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) : null,
         },
       });
+
+      await ensureDoctorReferralCode(profile.id, entityName, tx);
+
+      if (referrerDoctorId && referrerDoctorId !== profile.id) {
+        await recordDoctorReferral(referrerDoctorId, profile.id, tx);
+        if (isFreeListingGranted) {
+          await applyReferralRewardWhenDoctorJoins(profile.id, tx);
+        }
+      }
 
       return { profile, userEmail: user.email, userPhone: phone, isFreeListingGranted, freeSlotsClaimed };
     });

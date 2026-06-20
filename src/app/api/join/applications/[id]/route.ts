@@ -16,10 +16,12 @@ function parseJsonArray(value: unknown): string[] {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
-    const doctorId = params.id;
+    const doctorId = id;
     const payload = await req.json();
 
     if (!doctorId) {
@@ -52,7 +54,9 @@ export async function PATCH(
     }
 
     const specialty = resolveCanonicalSpecialtyName(String(payload.specialty));
-    const shouldBeVisible = profile.subscription?.status === "ACTIVE";
+    const medRegNumberRaw = payload.medRegNumber
+      ? String(payload.medRegNumber).trim()
+      : profile.medRegNumber || `PENDING-${profile.userId.slice(-6)}`;
 
     await prisma.$transaction(async (tx) => {
       const nextUserData: {
@@ -84,9 +88,7 @@ export async function PATCH(
           specialty,
           subSpecialties: parseJsonArray(payload.subSpecialties),
           credentials: String(payload.credentials),
-          medRegNumber: payload.medRegNumber
-            ? String(payload.medRegNumber)
-            : profile.medRegNumber || `PENDING-${profile.userId.slice(-6)}`,
+          medRegNumber: medRegNumberRaw,
           experience: Number(payload.experience ?? 0),
           hospitalAffils: [payload.clinicName, payload.hospitalName]
             .filter((v): v is string => Boolean(v))
@@ -100,14 +102,17 @@ export async function PATCH(
           medRegCertUrl: payload.medRegCertUrl ? String(payload.medRegCertUrl) : null,
           degreeDocUrl: payload.degreeDocUrl ? String(payload.degreeDocUrl) : null,
           govIdUrl: payload.govIdUrl ? String(payload.govIdUrl) : null,
-          approvalStatus: "APPROVED",
+          approvalStatus: "PENDING",
           rejectionReason: null,
-          isVisible: shouldBeVisible,
+          isVisible: false,
+          ...(medRegNumberRaw !== profile.medRegNumber
+            ? { nmcverified: false, nmcverifiedat: null, nmcverifiedby: null }
+            : {}),
         },
       });
     });
 
-    revalidateDoctorPublicPages(specialty);
+    revalidateDoctorPublicPages(specialty, profile.slug);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

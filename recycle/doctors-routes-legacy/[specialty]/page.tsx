@@ -4,10 +4,10 @@ import { SpecialtyDetailView } from "@/components/specialties/SpecialtyDetailVie
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { getSpecialtyBySlug, listSpecialtySlugs } from "@/data/specialties";
-import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { getCachedLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getSpecialtyPageSEO } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 type Props = { params: { specialty: string } };
 
@@ -18,7 +18,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const s = getSpecialtyBySlug(params.specialty);
   if (!s) return { title: "Specialty doctors" };
-  const allDoctors = await getLiveDoctorCatalog();
+  const allDoctors = await getCachedLiveDoctorCatalog();
   const doctorCount = allDoctors.filter(
     (doctor) => doctor.specialtySlug === params.specialty
   ).length;

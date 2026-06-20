@@ -15,7 +15,7 @@ import { getBlogPostSEO } from "@/lib/seo";
 import { getArticleSchema, getBreadcrumbSchema, getFAQSchema } from "@/lib/schema";
 import { getSiteUrl } from "@/lib/site-config";
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
 function parseFaqFromBody(body: string) {
   const lines = body.split("\n").map((line) => line.trim());
@@ -44,7 +44,8 @@ function parseFaqFromBody(body: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const post = await getMergedPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = await getMergedPostBySlug(slug);
   if (!post) return { title: "Article" };
   return getBlogPostSEO({
     title: post.title,
@@ -58,7 +59,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BlogArticlePage({ params }: Props) {
-  const post = await getMergedPostBySlug(params.slug);
+  const { slug } = await params;
+
+  const post = await getMergedPostBySlug(slug);
   if (!post) notFound();
 
   const base = getSiteUrl();

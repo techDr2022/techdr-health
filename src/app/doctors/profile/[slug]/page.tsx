@@ -20,18 +20,33 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { getSpecialtyBySlug } from "@/data/specialties";
 import { getSafeImageSrc } from "@/lib/image";
-import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { getCachedLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getDoctorProfileSEO } from "@/lib/seo";
+import { getSecondOpinionPrefillForPatient } from "@/lib/second-opinion-server";
 import { relatedDoctorsForSpecialty } from "@/lib/queries";
+import { auth } from "@/auth";
 import { getBreadcrumbSchema, getDoctorSchema } from "@/lib/schema";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 
-type Props = { params: { slug: string } };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ secondOpinionFor?: string }>;
+};
+
+export async function generateStaticParams() {
+  try {
+    const doctors = await getCachedLiveDoctorCatalog();
+    return doctors.map((doctor) => ({ slug: doctor.slug }));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const doctors = await getLiveDoctorCatalog();
-  const d = doctors.find((doctor) => doctor.slug === params.slug);
+  const { slug } = await params;
+  const doctors = await getCachedLiveDoctorCatalog();
+  const d = doctors.find((doctor) => doctor.slug === slug);
   if (!d) return { title: "Doctor" };
   const spec = getSpecialtyBySlug(d.specialtySlug)?.name ?? d.specialtySlug;
   return getDoctorProfileSEO({
@@ -45,9 +60,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function DoctorProfilePage({ params }: Props) {
-  const doctors = await getLiveDoctorCatalog();
-  const doctor = doctors.find((item) => item.slug === params.slug);
+export default async function DoctorProfilePage({ params, searchParams }: Props) {
+  const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
+  const session = await auth();
+  const secondOpinionPrefill =
+    resolvedSearchParams.secondOpinionFor && session?.user?.role === "PATIENT"
+      ? await getSecondOpinionPrefillForPatient(
+          resolvedSearchParams.secondOpinionFor,
+          session.user.id
+        )
+      : null;
+
+  const doctors = await getCachedLiveDoctorCatalog();
+  const doctor = doctors.find((item) => item.slug === slug);
   if (!doctor) notFound();
 
   const specialty = getSpecialtyBySlug(doctor.specialtySlug);
@@ -328,7 +354,7 @@ export default async function DoctorProfilePage({ params }: Props) {
                 Pick a preferred slot and connect with this specialist from anywhere.
               </p>
             </div>
-            <BookingWidget doctor={doctor} />
+            <BookingWidget doctor={doctor} secondOpinion={secondOpinionPrefill} />
           </aside>
         </div>
         </div>

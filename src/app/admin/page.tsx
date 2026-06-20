@@ -17,10 +17,11 @@ function toPeriod(value?: string): DashboardPeriod {
 export default async function AdminOverviewPage({
   searchParams,
 }: {
-  searchParams?: { period?: string };
+  searchParams?: Promise<{ period?: string }>;
 }) {
   await ensureAdminAccess();
-  const period = toPeriod(searchParams?.period);
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const period = toPeriod(resolvedSearchParams.period);
   const data = await getAdminDashboardData(period);
   const bookingTotalForMix = Math.max(
     1,

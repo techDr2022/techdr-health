@@ -3,12 +3,14 @@ import { ApprovalStatus } from "@prisma/client";
 type VisibilityInput = {
   approvalStatus: ApprovalStatus | string;
   isVisible: boolean;
+  nmcverified?: boolean;
   subscription?: { status: string } | null;
 };
 
-/** Approved doctors with an active subscription should appear in public listings. */
+/** Approved + NMC-verified doctors with an active subscription appear in public listings. */
 export function shouldDoctorBePubliclyListed(input: VisibilityInput) {
   if (input.approvalStatus !== ApprovalStatus.APPROVED) return false;
+  if (input.nmcverified === false) return false;
   if (input.isVisible) return true;
   return input.subscription?.status === "ACTIVE";
 }

@@ -6,6 +6,10 @@ import Link from "next/link";
 import { MessageCircle, Send, X, Stethoscope, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AiCrossBorderNotice } from "@/components/consent/AiCrossBorderNotice";
+import { LanguageSelector } from "@/components/i18n/LanguageSelector";
+import { VoiceSymptomInput } from "@/components/ai/VoiceSymptomInput";
+import { AppLanguage, getStoredLanguage, normalizeLanguage, storeLanguage, t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type ChatMessage = {
@@ -17,6 +21,10 @@ type ChatMessage = {
 };
 
 const STORAGE_KEY = "techdr-health-chat";
+
+function loadLanguagePreference(): AppLanguage {
+  return getStoredLanguage();
+}
 
 function loadMessages(): ChatMessage[] {
   if (typeof window === "undefined") return [];
@@ -47,16 +55,31 @@ function formatTime(timestamp: number) {
 
 export function HealthChatWidget() {
   const [open, setOpen] = useState(false);
+  const [language, setLanguage] = useState<AppLanguage>("en");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fallback, setFallback] = useState(false);
+  const [aiAcknowledged, setAiAcknowledged] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setMessages(loadMessages());
+    setLanguage(loadLanguagePreference());
+    void fetch("/api/patient/preferred-lang")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { language?: string } | null) => {
+        if (data?.language) {
+          const lang = normalizeLanguage(data.language);
+          storeLanguage(lang);
+          setLanguage(lang);
+        }
+      })
+      .catch(() => {
+        // Guest users rely on localStorage only.
+      });
   }, []);
 
   useEffect(() => {
@@ -70,9 +93,13 @@ export function HealthChatWidget() {
     }
   }, [open, messages, loading]);
 
-  const sendMessage = useCallback(async () => {
-    const text = input.trim();
-    if (!text || loading) return;
+  const sendMessage = useCallback(async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
+    if (!text || loading || !aiAcknowledged) return;
+
+    if (overrideText) {
+      setInput(overrideText);
+    }
 
     const userMessage: ChatMessage = {
       role: "user",
@@ -92,6 +119,7 @@ export function HealthChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          language,
         }),
       });
 
@@ -105,7 +133,7 @@ export function HealthChatWidget() {
 
       if (!response.ok || data.fallback) {
         setFallback(true);
-        setError(data.error ?? "AI assistant is temporarily unavailable.");
+        setError(data.error ?? t(language, "aiUnavailable"));
         setLoading(false);
         return;
       }
@@ -122,11 +150,11 @@ export function HealthChatWidget() {
       ]);
     } catch {
       setFallback(true);
-      setError("Unable to reach the assistant. Please try again.");
+      setError(t(language, "chatUnavailable"));
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages]);
+  }, [aiAcknowledged, input, language, loading, messages]);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -142,7 +170,7 @@ export function HealthChatWidget() {
           type="button"
           onClick={() => setOpen(true)}
           className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition-transform hover:scale-105 hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 sm:bottom-6 sm:right-6"
-          aria-label="Open health assistant chat"
+          aria-label={t(language, "openChat")}
         >
           <MessageCircle className="h-6 w-6" />
         </button>
@@ -157,24 +185,25 @@ export function HealthChatWidget() {
           <div className="flex h-full w-full flex-col bg-white shadow-2xl sm:h-[min(560px,calc(100vh-3rem))] sm:w-[400px] sm:rounded-2xl sm:border sm:border-slate-200">
             <header className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
               <div>
-                <p className="font-semibold text-slate-900">HealthGuide</p>
-                <p className="text-xs text-muted-foreground">Navigation & triage · not a diagnosis tool</p>
+                <p className="font-semibold text-slate-900">{t(language, "healthGuideTitle")}</p>
+                <p className="text-xs text-muted-foreground">{t(language, "healthGuideSubtitle")}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
-                aria-label="Close chat"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <LanguageSelector value={language} onChange={setLanguage} compact />
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+                  aria-label={t(language, "closeChat")}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </header>
 
             <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {messages.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Hi! I can help you understand symptoms and find the right specialist. What brings you here today?
-                </p>
+                <p className="text-sm text-muted-foreground">{t(language, "chatWelcome")}</p>
               ) : null}
 
               {messages.map((message, index) => (
@@ -200,8 +229,8 @@ export function HealthChatWidget() {
                     <div className="mt-2 rounded-xl border border-emerald-200 bg-white p-2.5 text-slate-800">
                       <p className="text-xs font-medium">
                         {message.suggestedSpecialty
-                          ? `Consult a ${message.suggestedSpecialty} specialist`
-                          : "Book a consultation"}
+                          ? `${t(language, "consultSpecialist")}: ${message.suggestedSpecialty}`
+                          : t(language, "consultSpecialist")}
                       </p>
                       <Link
                         href={
@@ -211,7 +240,7 @@ export function HealthChatWidget() {
                         }
                         className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:underline"
                       >
-                        Book a Consultation →
+                        {t(language, "bookConsultation")}
                       </Link>
                     </div>
                   ) : null}
@@ -221,7 +250,7 @@ export function HealthChatWidget() {
               {loading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  HealthGuide is typing...
+                  {t(language, "chatTyping")}
                 </div>
               ) : null}
 
@@ -230,7 +259,7 @@ export function HealthChatWidget() {
                   {error}
                   {fallback ? (
                     <Link href="/book" className="mt-1 block font-semibold text-emerald-700 hover:underline">
-                      Browse doctors manually →
+                      {t(language, "browseDoctors")}
                     </Link>
                   ) : null}
                 </div>
@@ -238,31 +267,40 @@ export function HealthChatWidget() {
             </div>
 
             <footer className="border-t border-slate-100 p-3">
+              <AiCrossBorderNotice className="mb-2" onAcknowledgedChange={setAiAcknowledged} />
               <Link
                 href="/book"
                 className="mb-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-700 hover:underline"
               >
                 <Stethoscope className="h-3.5 w-3.5" />
-                Talk to a real doctor
+                {t(language, "talkToDoctor")}
               </Link>
               <div className="flex gap-2">
+                <VoiceSymptomInput
+                  language={language}
+                  disabled={!aiAcknowledged || loading}
+                  className="shrink-0"
+                  onTranscript={(text) => setInput(text)}
+                  onSilenceSubmit={(text) => void sendMessage(text)}
+                />
                 <Textarea
                   ref={inputRef}
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Describe your concern..."
+                  placeholder={t(language, "chatPlaceholder")}
                   rows={2}
                   className="min-h-[44px] resize-none rounded-xl text-sm"
-                  aria-label="Chat message"
+                  aria-label={t(language, "sendMessage")}
+                  disabled={!aiAcknowledged}
                 />
                 <Button
                   type="button"
                   size="icon"
                   onClick={() => void sendMessage()}
-                  disabled={loading || !input.trim()}
+                  disabled={loading || !input.trim() || !aiAcknowledged}
                   className="h-11 w-11 shrink-0 rounded-xl"
-                  aria-label="Send message"
+                  aria-label={t(language, "sendMessage")}
                 >
                   <Send className="h-4 w-4" />
                 </Button>

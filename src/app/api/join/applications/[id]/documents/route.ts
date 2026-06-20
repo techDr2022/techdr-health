@@ -29,10 +29,12 @@ const DOCUMENT_TYPES = new Set([
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
-    const applicationId = params.id?.trim();
+    const applicationId = id?.trim();
     if (!applicationId) {
       return NextResponse.json({ error: "Application id is required." }, { status: 400 });
     }

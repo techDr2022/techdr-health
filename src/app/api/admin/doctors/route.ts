@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
           consultTypes: ["VIDEO"],
           approvalStatus: "APPROVED",
           isVisible: payload.isVisible ?? true,
+          nmcverified: true,
         },
       });
 
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
       return { profileId: profile.id, userId: user.id, slug: profile.slug };
     });
 
-    revalidateDoctorPublicPages(specialty);
+    revalidateDoctorPublicPages(specialty, created.slug);
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {

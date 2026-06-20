@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { DrugRestrictionWarnings } from "@/components/consultation/DrugRestrictionWarnings";
+import type { DrugValidationResult } from "@/lib/drug-restrictions";
 
 type Medicine = {
   name: string;
@@ -28,6 +30,9 @@ interface PrescriptionPanelProps {
   initialData?: PrescriptionData | null;
   onSent?: (data: PrescriptionData) => void;
   joinToken?: string | null;
+  prefillKey?: number;
+  prefillDiagnosis?: string;
+  prefillInstructions?: string;
 }
 
 const EMPTY_MED: Medicine = {
@@ -113,6 +118,9 @@ export function PrescriptionPanel({
   initialData,
   onSent,
   joinToken,
+  prefillKey,
+  prefillDiagnosis,
+  prefillInstructions,
 }: PrescriptionPanelProps) {
   const [diagnosis, setDiagnosis] = useState(initialData?.diagnosis || "");
   const [medicines, setMedicines] = useState<Medicine[]>(initialData?.medicines || [EMPTY_MED]);
@@ -120,6 +128,7 @@ export function PrescriptionPanel({
   const [followUpDate, setFollowUpDate] = useState(initialData?.followUpDate?.split("T")[0] || "");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(Boolean(initialData?.sentAt));
+  const [drugWarnings, setDrugWarnings] = useState<DrugValidationResult[]>([]);
 
   useEffect(() => {
     setDiagnosis(initialData?.diagnosis || "");
@@ -128,6 +137,12 @@ export function PrescriptionPanel({
     setFollowUpDate(initialData?.followUpDate?.split("T")[0] || "");
     setSent(Boolean(initialData?.sentAt));
   }, [initialData]);
+
+  useEffect(() => {
+    if (!prefillKey) return;
+    if (prefillDiagnosis?.trim()) setDiagnosis(prefillDiagnosis.trim());
+    if (prefillInstructions?.trim()) setInstructions(prefillInstructions.trim());
+  }, [prefillKey, prefillDiagnosis, prefillInstructions]);
 
   function addMedicine() {
     setMedicines((prev) => [...prev, { ...EMPTY_MED }]);
@@ -216,7 +231,18 @@ export function PrescriptionPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error("Failed to send prescription");
+      const data = (await response.json()) as {
+        error?: string;
+        violations?: DrugValidationResult[];
+      };
+      if (!response.ok) {
+        if (response.status === 422 && data.violations?.length) {
+          setDrugWarnings(data.violations);
+        }
+        throw new Error(data.error || "Failed to send prescription");
+      }
+
+      setDrugWarnings([]);
 
       const nextData: PrescriptionData = {
         diagnosis,
@@ -228,8 +254,8 @@ export function PrescriptionPanel({
       setSent(true);
       onSent?.(nextData);
       toast.success("Prescription sent to patient");
-    } catch {
-      toast.error("Failed to send prescription");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send prescription");
     } finally {
       setSending(false);
     }
@@ -320,9 +346,14 @@ export function PrescriptionPanel({
       <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[0.08] px-3 py-2">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300">Clinical Note</p>
         <p className="text-[11px] text-white/70 mt-0.5">
-          Confirm diagnosis, dosage, and follow-up before sending to patient.
+          Confirm diagnosis, dosage, and follow-up before sending. Schedule X/H/H1 drugs are blocked per TPG 2020.
         </p>
       </div>
+      <DrugRestrictionWarnings
+        warnings={drugWarnings}
+        className="border-amber-400/30 bg-amber-500/10 text-amber-100 [&_p]:text-amber-100 [&_li]:text-amber-50"
+        title="Prescription blocked — restricted medicines detected"
+      />
       <div>
         <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wide mb-1.5">Diagnosis *</label>
         <input

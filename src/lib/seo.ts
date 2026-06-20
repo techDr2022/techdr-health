@@ -227,6 +227,26 @@ export function getCityPageSEO(city: string, doctorCount: number): Metadata {
   });
 }
 
+export function getCitySpecialtyPageSEO(
+  city: string,
+  specialty: string,
+  doctorCount: number
+): Metadata {
+  const citySlug = toSlug(city);
+  const specialtySlug = toSlug(specialty);
+  return generateSEO({
+    title: `Best ${specialty} Doctor Online in ${city}`,
+    description: `Book online ${specialty.toLowerCase()} consultation in ${city}. ${doctorCount}+ verified ${specialty.toLowerCase()} specialists available via HD video. Digital prescription, transparent fees from ₹200.`,
+    path: `/doctors/${citySlug}/${specialtySlug}`,
+    keywords: [
+      `${specialty.toLowerCase()} doctor online ${city}`,
+      `online ${specialty.toLowerCase()} consultation ${city}`,
+      `best ${specialty.toLowerCase()} doctor ${city}`,
+      `${specialty.toLowerCase()} specialist ${city} teleconsultation`,
+    ],
+  });
+}
+
 export function getSpecialtyReviewsSEO(
   specialty: string,
   reviewCount: number,

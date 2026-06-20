@@ -33,6 +33,7 @@ export async function sendHealthNudges() {
     where: {
       role: "PATIENT",
       isActive: true,
+      marketingconsent: true,
       bookingsAsPatient: {
         some: {
           status: BookingStatus.COMPLETED,

@@ -11,13 +11,16 @@ import { ConsultationFeeTag } from "@/components/ui/ConsultationFeeTag";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookNowModal } from "@/components/doctors/BookNowModal";
 import { getSafeImageSrc } from "@/lib/image";
+import type { SecondOpinionPrefill } from "@/lib/second-opinion";
 
 export function DoctorCard({
   doctor,
   variant = "default",
+  secondOpinion = null,
 }: {
   doctor: DoctorRecord;
   variant?: "default" | "compact";
+  secondOpinion?: SecondOpinionPrefill | null;
 }) {
   const specialtyLabel = doctor.specialtySlug
     .split("-")
@@ -72,7 +75,11 @@ export function DoctorCard({
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
           <ConsultationFeeTag inr={doctor.consultFee} />
-          <BookNowModal doctor={doctor} />
+          <BookNowModal
+            doctor={doctor}
+            secondOpinion={secondOpinion}
+            triggerLabel={secondOpinion ? "Book Second Opinion" : undefined}
+          />
         </div>
       </CardContent>
     </Card>

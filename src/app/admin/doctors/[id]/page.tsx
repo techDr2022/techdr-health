@@ -25,11 +25,13 @@ function parseEducation(value: unknown): EducationEntry[] {
     .filter((item): item is EducationEntry => item !== null);
 }
 
-export default async function AdminDoctorEditPage({ params }: { params: { id: string } }) {
+export default async function AdminDoctorEditPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   await ensureAdminAccess();
 
   const doctor = await prisma.doctorProfile.findUnique({
-    where: { id: params.id },
+    where: { id: id },
     include: {
       user: {
         select: {

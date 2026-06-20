@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ensureAdminAccess } from "@/lib/admin-access";
 import { revalidateDoctorPublicPages } from "@/lib/revalidate-doctors";
 import { sendApprovalEmail, sendRejectionEmail } from "@/lib/email";
+import { canApproveDoctorProfile, shouldDoctorBeListedAfterApproval } from "@/lib/nmc-verification";
 
 export type ReviewApplicationState = {
   ok: boolean;
@@ -30,16 +31,30 @@ export async function approveApplication(
       return { ok: false, message: "Application not found." };
     }
 
+    const approvalCheck = canApproveDoctorProfile({
+      nmcverified: application.nmcverified,
+      medRegNumber: application.medRegNumber,
+    });
+    if (!approvalCheck.ok) {
+      return { ok: false, message: approvalCheck.error ?? "Cannot approve application." };
+    }
+
+    const isVisible = shouldDoctorBeListedAfterApproval({
+      approvalStatus: "APPROVED",
+      nmcverified: application.nmcverified,
+      subscriptionStatus: application.subscription?.status,
+    });
+
     await prisma.doctorProfile.update({
       where: { id: applicationId },
       data: {
         approvalStatus: "APPROVED",
         rejectionReason: null,
-        isVisible: application.subscription?.status === "ACTIVE",
+        isVisible,
       },
     });
 
-    revalidateDoctorPublicPages(application.specialty);
+    revalidateDoctorPublicPages(application.specialty, application.slug);
 
     try {
       await sendApprovalEmail(application.user.email, application.displayName);
@@ -88,7 +103,7 @@ export async function rejectApplication(
       },
     });
 
-    revalidateDoctorPublicPages(application.specialty);
+    revalidateDoctorPublicPages(application.specialty, application.slug);
 
     try {
       await sendRejectionEmail(application.user.email, application.displayName, reason);

@@ -10,10 +10,12 @@ import { SubscriptionExpiredEmail } from "@/emails/subscription-expired";
 import { BookingAcknowledgementEmail } from "@/emails/booking-acknowledgement";
 import { BookingStatusUpdateEmail } from "@/emails/booking-status-update";
 import { PayoutProcessedEmail } from "@/emails/payout-processed";
+import { PaymentInvoiceEmail } from "@/emails/payment-invoice";
 import { PrescriptionIssuedEmail } from "@/emails/prescription-issued";
 import { WeeklyDoctorPayoutSummaryEmail } from "@/emails/weekly-doctor-payout-summary";
 import { NewDoctorJoinAdminEmail } from "@/emails/new-doctor-join";
 import { HealthNudgeEmail } from "@/lib/email/nudge-template";
+import { ReferralMilestoneEmail } from "@/emails/referral-milestone";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const adminNotifyEmail =
@@ -147,6 +149,22 @@ export async function sendPayoutProcessedEmail(
   });
 }
 
+export async function sendPaymentInvoiceEmail(
+  to: string,
+  details: {
+    patientName: string;
+    invoiceNumber: string;
+    totalInr: number;
+    downloadUrl: string;
+  }
+) {
+  await safeSend({
+    to,
+    subject: `Tax invoice ${details.invoiceNumber}`,
+    react: <PaymentInvoiceEmail {...details} />,
+  });
+}
+
 export async function sendWeeklyDoctorPayoutSummaryEmail(
   to: string,
   details: {
@@ -156,9 +174,15 @@ export async function sendWeeklyDoctorPayoutSummaryEmail(
       doctorEmail: string;
       consultations: number;
       amountINR: number;
+      status?: string;
+      reason?: string;
     }>;
     totalAmountINR: number;
     totalConsultations: number;
+    processed?: number;
+    failed?: number;
+    skipped?: number;
+    payoutsEnabled?: boolean;
   }
 ) {
   await safeSend({
@@ -323,5 +347,53 @@ export async function sendHealthNudgeEmail(
     to,
     subject: details.subjectLine,
     react: <HealthNudgeEmail {...details} />,
+  });
+}
+
+export async function sendDataDeletionRequestEmail(details: {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  requestedAt: string;
+}) {
+  return safeSend({
+    to: adminNotifyEmail,
+    subject: `[DPDPA] Data deletion request — ${details.userName}`,
+    react: (
+      <div style={{ fontFamily: "sans-serif", lineHeight: 1.6, color: "#1e293b" }}>
+        <h2 style={{ color: "#0f766e" }}>Data Deletion Request (DPDPA)</h2>
+        <p>A patient has requested deletion of their personal data.</p>
+        <ul>
+          <li>
+            <strong>User ID:</strong> {details.userId}
+          </li>
+          <li>
+            <strong>Name:</strong> {details.userName}
+          </li>
+          <li>
+            <strong>Email:</strong> {details.userEmail}
+          </li>
+          <li>
+            <strong>Requested at:</strong> {details.requestedAt}
+          </li>
+        </ul>
+        <p>Please process within 30 days as required under DPDPA 2023.</p>
+      </div>
+    ),
+  });
+}
+
+export async function sendReferralMilestoneEmail(
+  to: string,
+  details: {
+    entityName: string;
+    milestone: number;
+    rewardLabel: string;
+  }
+) {
+  return safeSend({
+    to,
+    subject: `Referral milestone unlocked — ${details.rewardLabel}`,
+    react: <ReferralMilestoneEmail {...details} />,
   });
 }

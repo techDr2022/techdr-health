@@ -8,6 +8,7 @@ import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { FreeSlotsLeft } from "@/components/join/FreeSlotsLeft";
+import { JoinDoctorModal } from "@/components/join/JoinDoctorModal";
 import { cn } from "@/lib/utils";
 import { getDashboardPathForRole } from "@/lib/auth-redirect";
 
@@ -18,16 +19,9 @@ const NAV_LINKS = [
   { label: "About", href: "/about" },
 ];
 
-function JoinOfferLink({ className }: { className?: string }) {
-  return (
-    <Link href="/join" className={className}>
-      Join Free as a Doctor
-    </Link>
-  );
-}
-
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
   const { data: session, status } = useSession();
   const isLoggedIn = Boolean(session?.user);
   const role = session?.user?.role;
@@ -40,6 +34,7 @@ export function Navbar() {
   }, []);
 
   return (
+    <>
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
@@ -48,14 +43,15 @@ export function Navbar() {
           : "border-b border-emerald-100/70 bg-white/90 backdrop-blur-md"
       )}
     >
-      <Link
-        href="/join"
+      <button
+        type="button"
+        onClick={() => setJoinModalOpen(true)}
         className="flex h-8 w-full items-center justify-center gap-1.5 border-b border-emerald-200 bg-emerald-600 px-3 text-center text-[11px] font-bold text-white transition-colors hover:bg-emerald-500 sm:text-xs"
       >
         <span>500 free entries</span>
         <span aria-hidden="true">·</span>
         <FreeSlotsLeft compact fallback="join now" />
-      </Link>
+      </button>
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center">
           <Image
@@ -86,11 +82,11 @@ export function Navbar() {
         <div className="hidden items-center gap-2.5 md:flex">
           {!isLoggedIn ? (
             <Button
-              asChild
               size="sm"
               className="rounded-full bg-emerald-600 px-4 text-[13px] font-semibold text-white shadow-md shadow-emerald-600/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-500"
+              onClick={() => setJoinModalOpen(true)}
             >
-              <JoinOfferLink />
+              Join Free as a Doctor
             </Button>
           ) : null}
           {isLoggedIn ? (
@@ -143,12 +139,13 @@ export function Navbar() {
           </SheetTrigger>
           <SheetContent side="right" className="w-72 border-l border-emerald-100 bg-white">
             <nav className="mt-8 flex flex-col gap-1">
-              <Link
-                href="/join"
+              <button
+                type="button"
+                onClick={() => setJoinModalOpen(true)}
                 className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-sm font-semibold text-emerald-800"
               >
                 500 free entries · <FreeSlotsLeft compact fallback="join now" />
-              </Link>
+              </button>
               {NAV_LINKS.map(({ label, href }) => (
                 <Link
                   key={label}
@@ -173,9 +170,17 @@ export function Navbar() {
                     </Button>
                   </>
                 ) : status !== "loading" ? (
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link href="/login">Sign In</Link>
-                  </Button>
+                  <>
+                    <Button
+                      className="w-full rounded-full bg-emerald-600 text-white hover:bg-emerald-500"
+                      onClick={() => setJoinModalOpen(true)}
+                    >
+                      Join Free as a Doctor
+                    </Button>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href="/login">Sign In</Link>
+                    </Button>
+                  </>
                 ) : null}
                 <Button className="w-full rounded-full bg-slate-900 text-white hover:bg-slate-800" asChild>
                   <Link href="/book">Book Now</Link>
@@ -186,5 +191,9 @@ export function Navbar() {
         </Sheet>
       </nav>
     </header>
+    {!isLoggedIn ? (
+      <JoinDoctorModal open={joinModalOpen} onOpenChange={setJoinModalOpen} />
+    ) : null}
+    </>
   );
 }

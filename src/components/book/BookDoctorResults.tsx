@@ -12,6 +12,7 @@ import { ConsultationFeeTag } from "@/components/ui/ConsultationFeeTag";
 import { RatingStars } from "@/components/ui/RatingStars";
 import { Button } from "@/components/ui/button";
 import { getSafeImageSrc } from "@/lib/image";
+import type { SecondOpinionPrefill } from "@/lib/second-opinion";
 
 function specialtyLabel(slug: string) {
   return slug
@@ -25,9 +26,10 @@ type Props = {
   heading: string;
   subtext: string;
   emptyHref?: string;
+  secondOpinion?: SecondOpinionPrefill | null;
 };
 
-export function BookDoctorResults({ doctors, heading, subtext }: Props) {
+export function BookDoctorResults({ doctors, heading, subtext, secondOpinion = null }: Props) {
   if (doctors.length === 0) {
     return (
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -150,7 +152,8 @@ export function BookDoctorResults({ doctors, heading, subtext }: Props) {
                   </Button>
                   <BookNowModal
                     doctor={doctor}
-                    triggerLabel="Book slot"
+                    secondOpinion={secondOpinion}
+                    triggerLabel={secondOpinion ? "Second Opinion" : "Book slot"}
                     triggerSize="sm"
                     triggerClassName="rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] min-h-[40px] px-4"
                   />

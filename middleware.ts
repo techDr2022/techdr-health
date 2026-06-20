@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getDashboardPathForRole } from "@/lib/auth-redirect";
+import { checkApiRateLimit } from "@/lib/rate-limit";
 
-export default auth((req) => {
+export default auth(async (req) => {
   const { nextUrl } = req;
+
+  if (nextUrl.pathname.startsWith("/api")) {
+    const rateLimitResponse = await checkApiRateLimit(req, req.auth?.user?.id);
+    if (rateLimitResponse) return rateLimitResponse;
+    return NextResponse.next();
+  }
+
   const session = req.auth;
   const isLoggedIn = !!session;
   const role = session?.user?.role;
@@ -40,5 +48,8 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/api/:path*",
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 };

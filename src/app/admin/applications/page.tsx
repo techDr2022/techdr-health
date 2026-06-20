@@ -23,6 +23,7 @@ export default async function AdminApplicationsPage() {
               <th className="px-4 py-3">Applicant</th>
               <th className="px-4 py-3">Plan</th>
               <th className="px-4 py-3">Specialty</th>
+              <th className="px-4 py-3">NMC</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Submitted</th>
               <th className="px-4 py-3">Action</th>
@@ -37,6 +38,11 @@ export default async function AdminApplicationsPage() {
                 </td>
                 <td className="px-4 py-3">{item.subscription?.plan ?? "INDIVIDUAL"}</td>
                 <td className="px-4 py-3">{item.specialty}</td>
+                <td className="px-4 py-3">
+                  <Badge variant={item.nmcverified ? "default" : "outline"}>
+                    {item.nmcverified ? "Verified" : "Pending"}
+                  </Badge>
+                </td>
                 <td className="px-4 py-3">
                   <Badge variant={item.approvalStatus === "PENDING" ? "outline" : "default"}>
                     {item.approvalStatus}

@@ -13,7 +13,7 @@ import { Testimonials } from "@/components/home/Testimonials";
 import { WhyChoose } from "@/components/home/WhyChoose";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { HOME_FAQ } from "@/data/faq-home";
-import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { getCachedLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getHomepageSEO } from "@/lib/seo";
 import {
   getFAQSchema,
@@ -22,10 +22,10 @@ import {
 
 export const metadata: Metadata = getHomepageSEO();
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function HomePage() {
-  const doctors = await getLiveDoctorCatalog();
+  const doctors = await getCachedLiveDoctorCatalog();
 
   return (
     <>

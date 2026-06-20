@@ -10,7 +10,10 @@ import {
   Wallet,
 } from "lucide-react";
 import { auth } from "@/auth";
+import { ReferralShareCard } from "@/components/dashboard/ReferralShareCard";
 import { prisma } from "@/lib/prisma";
+import { getDoctorReferralStats, mapReferralStatsForCard } from "@/lib/doctor-referral";
+import { getSiteUrl } from "@/lib/site-config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -23,7 +26,7 @@ async function getDashboardData(userId: string) {
   });
   if (!doctor) return null;
 
-  const [todayCount, monthBookings] = await Promise.all([
+  const [todayCount, monthBookings, referralStats] = await Promise.all([
     prisma.booking.count({
       where: {
         doctorId: doctor.id,
@@ -42,13 +45,14 @@ async function getDashboardData(userId: string) {
         },
       },
     }),
+    getDoctorReferralStats(doctor.id),
   ]);
 
   const gross = monthBookings.reduce((sum, item) => sum + item.consultFee, 0);
   const platformFee = monthBookings.reduce((sum, item) => sum + item.platformFeeINR, 0);
   const net = monthBookings.reduce((sum, item) => sum + item.doctorPayoutINR, 0);
 
-  return { doctor, todayCount, gross, platformFee, net };
+  return { doctor, todayCount, gross, platformFee, net, referralStats };
 }
 
 export default async function DoctorDashboardPage() {
@@ -155,12 +159,19 @@ export default async function DoctorDashboardPage() {
         </Card>
       </section>
 
+      {data.referralStats ? (
+        <section>
+          <ReferralShareCard compact {...mapReferralStatsForCard(data.referralStats, getSiteUrl())} />
+        </section>
+      ) : null}
+
       <section>
         <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <QuickLink href="/dashboard/bookings" label="View bookings" />
           <QuickLink href="/dashboard/earnings" label="Earnings breakdown" />
           <QuickLink href="/dashboard/subscription" label="Subscription status" />
+          <QuickLink href="/dashboard/referrals" label="Refer a doctor" />
           <QuickLink href="/dashboard/profile" label="Edit profile" />
           <QuickLink href="/dashboard/availability" label="Manage availability" />
           <QuickLink href="/dashboard/reviews" label="Patient reviews" />

@@ -8,14 +8,15 @@ import { getSeoKeywordPage, SEO_KEYWORD_PAGES } from "@/data/seo-keywords";
 import { generateSEO } from "@/lib/seo";
 import { MEDICAL_TOURS_INDIA_URL } from "@/lib/site-config";
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
   return SEO_KEYWORD_PAGES.map((item) => ({ slug: item.slug }));
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const page = getSeoKeywordPage(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const page = getSeoKeywordPage(slug);
   if (!page) return { title: "Teleconsultation Care" };
 
   return generateSEO({
@@ -26,8 +27,9 @@ export function generateMetadata({ params }: Props): Metadata {
   });
 }
 
-export default function CareKeywordPage({ params }: Props) {
-  const page = getSeoKeywordPage(params.slug);
+export default async function CareKeywordPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const page = getSeoKeywordPage(slug);
   if (!page) notFound();
 
   const isMedicalTourismPage = page.slug === "medical-tourism-teleconsultation-india";

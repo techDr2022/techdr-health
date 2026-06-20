@@ -22,15 +22,17 @@ async function requireAdmin() {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   const authResult = await requireAdmin();
   if (authResult.error) return authResult.error;
 
   try {
     const payload = updateSchema.parse(await request.json());
     const updated = await prisma.user.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         name: payload.name,
         role: payload.role,
@@ -49,20 +51,21 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const authResult = await requireAdmin();
   if (authResult.error) return authResult.error;
-  if (authResult.session.user.id === params.id) {
+  if (authResult.session.user.id === id) {
     return NextResponse.json({ error: "Cannot delete your own profile." }, { status: 400 });
   }
 
   try {
-    await prisma.user.delete({ where: { id: params.id } });
+    await prisma.user.delete({ where: { id: id } });
     return NextResponse.json({ ok: true, softDeleted: false });
   } catch {
     await prisma.user.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { isActive: false },
     });
     return NextResponse.json({ ok: true, softDeleted: true });

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import type { DoctorRecord, ReviewEntry } from "@/types/catalog";
 import { SPECIALTIES } from "@/data/specialties";
 import { sanitizeDoctorBioForPublic } from "@/lib/doctor-bio";
@@ -6,6 +7,8 @@ import {
   resolveSpecialtySlug,
 } from "@/lib/doctor-specialty";
 import { prisma } from "@/lib/prisma";
+
+export const DOCTOR_CATALOG_CACHE_TAG = "doctor-catalog";
 
 const dayMap: Record<string, number> = {
   SUN: 0,
@@ -141,8 +144,14 @@ export async function getLiveDoctorCatalog(): Promise<DoctorRecord[]> {
   }
 }
 
+export const getCachedLiveDoctorCatalog = unstable_cache(
+  async () => getLiveDoctorCatalog(),
+  ["live-doctor-catalog-v1"],
+  { revalidate: 300, tags: [DOCTOR_CATALOG_CACHE_TAG] }
+);
+
 export async function getLiveDoctorCountBySpecialty(): Promise<Record<string, number>> {
-  const doctors = await getLiveDoctorCatalog();
+  const doctors = await getCachedLiveDoctorCatalog();
   const countMap: Record<string, number> = {};
   for (const specialty of SPECIALTIES) {
     countMap[specialty.slug] = 0;

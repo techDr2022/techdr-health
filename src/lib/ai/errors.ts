@@ -12,7 +12,10 @@ export function aiRateLimitedResponse(retryAfter: number) {
       fallback: true,
       retryAfter,
     },
-    { status: 429 }
+    {
+      status: 429,
+      headers: { "Retry-After": String(Math.max(1, retryAfter)) },
+    }
   );
 }
 

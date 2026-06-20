@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SymptomChecker } from "@/components/ai/SymptomChecker";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SYMPTOM_TARGETS } from "@/data/seo-targets";
@@ -9,14 +10,15 @@ import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getSymptomPageSEO } from "@/lib/seo";
 import { getFAQSchema } from "@/lib/schema";
 
-type Props = { params: { symptom: string } };
+type Props = { params: Promise<{ symptom: string }> };
 
 export function generateStaticParams() {
   return Object.keys(SYMPTOM_TARGETS).map((symptom) => ({ symptom }));
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const info = SYMPTOM_TARGETS[params.symptom];
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { symptom } = await params;
+  const info = SYMPTOM_TARGETS[symptom];
   if (!info) return { title: "Symptoms" };
   const specialty = getSpecialtyBySlug(info.specialtySlug);
   if (!specialty) return { title: "Symptoms" };
@@ -24,7 +26,9 @@ export function generateMetadata({ params }: Props): Metadata {
 }
 
 export default async function SymptomPage({ params }: Props) {
-  const info = SYMPTOM_TARGETS[params.symptom];
+  const { symptom } = await params;
+
+  const info = SYMPTOM_TARGETS[symptom];
   if (!info) notFound();
 
   const specialty = getSpecialtyBySlug(info.specialtySlug);
@@ -34,11 +38,11 @@ export default async function SymptomPage({ params }: Props) {
     .filter((doctor) => doctor.specialtySlug === info.specialtySlug)
     .slice(0, 6);
   const relatedSymptoms = Object.entries(SYMPTOM_TARGETS)
-    .filter(([slug, value]) => slug !== params.symptom && value.specialtySlug === info.specialtySlug)
+    .filter(([slug, value]) => slug !== symptom && value.specialtySlug === info.specialtySlug)
     .slice(0, 5);
   const symptomFAQs = [
     {
-      question: `Which doctor should I consult online for ${info.label.toLowerCase()}?`,
+    question: `Which doctor should I consult online for ${info.label.toLowerCase()}?`,
       answer: `For ${info.label.toLowerCase()}, start with an online ${specialty.name} consultation on TechDrHealth. Your doctor can evaluate symptoms, suggest tests if needed, and provide treatment guidance.`,
     },
     {
@@ -75,6 +79,10 @@ export default async function SymptomPage({ params }: Props) {
       {info.uniqueIntro ? (
         <p className="mt-3 max-w-4xl text-muted-foreground">{info.uniqueIntro}</p>
       ) : null}
+
+      <section className="mt-10">
+        <SymptomChecker variant="compact" />
+      </section>
 
       <section className="mt-10">
         <h2 className="font-heading text-2xl font-semibold text-[#0A1628]">

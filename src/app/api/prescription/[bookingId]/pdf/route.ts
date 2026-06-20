@@ -18,8 +18,10 @@ function toWebStream(body: unknown): ReadableStream<Uint8Array> | null {
 
 export async function GET(
   _req: Request,
-  { params }: { params: { bookingId: string } }
+  { params }: { params: Promise<{ bookingId: string }> }
 ) {
+  const { bookingId } = await params;
+
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -27,7 +29,7 @@ export async function GET(
     }
 
     const booking = await prisma.booking.findUnique({
-      where: { id: params.bookingId },
+      where: { id: bookingId },
       include: { doctor: true, prescriptionRecord: true },
     });
     if (!booking || !booking.prescriptionRecord?.pdfUrl) {
@@ -59,7 +61,7 @@ export async function GET(
     return new NextResponse(stream, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="prescription-${params.bookingId}.pdf"`,
+        "Content-Disposition": `inline; filename="prescription-${bookingId}.pdf"`,
         "Cache-Control": "private, max-age=0, no-cache",
       },
     });

@@ -17,20 +17,22 @@ import {
   getSpeakableFAQSchema,
 } from "@/lib/schema";
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
   return listGlobalRegionSlugs().map((slug) => ({ slug }));
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const region = getGlobalRegion(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const region = getGlobalRegion(slug);
   if (!region) return { title: "Global Teleconsultation" };
   return getRegionPageSEO(region);
 }
 
-export default function RegionTeleconsultationPage({ params }: Props) {
-  const region = getGlobalRegion(params.slug);
+export default async function RegionTeleconsultationPage({ params }: Props) {
+  const { slug } = await params;
+  const region = getGlobalRegion(slug);
   if (!region) notFound();
 
   const otherRegions = GLOBAL_REGIONS.filter((r) => r.slug !== region.slug).slice(

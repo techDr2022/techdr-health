@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Role = "PATIENT" | "DOCTOR";
 type Mode = "role" | "email";
@@ -62,6 +63,7 @@ export default function RegisterPage() {
   const [mode, setMode] = useState<Mode>("role");
   const [role, setRole] = useState<Role>("PATIENT");
   const [loading, setLoading] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   const {
     register,
@@ -83,6 +85,7 @@ export default function RegisterPage() {
           phone: data.phone || undefined,
           password: data.password,
           role,
+          marketingConsent: role === "PATIENT" ? marketingConsent : false,
         }),
       });
       const payload = (await res.json()) as { error?: string };
@@ -153,6 +156,19 @@ export default function RegisterPage() {
                 <Input {...register("confirmPassword")} type="password" placeholder="Confirm password" className="h-11" />
                 {errors.confirmPassword && <p className="text-red-500 text-[11px] mt-1">{errors.confirmPassword.message}</p>}
               </div>
+              {role === "PATIENT" ? (
+                <label className="flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3 text-left">
+                  <Checkbox
+                    checked={marketingConsent}
+                    onCheckedChange={(value) => setMarketingConsent(value === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-xs text-slate-600">
+                    Send me health tips and follow-up reminders by email (optional). You can change this anytime in
+                    Privacy &amp; Data settings.
+                  </span>
+                </label>
+              ) : null}
               <Button type="submit" disabled={loading} className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white">
                 {loading ? (
                   <>

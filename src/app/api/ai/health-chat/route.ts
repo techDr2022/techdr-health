@@ -3,12 +3,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { callClaudeJSON } from "@/lib/ai/client";
 import {
-  aiRateLimitedResponse,
   aiUnavailableResponse,
   handleAiRouteError,
 } from "@/lib/ai/errors";
-import { enforceAiRateLimit } from "@/lib/ai/rate-limit";
-import { SPECIALTIES } from "@/data/specialties";
+import {
+  buildHealthChatSystemPrompt,
+  normalizeLanguage,
+  SPECIALTY_NAMES,
+} from "@/lib/i18n";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -18,6 +20,7 @@ const messageSchema = z.object({
 const bodySchema = z.object({
   messages: z.array(messageSchema).min(1).max(20),
   patientId: z.string().optional(),
+  language: z.enum(["en", "hi", "te"]).optional(),
 });
 
 type HealthChatResponse = {
@@ -25,19 +28,6 @@ type HealthChatResponse = {
   suggestBooking: boolean;
   suggestedSpecialty?: string;
 };
-
-const SPECIALTY_NAMES = SPECIALTIES.map((item) => item.name).join(", ");
-
-const SYSTEM_PROMPT = `You are HealthGuide, a helpful medical navigation assistant for TechDrHealth.
-You help patients understand their symptoms and decide whether they need a consultation.
-You DO NOT diagnose. You DO triage urgency and recommend the right specialist.
-Always end responses with a clear next step: book a consultation, go to ER, or monitor at home.
-If the user's symptoms suggest emergency, always recommend calling emergency services immediately.
-Keep responses concise (under 150 words). Be warm, clear, and reassuring.
-
-Available specialties include: ${SPECIALTY_NAMES}
-
-Return JSON: { "reply": string, "suggestBooking": boolean, "suggestedSpecialty": string | null }`;
 
 export async function POST(req: Request) {
   try {
@@ -47,31 +37,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { messages, patientId } = parsed.data;
-    const rateLimit = enforceAiRateLimit(req, patientId);
-    if (rateLimit.blocked) {
-      return aiRateLimitedResponse(rateLimit.retryAfter);
-    }
+    const { messages, patientId, language } = parsed.data;
+    const lang = normalizeLanguage(language);
 
     const conversation = messages
       .map((message) => `${message.role === "user" ? "Patient" : "HealthGuide"}: ${message.content}`)
       .join("\n");
 
+    const systemPrompt = buildHealthChatSystemPrompt(lang, SPECIALTY_NAMES);
+
     let response: HealthChatResponse;
     try {
-      response = await callClaudeJSON<HealthChatResponse>(
-        SYSTEM_PROMPT,
-        conversation,
-        600
-      );
+      response = await callClaudeJSON<HealthChatResponse>(systemPrompt, conversation, 600);
     } catch {
       return aiUnavailableResponse();
     }
 
     return NextResponse.json({
-      reply: response.reply || "I'm here to help you find the right care. Could you tell me more about your symptoms?",
+      reply:
+        response.reply ||
+        (lang === "hi"
+          ? "मैं आपकी सही देखभाल खोजने में मदद करने के लिए यहाँ हूँ। कृपया अपने लक्षण थोड़ा और बताएँ।"
+          : lang === "te"
+            ? "సరైన సంరక్షణ కనుగొనడంలో నేను సహాయం చేయడానికి ఇక్కడ ఉన్నాను. దయచేసి మీ లక్షణాలను కొంచెం వివరించండి."
+            : "I'm here to help you find the right care. Could you tell me more about your symptoms?"),
       suggestBooking: Boolean(response.suggestBooking),
       suggestedSpecialty: response.suggestedSpecialty || undefined,
+      language: lang,
     });
   } catch (error) {
     return handleAiRouteError(error, "health-chat");

@@ -67,6 +67,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/pricing" className="hover:text-emerald-700">
+                  Health Pass
+                </Link>
+              </li>
+              <li>
                 <Link href="/doctors" className="hover:text-emerald-700">
                   Find Doctors
                 </Link>
@@ -121,6 +126,16 @@ export function Footer() {
               <li>
                 <Link href="/privacy-policy" className="hover:text-emerald-700">
                   Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/telemedicine-consent" className="hover:text-emerald-700">
+                  Telemedicine Consent
+                </Link>
+              </li>
+              <li>
+                <Link href="/grievance" className="hover:text-emerald-700">
+                  Grievance Redressal
                 </Link>
               </li>
               <li>

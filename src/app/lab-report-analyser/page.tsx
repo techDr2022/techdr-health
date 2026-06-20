@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { LabReportAnalyser } from "@/components/ai/LabReportAnalyser";
@@ -27,6 +28,11 @@ export default async function LabReportAnalyserPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Upload a PDF lab report to extract key values, flag abnormalities, and find the right
             specialist. For informational purposes only — not medical advice.
+          </p>
+          <p className="mt-3 text-sm">
+            <Link href="/dashboard/patient/lab-tests" className="font-semibold text-emerald-700 hover:underline">
+              Need new lab tests? Book a panel with our partner lab →
+            </Link>
           </p>
           <div className="mt-8">
             <LabReportAnalyser patientId={session?.user?.id} />

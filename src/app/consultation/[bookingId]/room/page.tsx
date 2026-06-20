@@ -6,6 +6,8 @@ import {
   isJoinableBookingStatus,
   resolveConsultationAccess,
 } from "@/lib/consultation-access";
+import { toSoapNoteClient } from "@/lib/soap-notes";
+import { getBookingBeneficiaryName } from "@/lib/family-members";
 
 type Medicine = {
   name: string;
@@ -18,26 +20,30 @@ export default async function VideoRoomPage({
   params,
   searchParams,
 }: {
-  params: { bookingId: string };
-  searchParams: { token?: string };
+  params: Promise<{ bookingId: string }>;
+  searchParams: Promise<{ token?: string }>;
 }) {
-  const joinToken = searchParams.token?.trim() || null;
+  const { bookingId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const joinToken = resolvedSearchParams.token?.trim() || null;
 
   const booking = await prisma.booking.findUnique({
-    where: { id: params.bookingId },
+    where: { id: bookingId },
     include: {
       doctor: true,
       patient: true,
       prescriptionRecord: true,
+      soapnote: true,
+      familymember: true,
     },
   });
   if (!booking) redirect("/");
 
-  const access = await resolveConsultationAccess(params.bookingId, booking, joinToken);
+  const access = await resolveConsultationAccess(bookingId, booking, joinToken);
   if (!access) {
     const session = await auth();
     if (!session?.user?.id) {
-      const callbackUrl = `/consultation/${params.bookingId}/room${
+      const callbackUrl = `/consultation/${bookingId}/room${
         joinToken ? `?token=${encodeURIComponent(joinToken)}` : ""
       }`;
       redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
@@ -64,16 +70,37 @@ export default async function VideoRoomPage({
       }
     : null;
 
+  const accessRole = access.role;
+
+  const beneficiaryAge = booking.familymember
+    ? Math.floor(
+        (Date.now() - booking.familymember.dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+      )
+    : null;
+  const beneficiaryGender = booking.familymember?.gender ?? null;
+
+  const initialSoapNote =
+    booking.soapnote &&
+    (accessRole === "doctor" || booking.soapnote.patientshared)
+      ? toSoapNoteClient(booking.soapnote)
+      : null;
+
   return (
     <VideoRoomClient
       bookingId={booking.id}
-      role={access.role}
+      role={accessRole}
       doctorName={booking.doctor.displayName}
-      patientName={booking.patient.name}
+      patientName={getBookingBeneficiaryName(booking)}
       specialty={booking.doctor.specialty}
       duration={duration}
+      consultType={booking.consultType}
       existingPrescription={existingPrescription}
+      initialSoapNote={initialSoapNote}
       joinToken={joinToken}
+      patientAge={beneficiaryAge}
+      patientGender={beneficiaryGender}
+      isSecondOpinion={booking.issecondopinion}
+      secondOpinionShareConsent={booking.secondopinionshareconsent}
     />
   );
 }

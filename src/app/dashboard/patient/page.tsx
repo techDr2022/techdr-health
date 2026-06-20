@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { LabReportAnalyser } from "@/components/ai/LabReportAnalyser";
+import { HealthPassBadge } from "@/components/patient/HealthPassBadge";
+import { SecondOpinionSharePrompt } from "@/components/patient/SecondOpinionSharePrompt";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +24,27 @@ export default async function PatientDashboardPage() {
     take: 100,
   });
 
+  const secondOpinionShareBookings = bookings
+    .filter((b) => b.issecondopinion)
+    .map((b) => ({
+      id: b.id,
+      doctorName: b.doctor.displayName,
+      shareConsent: b.secondopinionshareconsent,
+    }));
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold text-slate-900">Patient Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-600">Join upcoming consultations and manage visit history.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-900">Patient Dashboard</h1>
+          <p className="mt-1 text-sm text-slate-600">Join upcoming consultations and manage visit history.</p>
+        </div>
+        <HealthPassBadge userId={session.user.id} />
       </div>
+
+      <Suspense fallback={null}>
+        <SecondOpinionSharePrompt bookings={secondOpinionShareBookings} />
+      </Suspense>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard label="Total Bookings" value={String(bookings.length)} />
@@ -42,12 +60,14 @@ export default async function PatientDashboardPage() {
               Upload a PDF to get AI insights and specialist recommendations.
             </p>
           </div>
-          <Link
-            href="/lab-report-analyser"
-            className="text-sm font-semibold text-emerald-700 hover:underline"
-          >
-            Open full page →
-          </Link>
+          <div className="flex flex-wrap gap-3 text-sm font-semibold">
+            <Link href="/dashboard/patient/lab-tests" className="text-emerald-700 hover:underline">
+              Book lab tests →
+            </Link>
+            <Link href="/lab-report-analyser" className="text-emerald-700 hover:underline">
+              Open full page →
+            </Link>
+          </div>
         </div>
         <LabReportAnalyser patientId={session.user.id} className="mt-4" />
       </div>
@@ -84,12 +104,20 @@ export default async function PatientDashboardPage() {
                         </Link>
                       ) : null}
                       <Link
+                        href={`/book?secondOpinionFor=${booking.id}`}
+                        className="inline-flex items-center rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500"
+                      >
+                        Get Second Opinion
+                      </Link>
+                      <Link
                         href={`/dashboard/patient/review/${booking.id}`}
                         className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
                       >
                         {booking.review ? "Edit Review" : "Write Review"}
                       </Link>
                     </div>
+                  ) : booking.issecondopinion && !booking.secondopinionshareconsent ? (
+                    <span className="text-xs text-violet-700 font-medium">Share records pending</span>
                   ) : booking.consultType === "VIDEO" ? (
                     <Link
                       href={`/consultation/${booking.id}/waiting`}

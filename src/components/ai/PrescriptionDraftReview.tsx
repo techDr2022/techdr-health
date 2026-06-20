@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DrugRestrictionWarnings } from "@/components/consultation/DrugRestrictionWarnings";
+import type { DrugValidationResult } from "@/lib/drug-restrictions";
 
 type Medication = {
   name: string;
@@ -23,6 +25,7 @@ type AiDraft = {
   medications: Medication[];
   followUpRecommendation: string;
   lifestyle: string[];
+  warnings?: DrugValidationResult[];
 };
 
 type PrescriptionDraftReviewProps = {
@@ -62,6 +65,7 @@ export function PrescriptionDraftReview({
     initialDraft?.medications?.length ? initialDraft.medications : [{ ...EMPTY_MED }]
   );
   const [followUpDate, setFollowUpDate] = useState("");
+  const [drugWarnings, setDrugWarnings] = useState<DrugValidationResult[]>([]);
 
   useEffect(() => {
     if (initialDraft) {
@@ -90,7 +94,11 @@ export function PrescriptionDraftReview({
         }),
       });
 
-      const data = (await response.json()) as AiDraft & { error?: string; fallback?: boolean };
+      const data = (await response.json()) as AiDraft & {
+        error?: string;
+        fallback?: boolean;
+        warnings?: DrugValidationResult[];
+      };
       if (!response.ok || data.fallback) {
         setFallback(true);
         toast.error(data.error ?? "AI draft unavailable. Complete the form manually.");
@@ -101,7 +109,12 @@ export function PrescriptionDraftReview({
       setDiagnosis(data.diagnosis);
       setInstructions(data.followUpRecommendation);
       setMedicines(data.medications.length ? data.medications : [{ ...EMPTY_MED }]);
-      toast.success("AI draft generated");
+      setDrugWarnings(data.warnings ?? []);
+      if ((data.warnings?.length ?? 0) > 0) {
+        toast.warning("AI draft contains medicines restricted under telemedicine rules.");
+      } else {
+        toast.success("AI draft generated");
+      }
     } catch {
       setFallback(true);
       toast.error("Unable to generate AI draft.");
@@ -137,12 +150,19 @@ export function PrescriptionDraftReview({
         }),
       });
 
-      const data = (await response.json()) as { error?: string };
+      const data = (await response.json()) as {
+        error?: string;
+        violations?: DrugValidationResult[];
+      };
       if (!response.ok) {
+        if (response.status === 422 && data.violations?.length) {
+          setDrugWarnings(data.violations);
+        }
         toast.error(data.error ?? "Failed to send prescription.");
         return;
       }
 
+      setDrugWarnings([]);
       toast.success("Prescription sent to patient");
     } catch {
       toast.error("Failed to send prescription.");
@@ -186,6 +206,7 @@ export function PrescriptionDraftReview({
 
         {aiDraft ? (
           <div className="mt-4 space-y-4 text-sm">
+            <DrugRestrictionWarnings warnings={drugWarnings} />
             <div>
               <Badge variant="secondary" className="mb-2">
                 Summary
@@ -220,6 +241,8 @@ export function PrescriptionDraftReview({
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="font-semibold text-slate-900">Editable prescription</h2>
+
+        <DrugRestrictionWarnings warnings={drugWarnings} className="mt-3" />
 
         <div className="mt-4 space-y-4">
           <div>

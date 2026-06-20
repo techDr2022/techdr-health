@@ -12,18 +12,19 @@ import {
   paginate,
   getSpecialtyTitle,
 } from "@/lib/queries";
-import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { getCachedLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateSEO } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
-export function generateMetadata({
+export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: SP;
-}): Metadata {
-  const hasFilters = Object.keys(searchParams).length > 0;
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const resolved = await searchParams;
+  const hasFilters = Object.keys(resolved).length > 0;
   return generateSEO({
     title: "Find Online Doctors - Teleconsult Directory",
     description:
@@ -48,17 +49,18 @@ function first(v: string | string[] | undefined): string | undefined {
 export default async function DoctorsDirectoryPage({
   searchParams,
 }: {
-  searchParams: SP;
+  searchParams: Promise<SP>;
 }) {
-  const doctors = await getLiveDoctorCatalog();
-  const specialty = first(searchParams.specialty);
-  const lang = first(searchParams.lang);
-  const q = first(searchParams.q) ?? first(searchParams.query);
-  const page = Math.max(1, Number(first(searchParams.page)) || 1);
-  const minExp = Number(first(searchParams.minExp));
-  const rating = Number(first(searchParams.rating));
-  const maxFee = Number(first(searchParams.maxFee));
-  const available = first(searchParams.available);
+  const resolvedSearchParams = await searchParams;
+  const doctors = await getCachedLiveDoctorCatalog();
+  const specialty = first(resolvedSearchParams.specialty);
+  const lang = first(resolvedSearchParams.lang);
+  const q = first(resolvedSearchParams.q) ?? first(resolvedSearchParams.query);
+  const page = Math.max(1, Number(first(resolvedSearchParams.page)) || 1);
+  const minExp = Number(first(resolvedSearchParams.minExp));
+  const rating = Number(first(resolvedSearchParams.rating));
+  const maxFee = Number(first(resolvedSearchParams.maxFee));
+  const available = first(resolvedSearchParams.available);
 
   const filters = {
     specialty,

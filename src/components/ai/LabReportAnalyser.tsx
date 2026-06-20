@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FileText, Loader2, Upload, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AiCrossBorderNotice } from "@/components/consent/AiCrossBorderNotice";
 import { cn } from "@/lib/utils";
 
 type LabParameter = {
@@ -51,9 +52,14 @@ export function LabReportAnalyser({ patientId, bookingId, className }: LabReport
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fallback, setFallback] = useState(false);
+  const [aiAcknowledged, setAiAcknowledged] = useState(false);
 
   const analyseFile = useCallback(
     async (selected: File) => {
+      if (!aiAcknowledged) {
+        setError("Please acknowledge the AI data processing notice before uploading.");
+        return;
+      }
       if (selected.type !== "application/pdf") {
         setError("Please upload a PDF lab report.");
         return;
@@ -95,7 +101,7 @@ export function LabReportAnalyser({ patientId, bookingId, className }: LabReport
         setLoading(false);
       }
     },
-    [patientId, bookingId]
+    [aiAcknowledged, patientId, bookingId]
   );
 
   function handleDrop(event: DragEvent<HTMLDivElement>) {
@@ -113,6 +119,7 @@ export function LabReportAnalyser({ patientId, bookingId, className }: LabReport
 
   return (
     <div className={cn("space-y-5", className)}>
+      <AiCrossBorderNotice onAcknowledgedChange={setAiAcknowledged} />
       <div
         onDragOver={(event) => {
           event.preventDefault();
@@ -226,11 +233,16 @@ export function LabReportAnalyser({ patientId, bookingId, className }: LabReport
 
           <p className="text-xs text-muted-foreground">{result.disclaimer}</p>
 
-          <Button asChild className="rounded-xl">
-            <Link href={`/book?specialty=${encodeURIComponent(specialtySlug)}`}>
-              Book Consultation with {result.recommendedSpecialty}
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild className="rounded-xl">
+              <Link href={`/book?specialty=${encodeURIComponent(specialtySlug)}`}>
+                Book Consultation with {result.recommendedSpecialty}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-xl">
+              <Link href="/dashboard/patient/lab-tests">Book follow-up lab tests</Link>
+            </Button>
+          </div>
         </div>
       ) : null}
     </div>

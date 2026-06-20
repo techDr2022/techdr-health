@@ -9,16 +9,20 @@ export const metadata: Metadata = {
     "Register as an individual doctor, clinic, or hospital. Upload documents, complete payment, and get verified in 48 hours.",
 };
 
-export default function JoinRegisterPage({
+export default async function JoinRegisterPage({
   searchParams,
 }: {
-  searchParams?: { plan?: string };
+  searchParams?: Promise<{ plan?: string; ref?: string }>;
 }) {
+  const resolvedSearchParams = (await searchParams) ?? {};
   return (
     <>
       <Navbar />
       <main className="min-h-screen bg-gradient-to-b from-white via-emerald-50/50 to-white pt-20">
-        <RegisterFlow initialPlanId={searchParams?.plan} />
+        <RegisterFlow
+          initialPlanId={resolvedSearchParams.plan}
+          initialReferralCode={resolvedSearchParams.ref}
+        />
       </main>
       <Footer />
     </>

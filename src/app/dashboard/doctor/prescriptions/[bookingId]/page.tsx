@@ -4,6 +4,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PrescriptionDraftReview } from "@/components/ai/PrescriptionDraftReview";
+import { getBookingBeneficiaryLabel } from "@/lib/family-members";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +30,10 @@ type AiDraft = {
 export default async function DoctorPrescriptionReviewPage({
   params,
 }: {
-  params: { bookingId: string };
+  params: Promise<{ bookingId: string }>;
 }) {
+  const { bookingId } = await params;
+
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   if (session.user.role !== "DOCTOR") redirect("/dashboard/patient");
@@ -42,11 +45,12 @@ export default async function DoctorPrescriptionReviewPage({
   if (!doctor) redirect("/dashboard");
 
   const booking = await prisma.booking.findFirst({
-    where: { id: params.bookingId, doctorId: doctor.id },
+    where: { id: bookingId, doctorId: doctor.id },
     include: {
       patient: { select: { name: true } },
       doctor: { select: { specialty: true, displayName: true } },
       prescriptionRecord: true,
+      familymember: true,
     },
   });
 
@@ -62,7 +66,7 @@ export default async function DoctorPrescriptionReviewPage({
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-slate-900">Prescription review</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {booking.patient.name} · {booking.doctor.specialty} ·{" "}
+          {getBookingBeneficiaryLabel(booking)} · {booking.doctor.specialty} ·{" "}
           {booking.scheduledAt.toLocaleDateString("en-IN")}
         </p>
       </div>

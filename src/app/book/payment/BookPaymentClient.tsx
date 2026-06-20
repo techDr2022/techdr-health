@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TelemedicineConsentCheckbox } from "@/components/consent/TelemedicineConsentCheckbox";
 
 declare global {
   interface Window {
@@ -57,6 +58,8 @@ export function BookPaymentClient() {
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
+  const [consentError, setConsentError] = useState(false);
   const hasAutoStarted = useRef(false);
 
   const details = useMemo(
@@ -83,11 +86,21 @@ export function BookPaymentClient() {
       details.timeSlot
   );
   const autoPay = searchParams.get("autopay") === "1";
+  const consentFromQuery = searchParams.get("consentGiven") === "1";
+
+  useEffect(() => {
+    if (consentFromQuery) setConsentGiven(true);
+  }, [consentFromQuery]);
 
   const handlePayNow = useCallback(async () => {
     setError(null);
     if (!canPay) {
       setError("Booking details are missing. Please fill the form again.");
+      return;
+    }
+    if (!consentGiven) {
+      setConsentError(true);
+      setError("Please accept telemedicine consent before payment.");
       return;
     }
 
@@ -110,6 +123,7 @@ export function BookPaymentClient() {
           patientPhone: details.patientPhone,
           concern: details.concern,
           labReportUrls: details.labReportUrls,
+          consentGiven: true,
         }),
       });
 
@@ -162,13 +176,14 @@ export function BookPaymentClient() {
     } finally {
       setIsBusy(false);
     }
-  }, [canPay, details, router]);
+  }, [canPay, consentGiven, details, router]);
 
   useEffect(() => {
     if (!autoPay || hasAutoStarted.current || !canPay || isBusy || isPaid) return;
+    if (!consentGiven && !consentFromQuery) return;
     hasAutoStarted.current = true;
     void handlePayNow();
-  }, [autoPay, canPay, handlePayNow, isBusy, isPaid]);
+  }, [autoPay, canPay, consentFromQuery, consentGiven, handlePayNow, isBusy, isPaid]);
 
   if (isPaid) {
     return (
@@ -227,9 +242,19 @@ export function BookPaymentClient() {
           </p>
         </div>
 
+        <TelemedicineConsentCheckbox
+          checked={consentGiven}
+          onCheckedChange={(checked) => {
+            setConsentGiven(checked);
+            if (checked) setConsentError(false);
+          }}
+          error={consentError}
+          className="mt-4"
+        />
+
         <Button
           onClick={handlePayNow}
-          disabled={isBusy || !canPay}
+          disabled={isBusy || !canPay || !consentGiven}
           className="mt-6 h-12 w-full rounded-xl bg-cyan-500 text-sm font-bold text-slate-950 hover:bg-cyan-400"
         >
           {isBusy ? "Opening payment..." : autoPay ? "Redirecting to Cashfree..." : "Pay with Cashfree"}

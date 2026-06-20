@@ -3,7 +3,6 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { saveOTP } from "@/lib/otp";
 import { sendMagicLoginEmail, sendOtpEmail } from "@/lib/email";
-import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z
   .object({
@@ -20,15 +19,6 @@ const schema = z
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "unknown";
-    const limited = await rateLimit(`otp:${ip}`, 3, 600);
-    if (limited) {
-      return NextResponse.json(
-        { error: "Too many requests. Please wait 10 minutes before trying again." },
-        { status: 429 }
-      );
-    }
-
     const body = await req.json();
     const { email, purpose, method } = schema.parse(body);
     const identifier = email as string;

@@ -4,8 +4,10 @@ import { DoctorCard } from "@/components/doctors/DoctorCard";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SpecialtyHero } from "@/components/specialties/SpecialtyHero";
 import { getSpecialtyBySlug, SPECIALTIES } from "@/data/specialties";
+import { CITY_TARGETS } from "@/data/seo-targets";
+import { buildCitySpecialtyPath, formatCityName } from "@/lib/city-specialty-seo";
 import { crossSpecialtyDoctors } from "@/lib/queries";
-import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { getCachedLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getFAQSchema, getSpecialtyPageSchema } from "@/lib/schema";
 import { notFound } from "next/navigation";
 
@@ -13,7 +15,7 @@ export async function SpecialtyDetailView({ slug }: { slug: string }) {
   const specialty = getSpecialtyBySlug(slug);
   if (!specialty) notFound();
 
-  const allDoctors = await getLiveDoctorCatalog();
+  const allDoctors = await getCachedLiveDoctorCatalog();
   const doctors = allDoctors.filter((doctor) => doctor.specialtySlug === slug);
   const relatedDoctors = crossSpecialtyDoctors(specialty.relatedSlugs, 6, allDoctors);
 
@@ -154,6 +156,26 @@ export async function SpecialtyDetailView({ slug }: { slug: string }) {
                   {f.answer}
                 </p>
               </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="font-heading text-2xl font-semibold text-[#0A1628]">
+            {specialty.name} doctors in top cities
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Book online {specialty.name.toLowerCase()} consultations in major Indian cities.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {CITY_TARGETS.slice(0, 5).map((city) => (
+              <Link
+                key={city}
+                href={buildCitySpecialtyPath(city, slug)}
+                className="rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary hover:bg-primary/15"
+              >
+                {specialty.name} in {formatCityName(city)}
+              </Link>
             ))}
           </div>
         </section>

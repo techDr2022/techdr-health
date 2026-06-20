@@ -1,4 +1,4 @@
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 type R2Config = {
   accountId: string;
@@ -85,4 +85,15 @@ export async function getR2ObjectBuffer(objectKey: string) {
     buffer: Buffer.from(bytes),
     contentType: object.ContentType || "application/octet-stream",
   };
+}
+
+export async function deleteR2Object(objectKey: string) {
+  const normalizedKey = objectKey.replace(/^\/+/, "");
+  const config = getR2Config();
+  await getR2Client().send(
+    new DeleteObjectCommand({
+      Bucket: config.bucketName,
+      Key: normalizedKey,
+    })
+  );
 }

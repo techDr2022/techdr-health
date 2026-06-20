@@ -3,6 +3,8 @@ import { GLOBAL_REGIONS } from "@/data/global-regions";
 import { SEO_KEYWORD_PAGES } from "@/data/seo-keywords";
 import { CITY_TARGETS, SYMPTOM_TARGETS } from "@/data/seo-targets";
 import { listSpecialtySlugs } from "@/data/specialties";
+import { getLiveDoctorCountBySpecialty } from "@/lib/doctor-catalog";
+import { listCitySpecialtyStaticParams } from "@/lib/city-specialty-seo";
 import { getSiteUrl } from "@/lib/site-config";
 
 const SITE_URL = getSiteUrl();
@@ -16,12 +18,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/specialties",
     "/blog",
     "/book",
+    "/pricing",
     "/about",
     "/faq",
     "/contact",
     "/join",
     "/teleconsultation",
     "/privacy-policy",
+    "/telemedicine-consent",
+    "/grievance",
     "/terms-and-conditions",
     "/surgery-guidance",
   ].map((path) => ({
@@ -75,6 +80,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.82,
   }));
 
+  const specialtyCounts = await getLiveDoctorCountBySpecialty();
+  const citySpecialtyParams = await listCitySpecialtyStaticParams(specialtyCounts);
+  const citySpecialtyPaths = citySpecialtyParams.map(({ slug, specialty }) => ({
+    url: `${SITE_URL}/doctors/${slug}/${specialty}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
   const keywordPaths = SEO_KEYWORD_PAGES.map((item) => ({
     url: `${SITE_URL}/care/${item.slug}`,
     lastModified: now,
@@ -88,6 +102,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...specialtyPaths,
     ...symptomPaths,
     ...cityPaths,
+    ...citySpecialtyPaths,
     ...keywordPaths,
   ];
 }

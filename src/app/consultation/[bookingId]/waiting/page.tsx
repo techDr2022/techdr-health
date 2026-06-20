@@ -6,30 +6,34 @@ import {
   isJoinableBookingStatus,
   resolveConsultationAccess,
 } from "@/lib/consultation-access";
+import { getBookingBeneficiaryName } from "@/lib/family-members";
 
 export default async function WaitingRoomPage({
   params,
   searchParams,
 }: {
-  params: { bookingId: string };
-  searchParams: { token?: string };
+  params: Promise<{ bookingId: string }>;
+  searchParams: Promise<{ token?: string }>;
 }) {
-  const joinToken = searchParams.token?.trim() || null;
+  const { bookingId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const joinToken = resolvedSearchParams.token?.trim() || null;
 
   const booking = await prisma.booking.findUnique({
-    where: { id: params.bookingId },
+    where: { id: bookingId },
     include: {
       doctor: true,
       patient: true,
+      familymember: true,
     },
   });
   if (!booking) redirect("/");
 
-  const access = await resolveConsultationAccess(params.bookingId, booking, joinToken);
+  const access = await resolveConsultationAccess(bookingId, booking, joinToken);
   if (!access) {
     const session = await auth();
     if (!session?.user?.id) {
-      const callbackUrl = `/consultation/${params.bookingId}/waiting${
+      const callbackUrl = `/consultation/${bookingId}/waiting${
         joinToken ? `?token=${encodeURIComponent(joinToken)}` : ""
       }`;
       redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
@@ -55,7 +59,7 @@ export default async function WaitingRoomPage({
         credentials: booking.doctor.credentials,
         scheduledAt: booking.scheduledAt.toISOString(),
         duration,
-        patientName: booking.patient.name,
+        patientName: getBookingBeneficiaryName(booking),
       }}
       role={access.role}
       joinToken={joinToken}

@@ -6,16 +6,18 @@ import { FeedbackForm } from "@/components/patient/FeedbackForm";
 export const dynamic = "force-dynamic";
 
 type Props = {
-  params: { bookingId: string };
+  params: Promise<{ bookingId: string }>;
 };
 
 export default async function PatientFeedbackPage({ params }: Props) {
+  const { bookingId } = await params;
+
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   if (session.user.role !== "PATIENT") redirect("/dashboard");
 
   const booking = await prisma.booking.findUnique({
-    where: { id: params.bookingId },
+    where: { id: bookingId },
     include: {
       doctor: { select: { displayName: true, specialty: true } },
       review: true,

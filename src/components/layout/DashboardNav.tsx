@@ -8,12 +8,19 @@ import {
   Activity,
   CalendarDays,
   CreditCard,
+  FileText,
+  FlaskConical,
+  FolderOpen,
+  Gift,
   Home,
+  Landmark,
   LogOut,
   Settings,
   Star,
   User,
+  Users,
   Wallet,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,7 +29,9 @@ const DOCTOR_DASHBOARD_LINKS = [
   { href: "/dashboard", label: "Overview", icon: Home },
   { href: "/dashboard/bookings", label: "Bookings", icon: CalendarDays },
   { href: "/dashboard/earnings", label: "Earnings", icon: Wallet },
+  { href: "/dashboard/bank-details", label: "Bank Details", icon: Landmark },
   { href: "/dashboard/subscription", label: "Subscription", icon: CreditCard },
+  { href: "/dashboard/referrals", label: "Referrals", icon: Gift },
   { href: "/dashboard/profile", label: "Profile", icon: User },
   { href: "/dashboard/availability", label: "Availability", icon: Activity },
   { href: "/dashboard/reviews", label: "Reviews", icon: Star },
@@ -31,7 +40,13 @@ const DOCTOR_DASHBOARD_LINKS = [
 const PATIENT_DASHBOARD_LINKS = [
   { href: "/dashboard/patient", label: "Overview", icon: Home },
   { href: "/book", label: "Book Consultation", icon: CalendarDays },
-  { href: "/dashboard/patient", label: "My Consultations", icon: Activity },
+  { href: "/instant-consult", label: "Instant Consult", icon: Zap },
+  { href: "/dashboard/patient/invoices", label: "Invoices", icon: FileText },
+  { href: "/dashboard/patient/records", label: "Health Records", icon: FolderOpen },
+  { href: "/dashboard/patient/lab-tests", label: "Lab Tests", icon: FlaskConical },
+  { href: "/dashboard/patient/family", label: "Family", icon: Users },
+  { href: "/pricing", label: "Health Pass", icon: CreditCard },
+  { href: "/dashboard/patient/settings", label: "Privacy & Data", icon: Settings },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
@@ -109,7 +124,7 @@ export function DashboardNav() {
           </Button>
 
           <Button variant="ghost" className="w-full justify-start text-slate-700 hover:bg-slate-100" asChild>
-            <Link href="/dashboard/profile?panel=delete">
+            <Link href={isPatient ? "/dashboard/patient/settings" : "/dashboard/profile?panel=delete"}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Link>

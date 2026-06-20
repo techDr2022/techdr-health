@@ -4,11 +4,15 @@ import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { CITY_TARGETS, CITY_UNIQUE_COPY } from "@/data/seo-targets";
-import { getLiveDoctorCatalog } from "@/lib/doctor-catalog";
+import { getSpecialtyBySlug, listSpecialtySlugs } from "@/data/specialties";
+import { buildCitySpecialtyPath } from "@/lib/city-specialty-seo";
+import { getCachedLiveDoctorCatalog } from "@/lib/doctor-catalog";
 import { getCityPageSEO } from "@/lib/seo";
 import { getFAQSchema } from "@/lib/schema";
 
-type Props = { params: { city: string } };
+export const revalidate = 3600;
+
+type Props = { params: Promise<{ city: string }> };
 
 function cityFromSlug(slug: string): (typeof CITY_TARGETS)[number] | null {
   const city = CITY_TARGETS.find((c) => c.toLowerCase() === slug.toLowerCase());
@@ -23,23 +27,25 @@ export function generateStaticParams() {
   return CITY_TARGETS.map((city) => ({ city: city.toLowerCase() }));
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const city = cityFromSlug(params.city);
-  if (!city) return { title: "City doctors" };
-  const cityName = city[0].toUpperCase() + city.slice(1);
-  return getCityPageSEO(cityName, cityDoctorCount(city));
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { city: citySlug } = await params;
+  const resolvedCity = cityFromSlug(citySlug);
+  if (!resolvedCity) return { title: "City doctors" };
+  const cityName = resolvedCity[0].toUpperCase() + resolvedCity.slice(1);
+  return getCityPageSEO(cityName, cityDoctorCount(resolvedCity));
 }
 
 export default async function CityDoctorsPage({ params }: Props) {
-  const city = cityFromSlug(params.city);
-  if (!city) notFound();
+  const { city: citySlug } = await params;
+  const resolvedCity = cityFromSlug(citySlug);
+  if (!resolvedCity) notFound();
 
-  const featured = (await getLiveDoctorCatalog()).slice(0, 6);
-  const doctorCount = cityDoctorCount(city);
-  const cityName = city[0].toUpperCase() + city.slice(1);
+  const featured = (await getCachedLiveDoctorCatalog()).slice(0, 6);
+  const doctorCount = cityDoctorCount(resolvedCity);
+  const cityName = resolvedCity[0].toUpperCase() + resolvedCity.slice(1);
   const cityFAQs = [
     {
-      question: `How do I book an online doctor consultation in ${cityName}?`,
+    question: `How do I book an online doctor consultation in ${cityName}?`,
       answer: `Choose your symptom or speciality, select an available doctor, and join your video consultation from home in ${cityName}.`,
     },
     {
@@ -73,9 +79,9 @@ export default async function CityDoctorsPage({ params }: Props) {
         medical advice across major specialities without travel and receive
         digital prescriptions after consultation.
       </p>
-      {CITY_UNIQUE_COPY[city] ? (
+      {CITY_UNIQUE_COPY[resolvedCity] ? (
         <p className="mt-3 max-w-4xl text-muted-foreground">
-          {CITY_UNIQUE_COPY[city]}
+          {CITY_UNIQUE_COPY[resolvedCity]}
         </p>
       ) : null}
 
@@ -117,39 +123,22 @@ export default async function CityDoctorsPage({ params }: Props) {
 
       <section className="mt-10">
         <h2 className="font-heading text-2xl font-semibold text-[#0A1628]">
-          Explore By Speciality
+          Explore By Speciality in {cityName}
         </h2>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link
-            href="/doctors/cardiology"
-            className="rounded-full bg-primary/10 px-4 py-2 text-sm text-primary"
-          >
-            Online Cardiologist Consultation
-          </Link>
-          <Link
-            href="/doctors/dermatology"
-            className="rounded-full bg-primary/10 px-4 py-2 text-sm text-primary"
-          >
-            Dermatologist Online Consultation
-          </Link>
-          <Link
-            href="/doctors/pediatrics"
-            className="rounded-full bg-primary/10 px-4 py-2 text-sm text-primary"
-          >
-            Online Pediatrician India
-          </Link>
-          <Link
-            href="/doctors/gynecology"
-            className="rounded-full bg-primary/10 px-4 py-2 text-sm text-primary"
-          >
-            Gynecologist Online Consultation
-          </Link>
-          <Link
-            href="/doctors/psychiatry"
-            className="rounded-full bg-primary/10 px-4 py-2 text-sm text-primary"
-          >
-            Online Psychiatrist India
-          </Link>
+          {listSpecialtySlugs().slice(0, 12).map((slug) => {
+            const specialty = getSpecialtyBySlug(slug);
+            if (!specialty) return null;
+            return (
+              <Link
+                key={slug}
+                href={buildCitySpecialtyPath(resolvedCity, slug)}
+                className="rounded-full bg-primary/10 px-4 py-2 text-sm text-primary"
+              >
+                {specialty.name} in {cityName}
+              </Link>
+            );
+          })}
         </div>
       </section>
 

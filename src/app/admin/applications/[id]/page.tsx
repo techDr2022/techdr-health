@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ensureAdminAccess } from "@/lib/admin-access";
 import { ApplicationReviewForm } from "@/components/admin/ApplicationReviewForm";
+import { NmcVerificationPanel } from "@/components/admin/NmcVerificationPanel";
 import { ApplicationDocumentPreviews } from "@/components/admin/ApplicationDocumentPreviews";
 import { loadApplicationDocumentPreviews } from "@/lib/storage-documents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +13,13 @@ export const dynamic = "force-dynamic";
 export default async function AdminApplicationDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+
   await ensureAdminAccess();
   const application = await prisma.doctorProfile.findUnique({
-    where: { id: params.id },
+    where: { id: id },
     include: { subscription: true, user: true },
   });
 
@@ -58,6 +61,7 @@ export default async function AdminApplicationDetailPage({
             ["Experience", application.experience.toString()],
             ["Credentials", application.credentials],
             ["Registration Number", application.medRegNumber],
+            ["NMC Verified", application.nmcverified ? "Yes" : "No"],
             ["Consultation Fee", `INR ${application.consultFee}`],
           ]}
         />
@@ -72,7 +76,18 @@ export default async function AdminApplicationDetailPage({
         </CardContent>
       </Card>
 
-      <ApplicationReviewForm applicationId={application.id} />
+      <NmcVerificationPanel
+        doctorId={application.id}
+        medRegNumber={application.medRegNumber}
+        nmcVerified={application.nmcverified}
+        nmcVerifiedAt={application.nmcverifiedat?.toISOString() ?? null}
+      />
+
+      <ApplicationReviewForm
+        applicationId={application.id}
+        nmcVerified={application.nmcverified}
+        approvalStatus={application.approvalStatus}
+      />
     </div>
   );
 }

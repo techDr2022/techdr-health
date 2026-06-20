@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/weekly-doctor-payout-summary",
       "schedule": "30 3 * * 1"
+    },
+    {
+      "path": "/api/cron/consultation-reminders",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

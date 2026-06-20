@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { auth } from "@/auth";
 import { BookHero } from "@/components/book/BookHero";
 import { BookSearchHub } from "@/components/book/BookSearchHub";
 import { BookDoctorResults } from "@/components/book/BookDoctorResults";
@@ -19,6 +20,7 @@ import type { DoctorRecord } from "@/types/catalog";
 import { SPECIALTIES } from "@/data/specialties";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateSEO } from "@/lib/seo";
+import { getSecondOpinionPrefillForPatient } from "@/lib/second-opinion-server";
 
 export const metadata: Metadata = generateSEO({
   title: "Book Specialist Consultation Online",
@@ -63,17 +65,29 @@ function SearchHubFallback() {
   );
 }
 
-export default async function BookPage({ searchParams }: { searchParams: SP }) {
+export default async function BookPage({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const secondOpinionFor = first(resolvedSearchParams.secondOpinionFor);
+  const session = await auth();
+  const secondOpinionPrefill =
+    secondOpinionFor && session?.user?.role === "PATIENT"
+      ? await getSecondOpinionPrefillForPatient(secondOpinionFor, session.user.id)
+      : null;
+
   const [doctors, counts] = await Promise.all([
     getLiveDoctorCatalog(),
     getLiveDoctorCountBySpecialty(),
   ]);
 
-  const specialty = first(searchParams.specialty);
-  const query = first(searchParams.q)?.trim();
-  const lang = first(searchParams.lang);
-  const minRating = Number(first(searchParams.rating));
-  const maxFee = Number(first(searchParams.maxFee));
+  const specialty = first(resolvedSearchParams.specialty);
+  const query = first(resolvedSearchParams.q)?.trim();
+  const lang = first(resolvedSearchParams.lang);
+  const minRating = Number(first(resolvedSearchParams.rating));
+  const maxFee = Number(first(resolvedSearchParams.maxFee));
   const hasFilters = Boolean(
     specialty || query || lang || (minRating > 0 && Number.isFinite(minRating)) || (maxFee > 0 && maxFee < 3000 && Number.isFinite(maxFee))
   );
@@ -92,7 +106,9 @@ export default async function BookPage({ searchParams }: { searchParams: SP }) {
             ? maxFee
             : undefined,
       },
-      doctors
+      secondOpinionPrefill
+        ? doctors.filter((doctor) => doctor.slug !== secondOpinionPrefill.originalDoctorSlug)
+        : doctors
     )
   );
 
@@ -141,6 +157,19 @@ export default async function BookPage({ searchParams }: { searchParams: SP }) {
           />
         </Suspense>
 
+        {secondOpinionPrefill ? (
+          <section className="mx-auto max-w-7xl px-4 pb-2 sm:px-6 lg:px-8">
+            <div className="rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4">
+              <p className="font-semibold text-violet-900">Second opinion booking</p>
+              <p className="mt-1 text-sm text-violet-800">
+                Prior consult with {secondOpinionPrefill.originalDoctorName} (
+                {secondOpinionPrefill.originalSpecialty}). Choose a different specialist below.
+                Consult fees include a 15% second-opinion surcharge.
+              </p>
+            </div>
+          </section>
+        ) : null}
+
         <section className="mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8">
           <SymptomChecker variant="compact" />
         </section>
@@ -150,6 +179,7 @@ export default async function BookPage({ searchParams }: { searchParams: SP }) {
             doctors={specialists}
             heading={resultsHeading}
             subtext={resultsSubtext}
+            secondOpinion={secondOpinionPrefill}
           />
         ) : null}
 
@@ -158,10 +188,12 @@ export default async function BookPage({ searchParams }: { searchParams: SP }) {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h2 className="font-heading text-xl font-semibold text-[#0A1628] sm:text-2xl">
-                  Top-rated this week
+                  {secondOpinionPrefill ? "Specialists for second opinion" : "Top-rated this week"}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Highly trusted specialists across India.
+                  {secondOpinionPrefill
+                    ? "Pick a different doctor to review your prior consultation."
+                    : "Highly trusted specialists across India."}
                 </p>
               </div>
               <Button asChild variant="outline" size="sm">
@@ -169,8 +201,16 @@ export default async function BookPage({ searchParams }: { searchParams: SP }) {
               </Button>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((doctor) => (
-                <DoctorCard key={doctor.slug} doctor={doctor} variant="compact" />
+              {(secondOpinionPrefill
+                ? featured.filter((d) => d.slug !== secondOpinionPrefill.originalDoctorSlug)
+                : featured
+              ).map((doctor) => (
+                <DoctorCard
+                  key={doctor.slug}
+                  doctor={doctor}
+                  variant="compact"
+                  secondOpinion={secondOpinionPrefill}
+                />
               ))}
             </div>
           </section>

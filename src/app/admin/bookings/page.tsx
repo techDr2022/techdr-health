@@ -8,7 +8,10 @@ export default async function AdminBookingsPage() {
   await ensureAdminAccess();
   const bookings = await prisma.booking.findMany({
     orderBy: { createdAt: "desc" },
-    include: { doctor: { select: { displayName: true } } },
+    include: {
+      doctor: { select: { displayName: true } },
+      soapnote: { select: { finalized: true, patientshared: true, aidraftused: true } },
+    },
     take: 250,
   });
 
@@ -26,6 +29,7 @@ export default async function AdminBookingsPage() {
               <th className="px-4 py-3">GST</th>
               <th className="px-4 py-3">Doctor Payout</th>
               <th className="px-4 py-3">Payment</th>
+              <th className="px-4 py-3">SOAP</th>
             </tr>
           </thead>
           <tbody>
@@ -49,6 +53,17 @@ export default async function AdminBookingsPage() {
                   <Badge variant={booking.payStatus === "CAPTURED" ? "default" : "outline"}>
                     {booking.payStatus}
                   </Badge>
+                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">
+                  {booking.soapnote ? (
+                    <div className="space-y-1">
+                      <p>{booking.soapnote.finalized ? "Finalized" : "Draft"}</p>
+                      {booking.soapnote.patientshared ? <p>Patient shared</p> : null}
+                      {booking.soapnote.aidraftused ? <p>AI draft</p> : null}
+                    </div>
+                  ) : (
+                    "—"
+                  )}
                 </td>
               </tr>
             ))}

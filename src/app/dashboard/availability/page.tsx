@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { InstantConsultDoctorToggle } from "@/components/instant-consult/InstantConsultDoctorToggle";
+import { SurgePricingToggle } from "@/components/doctor/SurgePricingToggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +17,13 @@ const DAYS: Record<string, string> = {
 };
 
 export default async function DashboardAvailabilityPage() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return <div className="mx-auto max-w-3xl px-4 py-10">Please sign in.</div>;
+  }
+
   const doctor = await prisma.doctorProfile.findFirst({
+    where: { userId: session.user.id },
     include: { timings: { include: { slots: true }, orderBy: { day: "asc" } } },
   });
   if (!doctor) return <div className="mx-auto max-w-3xl px-4 py-10">No doctor account found.</div>;
@@ -22,6 +31,8 @@ export default async function DashboardAvailabilityPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="font-heading text-3xl font-semibold">Availability</h1>
+      <InstantConsultDoctorToggle />
+      <SurgePricingToggle initialEnabled={doctor.surgepricingenabled} />
       <Card>
         <CardHeader>
           <CardTitle>Current Time Slots</CardTitle>

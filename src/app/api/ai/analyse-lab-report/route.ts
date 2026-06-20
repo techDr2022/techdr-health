@@ -4,11 +4,9 @@ import { randomUUID } from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { callClaudeJSON } from "@/lib/ai/client";
 import {
-  aiRateLimitedResponse,
   aiUnavailableResponse,
   handleAiRouteError,
 } from "@/lib/ai/errors";
-import { enforceAiRateLimit } from "@/lib/ai/rate-limit";
 import { extractTextFromResumeFile } from "@/lib/doctor-resume-parse";
 import { buildR2PublicUrl, getR2Client, getR2Config } from "@/lib/r2";
 import { prisma } from "@/lib/prisma";
@@ -71,11 +69,6 @@ export async function POST(req: Request) {
     }
     if (file.size > MAX_SIZE_BYTES) {
       return NextResponse.json({ error: "File must be under 10MB." }, { status: 400 });
-    }
-
-    const rateLimit = enforceAiRateLimit(req, patientId);
-    if (rateLimit.blocked) {
-      return aiRateLimitedResponse(rateLimit.retryAfter);
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());

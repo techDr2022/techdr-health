@@ -3,7 +3,12 @@ import { fetchCashfreeOrder } from "@/lib/cashfree";
 import { sendBookingStatusUpdateEmail, sendSubscriptionConfirmationEmail } from "@/lib/email";
 import { buildConsultationJoinUrl } from "@/lib/consultation-join";
 import { revalidateDoctorPublicPages } from "@/lib/revalidate-doctors";
+import { applyReferralRewardWhenDoctorJoins } from "@/lib/doctor-referral";
 import { getSiteUrl } from "@/lib/site-config";
+import { HEALTH_PASS_PLANS } from "@/lib/patient-health-pass";
+import { incrementHealthPassVideoUsage } from "@/lib/patient-health-pass-db";
+import { issuePatientInvoice } from "@/lib/patient-invoice";
+import { notifyBookingConfirmed } from "@/lib/push-notifications";
 
 type BookingCaptureResult =
   | { ok: true; type: "booking"; bookingId: string; alreadyCaptured: boolean }
@@ -13,7 +18,14 @@ type SubscriptionCaptureResult =
   | { ok: true; type: "subscription"; doctorId: string; alreadyActive: boolean }
   | { ok: false; error: string };
 
-export type PaymentCaptureResult = BookingCaptureResult | SubscriptionCaptureResult;
+type PatientPassCaptureResult =
+  | { ok: true; type: "patient_pass"; userId: string; alreadyActive: boolean }
+  | { ok: false; error: string };
+
+export type PaymentCaptureResult =
+  | BookingCaptureResult
+  | SubscriptionCaptureResult
+  | PatientPassCaptureResult;
 
 function isPaidOrder(orderStatus: string) {
   return orderStatus === "PAID";
@@ -117,6 +129,21 @@ export async function captureBookingPayment(
           })
         : Promise.resolve(),
     ]);
+
+    if (booking.healthpassapplied && booking.consultType === "VIDEO") {
+      await incrementHealthPassVideoUsage(booking.patientId);
+    }
+
+    void issuePatientInvoice(booking.id).catch((error) => {
+      console.error("patient invoice generation failed", error);
+    });
+
+    notifyBookingConfirmed({
+      patientUserId: booking.patientId,
+      doctorName,
+      scheduledAt: booking.scheduledAt,
+      bookingId: booking.id,
+    });
   }
 
   return { ok: true, type: "booking", bookingId: booking.id, alreadyCaptured };
@@ -167,12 +194,12 @@ export async function activateSubscriptionPayment(
     });
 
     const doctor = subscription.doctor;
-    if (doctor.approvalStatus === "APPROVED") {
+    if (doctor.approvalStatus === "APPROVED" && doctor.nmcverified) {
       await prisma.doctorProfile.update({
         where: { id: subscription.doctorId },
         data: { isVisible: true },
       });
-      revalidateDoctorPublicPages(doctor.specialty);
+      revalidateDoctorPublicPages(doctor.specialty, doctor.slug);
     }
 
     if (subscription.doctor.user.email) {
@@ -181,6 +208,8 @@ export async function activateSubscriptionPayment(
         subscription.doctor.displayName
       );
     }
+
+    await applyReferralRewardWhenDoctorJoins(subscription.doctorId);
   }
 
   return {
@@ -191,9 +220,63 @@ export async function activateSubscriptionPayment(
   };
 }
 
+export async function activatePatientHealthPassPayment(
+  orderId: string,
+  userId?: string
+): Promise<PatientPassCaptureResult> {
+  const order = await fetchCashfreeOrder(orderId);
+  if (!isPaidOrder(order.order_status)) {
+    return { ok: false, error: "Payment is not completed yet." };
+  }
+
+  const pass = await prisma.patientsubscription.findFirst({
+    where: {
+      cashfreeorderid: orderId,
+      ...(userId ? { userid: userId } : {}),
+    },
+    include: {
+      user: { select: { email: true, name: true } },
+    },
+  });
+
+  if (!pass) {
+    return { ok: false, error: "Health Pass subscription not found." };
+  }
+
+  const alreadyActive =
+    pass.status === "ACTIVE" && Boolean(pass.startdate) && Boolean(pass.enddate);
+
+  if (!alreadyActive) {
+    const planConfig = HEALTH_PASS_PLANS[pass.plan as keyof typeof HEALTH_PASS_PLANS];
+    const durationDays = planConfig?.durationDays ?? 30;
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    await prisma.patientsubscription.update({
+      where: { id: pass.id },
+      data: {
+        status: "ACTIVE",
+        startdate: startDate,
+        enddate: endDate,
+        videoconsultsused: 0,
+      },
+    });
+  }
+
+  return {
+    ok: true,
+    type: "patient_pass",
+    userId: pass.userid,
+    alreadyActive,
+  };
+}
+
 export async function capturePaymentByOrderId(orderId: string): Promise<PaymentCaptureResult> {
   if (orderId.startsWith("bkg_")) {
     return captureBookingPayment(orderId);
+  }
+  if (orderId.startsWith("psub_")) {
+    return activatePatientHealthPassPayment(orderId);
   }
   if (orderId.startsWith("sub_")) {
     return activateSubscriptionPayment(orderId);
@@ -213,6 +296,14 @@ export async function capturePaymentByOrderId(orderId: string): Promise<PaymentC
   });
   if (subscription) {
     return activateSubscriptionPayment(orderId, subscription.doctorId);
+  }
+
+  const patientPass = await prisma.patientsubscription.findFirst({
+    where: { cashfreeorderid: orderId },
+    select: { userid: true },
+  });
+  if (patientPass) {
+    return activatePatientHealthPassPayment(orderId, patientPass.userid);
   }
 
   return { ok: false, error: "No payment record found for this order." };

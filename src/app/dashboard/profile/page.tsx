@@ -13,12 +13,13 @@ const PANEL_KEYS: PanelKey[] = ["profile", "password", "reports", "delete"];
 export default async function DashboardProfilePage({
   searchParams,
 }: {
-  searchParams?: { panel?: string };
+  searchParams?: Promise<{ panel?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   if (session.user.role !== "DOCTOR") redirect("/dashboard/patient");
-  const requestedPanel = searchParams?.panel;
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const requestedPanel = resolvedSearchParams.panel;
   const defaultPanel: PanelKey = PANEL_KEYS.includes(requestedPanel as PanelKey)
     ? (requestedPanel as PanelKey)
     : "profile";

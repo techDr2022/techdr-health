@@ -337,6 +337,35 @@ export function getSpecialtyPageSchema(specialty: string, doctorCount: number) {
   };
 }
 
+export function getCitySpecialtyPageSchema(input: {
+  cityName: string;
+  citySlug: string;
+  specialtyName: string;
+  specialtySlug: string;
+  doctorCount: number;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "MedicalWebPage",
+    name: `Online ${input.specialtyName} Doctor Consultation in ${input.cityName}`,
+    url: `${SITE_URL}/doctors/${input.citySlug}/${input.specialtySlug}`,
+    description: `Book online ${input.specialtyName.toLowerCase()} consultation in ${input.cityName}. ${input.doctorCount}+ verified specialists available.`,
+    medicalAudience: {
+      "@type": "MedicalAudience",
+      audienceType: "Patient",
+    },
+    about: {
+      "@type": "MedicalSpecialty",
+      name: input.specialtyName,
+    },
+    provider: { "@id": `${SITE_URL}/#organization` },
+    areaServed: {
+      "@type": "City",
+      name: input.cityName,
+    },
+  };
+}
+
 export function getRegionPageSchema(region: {
   name: string;
   slug: string;

@@ -10,12 +10,13 @@ export const metadata: Metadata = {
     "Your onboarding is complete and your doctor account is approved.",
 };
 
-export default function JoinSuccessPage({
+export default async function JoinSuccessPage({
   searchParams,
 }: {
-  searchParams?: { email?: string };
+  searchParams?: Promise<{ email?: string }>;
 }) {
-  const email = searchParams?.email;
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const email = resolvedSearchParams.email;
   const isEmailConfigured = Boolean(process.env.RESEND_API_KEY);
 
   return (

@@ -5,6 +5,7 @@ import {
   isJoinableBookingStatus,
   resolveConsultationAccess,
 } from "@/lib/consultation-access";
+import { notifyDoctorJoinedRoom } from "@/lib/push-notifications";
 
 export async function POST(req: NextRequest) {
   try {
@@ -77,6 +78,12 @@ export async function POST(req: NextRequest) {
             ]
           : []),
       ]);
+
+      notifyDoctorJoinedRoom({
+        patientUserId: booking.patientId,
+        doctorName: booking.doctor.displayName,
+        bookingId: booking.id,
+      });
     }
 
     return NextResponse.json({

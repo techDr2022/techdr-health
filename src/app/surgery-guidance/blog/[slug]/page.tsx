@@ -11,9 +11,10 @@ export function generateStaticParams() {
   return getAllPosts().map((post) => ({ slug: post.slug }));
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
   const siteUrl = getSiteUrl();
-  const post = getPostBySlug(params.slug);
+  const post = getPostBySlug(slug);
   if (!post) return {};
 
   return {
@@ -38,8 +39,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function SurgeryPostPage({ params }: { params: { slug: string } }) {
-  const post = getPostBySlug(params.slug);
+export default async function SurgeryPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
   if (!post) notFound();
 
   const related = getRelatedPosts(post.slug, post.category, 3);

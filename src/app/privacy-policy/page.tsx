@@ -77,10 +77,18 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-semibold text-slate-900">6. Your Choices and Rights</h2>
+              <h2 className="font-display text-xl font-semibold text-slate-900">6. Your Choices and Rights (DPDPA)</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                You may request access, correction, or deletion of your personal data, subject to applicable laws and
-                medical record obligations. For account or data requests, contact us using the details below.
+                Under the Digital Personal Data Protection Act, 2023, you may access, correct, or request deletion of
+                your personal data. Registered patients can manage consent and submit deletion requests from{" "}
+                <Link className="text-emerald-700 hover:underline" href="/dashboard/patient/settings">
+                  Privacy &amp; Data settings
+                </Link>
+                . For grievances, see our{" "}
+                <Link className="text-emerald-700 hover:underline" href="/grievance">
+                  Grievance Redressal
+                </Link>{" "}
+                page. Telemedicine consent is captured at booking time.
               </p>
             </section>
 

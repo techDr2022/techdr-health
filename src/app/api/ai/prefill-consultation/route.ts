@@ -4,11 +4,9 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { callClaudeJSON } from "@/lib/ai/client";
 import {
-  aiRateLimitedResponse,
   aiUnavailableResponse,
   handleAiRouteError,
 } from "@/lib/ai/errors";
-import { enforceAiRateLimit } from "@/lib/ai/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
@@ -57,11 +55,6 @@ export async function POST(req: Request) {
     const patientId = parsed.data.patientId ?? session?.user?.id;
     if (!patientId) {
       return NextResponse.json({ error: "Patient ID required" }, { status: 401 });
-    }
-
-    const rateLimit = enforceAiRateLimit(req, patientId);
-    if (rateLimit.blocked) {
-      return aiRateLimitedResponse(rateLimit.retryAfter);
     }
 
     const recentBookings = await prisma.booking.findMany({

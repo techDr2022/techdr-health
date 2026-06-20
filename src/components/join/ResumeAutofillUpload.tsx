@@ -20,6 +20,7 @@ const MAX_FILE_SIZE = 8 * 1024 * 1024;
 type ResumeAutofillUploadProps = {
   disabled?: boolean;
   variant?: "join" | "admin";
+  compact?: boolean;
   onParsed: (data: ParsedDoctorResume, filledFields: number) => void;
   onError?: (message: string) => void;
 };
@@ -34,6 +35,7 @@ const DESCRIPTIONS = {
 export function ResumeAutofillUpload({
   disabled = false,
   variant = "join",
+  compact = false,
   onParsed,
   onError,
 }: ResumeAutofillUploadProps) {
@@ -85,6 +87,49 @@ export function ResumeAutofillUpload({
     } finally {
       setIsParsing(false);
     }
+  }
+
+  if (compact) {
+    return (
+      <div className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/60 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-emerald-800">AI Resume Autofill</p>
+            <p className="mt-0.5 truncate text-[11px] text-slate-600">
+              {fileName
+                ? isParsing
+                  ? `Analyzing ${fileName}...`
+                  : fileName
+                : "Optional — auto-fills your profile"}
+            </p>
+          </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.txt,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(event) => void handleFileChange(event)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled || isParsing}
+            onClick={() => inputRef.current?.click()}
+            className="shrink-0 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+          >
+            {isParsing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                Upload
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (

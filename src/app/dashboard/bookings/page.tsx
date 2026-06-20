@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { BookingActionControls } from "@/components/dashboard/BookingActionControls";
+import { getBookingBeneficiaryLabel } from "@/lib/family-members";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function DashboardBookingsPage() {
 
   const bookings = await prisma.booking.findMany({
     where: { doctorId: doctor.id },
-    include: { patient: { select: { name: true } } },
+    include: { patient: { select: { name: true } }, familymember: { select: { name: true, relation: true } } },
     orderBy: { scheduledAt: "desc" },
     take: 150,
   });
@@ -64,7 +65,7 @@ export default async function DashboardBookingsPage() {
               return (
                 <tr key={booking.id} className="border-b last:border-0">
                   <td className="px-4 py-3">{booking.scheduledAt.toLocaleString("en-IN")}</td>
-                  <td className="px-4 py-3">{booking.patient.name}</td>
+                  <td className="px-4 py-3">{getBookingBeneficiaryLabel(booking)}</td>
                   <td className="px-4 py-3">{booking.consultType}</td>
                   <td className="px-4 py-3">INR {booking.consultFee.toLocaleString("en-IN")}</td>
                   <td className="px-4 py-3">INR {booking.doctorPayoutINR.toLocaleString("en-IN")}</td>
@@ -113,13 +114,28 @@ export default async function DashboardBookingsPage() {
                         </Link>
                       ) : null}
                       {booking.status === "COMPLETED" ? (
+                        <>
+                          <Link
+                            href={`/dashboard/bookings/${booking.id}`}
+                            className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          >
+                            SOAP / Record
+                          </Link>
+                          <Link
+                            href={`/dashboard/doctor/prescriptions/${booking.id}`}
+                            className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                          >
+                            AI Prescription Review
+                          </Link>
+                        </>
+                      ) : (
                         <Link
-                          href={`/dashboard/doctor/prescriptions/${booking.id}`}
-                          className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                          href={`/dashboard/bookings/${booking.id}`}
+                          className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                         >
-                          AI Prescription Review
+                          View record
                         </Link>
-                      ) : null}
+                      )}
                       <BookingActionControls
                         bookingId={booking.id}
                         status={booking.status}

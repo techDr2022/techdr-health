@@ -4,13 +4,13 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { callClaudeJSON } from "@/lib/ai/client";
 import {
-  aiRateLimitedResponse,
   aiUnavailableResponse,
   handleAiRouteError,
 } from "@/lib/ai/errors";
-import { enforceAiRateLimit } from "@/lib/ai/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { resolveConsultationAccess } from "@/lib/consultation-access";
+import { getDrugWarnings, validateMedicinesForConsult } from "@/lib/drug-restrictions";
+import { isFirstConsultWithDoctor } from "@/lib/booking-consult-context";
 
 const bodySchema = z.object({
   bookingId: z.string().min(1),
@@ -83,11 +83,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateLimit = enforceAiRateLimit(req, session?.user?.id);
-    if (rateLimit.blocked) {
-      return aiRateLimitedResponse(rateLimit.retryAfter);
-    }
-
     const chatSnippet =
       booking.consultationRoom?.chatLog != null
         ? JSON.stringify(booking.consultationRoom.chatLog).slice(0, 2000)
@@ -116,6 +111,18 @@ export async function POST(req: Request) {
       ? draft.medications.filter((item) => item?.name)
       : [];
 
+    const firstConsult = await isFirstConsultWithDoctor(
+      booking.patientId,
+      booking.doctorId,
+      booking.id
+    );
+    const drugChecks = validateMedicinesForConsult(
+      medications,
+      booking.consultType,
+      firstConsult
+    );
+    const warnings = getDrugWarnings(drugChecks);
+
     const aiDraft = {
       summary: draft.summary || "",
       diagnosis: draft.diagnosis || "",
@@ -138,7 +145,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(aiDraft);
+    return NextResponse.json({ ...aiDraft, warnings });
   } catch (error) {
     return handleAiRouteError(error, "consultation-summary");
   }

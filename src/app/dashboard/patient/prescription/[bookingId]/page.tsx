@@ -4,6 +4,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PrintPrescriptionButton } from "@/components/patient/PrintPrescriptionButton";
 import { DownloadPrescriptionPdfButton } from "@/components/patient/DownloadPrescriptionPdfButton";
+import { SOAPNoteViewer } from "@/components/consultation/SOAPNoteViewer";
+import { toSoapNoteClient } from "@/lib/soap-notes";
+import { getBookingBeneficiaryName } from "@/lib/family-members";
 
 type Medicine = {
   name: string;
@@ -20,18 +23,22 @@ export const dynamic = "force-dynamic";
 export default async function PatientPrescriptionPage({
   params,
 }: {
-  params: { bookingId: string };
+  params: Promise<{ bookingId: string }>;
 }) {
+  const { bookingId } = await params;
+
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   if (session.user.role !== "PATIENT") redirect("/dashboard");
 
   const booking = await prisma.booking.findUnique({
-    where: { id: params.bookingId },
+    where: { id: bookingId },
     include: {
       doctor: true,
       patient: { select: { name: true, email: true, phone: true } },
       prescriptionRecord: true,
+      soapnote: true,
+      familymember: true,
     },
   });
 
@@ -57,6 +64,11 @@ export default async function PatientPrescriptionPage({
   }
 
   const medicines = (booking.prescriptionRecord.medicines as Medicine[]) || [];
+  const sharedSoapNote =
+    booking.soapnote?.patientshared && booking.soapnote.finalized
+      ? toSoapNoteClient(booking.soapnote)
+      : null;
+  const beneficiaryName = getBookingBeneficiaryName(booking);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -82,7 +94,13 @@ export default async function PatientPrescriptionPage({
       <section className="rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Patient Details</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Info label="Name" value={booking.patient.name || "-"} />
+          <Info label="Name" value={beneficiaryName} />
+          {booking.familymember ? (
+            <Info
+              label="Booked by"
+              value={booking.patient.name || "-"}
+            />
+          ) : null}
           <Info label="Email" value={booking.patient.email || "-"} />
           <Info label="Phone" value={booking.patient.phone || "-"} />
           <Info
@@ -114,6 +132,10 @@ export default async function PatientPrescriptionPage({
           />
         </div>
       </section>
+
+      {sharedSoapNote ? (
+        <SOAPNoteViewer bookingId={booking.id} note={sharedSoapNote} />
+      ) : null}
 
       <section className="rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Clinical Notes</h2>

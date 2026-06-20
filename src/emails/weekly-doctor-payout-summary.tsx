@@ -7,6 +7,8 @@ type DoctorPayoutRow = {
   doctorEmail: string;
   consultations: number;
   amountINR: number;
+  status?: string;
+  reason?: string;
 };
 
 export function WeeklyDoctorPayoutSummaryEmail({
@@ -14,11 +16,19 @@ export function WeeklyDoctorPayoutSummaryEmail({
   rows,
   totalAmountINR,
   totalConsultations,
+  processed = 0,
+  failed = 0,
+  skipped = 0,
+  payoutsEnabled = false,
 }: {
   weekLabel: string;
   rows: DoctorPayoutRow[];
   totalAmountINR: number;
   totalConsultations: number;
+  processed?: number;
+  failed?: number;
+  skipped?: number;
+  payoutsEnabled?: boolean;
 }) {
   return (
     <EmailLayout
@@ -32,6 +42,11 @@ export function WeeklyDoctorPayoutSummaryEmail({
         Total consultations: <strong>{totalConsultations}</strong>
         <br />
         Total payout amount: <strong>INR {totalAmountINR.toLocaleString("en-IN")}</strong>
+        <br />
+        Processed: <strong>{processed}</strong> · Failed: <strong>{failed}</strong> · Skipped:{" "}
+        <strong>{skipped}</strong>
+        <br />
+        Cashfree payouts: <strong>{payoutsEnabled ? "enabled" : "disabled"}</strong>
       </Text>
 
       <Section style={{ marginTop: "16px" }}>
@@ -47,6 +62,7 @@ export function WeeklyDoctorPayoutSummaryEmail({
               <th style={headerCellStyle}>Email</th>
               <th style={{ ...headerCellStyle, textAlign: "right" }}>Consultations</th>
               <th style={{ ...headerCellStyle, textAlign: "right" }}>Payout (INR)</th>
+              <th style={headerCellStyle}>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -57,6 +73,10 @@ export function WeeklyDoctorPayoutSummaryEmail({
                 <td style={{ ...bodyCellStyle, textAlign: "right" }}>{row.consultations}</td>
                 <td style={{ ...bodyCellStyle, textAlign: "right" }}>
                   {row.amountINR.toLocaleString("en-IN")}
+                </td>
+                <td style={bodyCellStyle}>
+                  {row.status ?? "PENDING"}
+                  {row.reason ? ` — ${row.reason}` : ""}
                 </td>
               </tr>
             ))}

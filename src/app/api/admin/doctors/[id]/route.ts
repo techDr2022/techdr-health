@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { adminUpdateDoctorSchema, formatAdminDoctorSchemaError } from "@/lib/admin-doctor-schema";
 import { resolveCanonicalSpecialtyName } from "@/lib/doctor-specialty";
 import { revalidateDoctorPublicPages } from "@/lib/revalidate-doctors";
+import { canApproveDoctorProfile } from "@/lib/nmc-verification";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,7 @@ const doctorSelect = {
   subSpecialties: true,
   credentials: true,
   medRegNumber: true,
+  nmcverified: true,
   experience: true,
   education: true,
   hospitalAffils: true,
@@ -56,13 +58,15 @@ const doctorSelect = {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   const authResult = await requireAdmin();
   if (authResult.error) return authResult.error;
 
   const doctor = await prisma.doctorProfile.findUnique({
-    where: { id: params.id },
+    where: { id: id },
     select: doctorSelect,
   });
 
@@ -75,19 +79,35 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const authResult = await requireAdmin();
   if (authResult.error) return authResult.error;
 
   try {
     const payload = adminUpdateDoctorSchema.parse(await req.json());
     const existing = await prisma.doctorProfile.findUnique({
-      where: { id: params.id },
-      select: { id: true, userId: true },
+      where: { id: id },
+      select: { id: true, userId: true, medRegNumber: true, nmcverified: true },
     });
     if (!existing) {
       return NextResponse.json({ error: "Doctor not found." }, { status: 404 });
+    }
+
+    const nextMedRegNumber = payload.medRegNumber?.trim() || existing.medRegNumber;
+    const medRegChanged = Boolean(
+      payload.medRegNumber?.trim() && payload.medRegNumber.trim() !== existing.medRegNumber
+    );
+
+    if (payload.approvalStatus === "APPROVED") {
+      const approvalCheck = canApproveDoctorProfile({
+        nmcverified: medRegChanged ? false : existing.nmcverified,
+        medRegNumber: nextMedRegNumber,
+      });
+      if (!approvalCheck.ok) {
+        return NextResponse.json({ error: approvalCheck.error }, { status: 400 });
+      }
     }
 
     const passwordHash = payload.password ? await bcrypt.hash(payload.password, 12) : undefined;
@@ -106,7 +126,7 @@ export async function PATCH(
       }
 
       return tx.doctorProfile.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           ...(payload.displayName ? { displayName: payload.displayName.trim() } : {}),
           ...(payload.specialty
@@ -114,6 +134,9 @@ export async function PATCH(
             : {}),
           ...(payload.credentials ? { credentials: payload.credentials.trim() } : {}),
           ...(payload.medRegNumber ? { medRegNumber: payload.medRegNumber.trim() } : {}),
+          ...(medRegChanged
+            ? { nmcverified: false, nmcverifiedat: null, nmcverifiedby: null }
+            : {}),
           ...(payload.experience !== undefined ? { experience: payload.experience } : {}),
           ...(payload.bio !== undefined ? { bio: payload.bio?.trim() || null } : {}),
           ...(payload.languages ? { languages: payload.languages.map((v) => v.trim()).filter(Boolean) } : {}),
@@ -143,7 +166,7 @@ export async function PATCH(
       });
     });
 
-    revalidateDoctorPublicPages(updated.specialty);
+    revalidateDoctorPublicPages(updated.specialty, updated.slug);
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -163,28 +186,30 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const authResult = await requireAdmin();
   if (authResult.error) return authResult.error;
 
   try {
     const doctor = await prisma.doctorProfile.findUnique({
-      where: { id: params.id },
-      select: { userId: true },
+      where: { id: id },
+      select: { userId: true, slug: true, specialty: true },
     });
     if (!doctor) {
       return NextResponse.json({ error: "Doctor not found." }, { status: 404 });
     }
 
     await prisma.user.delete({ where: { id: doctor.userId } });
+    revalidateDoctorPublicPages(doctor.specialty, doctor.slug);
     return NextResponse.json({ ok: true, softDeleted: false });
   } catch (error) {
     console.error("admin delete doctor error", error);
     try {
       const doctor = await prisma.doctorProfile.findUnique({
-        where: { id: params.id },
-        select: { userId: true },
+        where: { id: id },
+        select: { userId: true, slug: true, specialty: true },
       });
       if (!doctor) {
         return NextResponse.json({ error: "Doctor not found." }, { status: 404 });
@@ -192,7 +217,7 @@ export async function DELETE(
 
       await prisma.$transaction([
         prisma.doctorProfile.update({
-          where: { id: params.id },
+          where: { id: id },
           data: { isVisible: false, approvalStatus: "REJECTED" },
         }),
         prisma.user.update({
@@ -200,6 +225,8 @@ export async function DELETE(
           data: { isActive: false },
         }),
       ]);
+
+      revalidateDoctorPublicPages(doctor.specialty, doctor.slug);
 
       return NextResponse.json({
         ok: true,

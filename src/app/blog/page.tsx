@@ -11,12 +11,13 @@ import { generateSEO } from "@/lib/seo";
 
 type BlogSearchParams = { category?: string };
 
-export function generateMetadata({
+export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: BlogSearchParams;
-}): Metadata {
-  const category = searchParams.category;
+  searchParams: Promise<BlogSearchParams>;
+}): Promise<Metadata> {
+  const resolved = await searchParams;
+  const category = resolved.category;
   const categoryName = category
     ? SPECIALTIES.find((s) => s.slug === category)?.name ?? category
     : null;
@@ -50,10 +51,11 @@ export function generateMetadata({
 export default async function BlogIndexPage({
   searchParams,
 }: {
-  searchParams: BlogSearchParams;
+  searchParams: Promise<BlogSearchParams>;
 }) {
+  const resolvedSearchParams = await searchParams;
   const allPosts = await getMergedPublishedPosts();
-  const cat = searchParams.category;
+  const cat = resolvedSearchParams.category;
   const posts = cat
     ? allPosts.filter((p) => p.specialtySlug === cat || p.category === cat)
     : allPosts;

@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import {
+  canApproveDoctorProfile,
+  shouldDoctorBeListedAfterApproval,
+} from "@/lib/nmc-verification";
 
 export const dynamic = "force-dynamic";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -26,7 +32,7 @@ export async function PATCH(
     const reason = body.reason ? String(body.reason) : null;
 
     const application = await prisma.doctorProfile.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { user: true, subscription: true },
     });
     if (!application) {
@@ -34,17 +40,31 @@ export async function PATCH(
     }
 
     if (action === "APPROVE") {
+      const approvalCheck = canApproveDoctorProfile({
+        nmcverified: application.nmcverified,
+        medRegNumber: application.medRegNumber,
+      });
+      if (!approvalCheck.ok) {
+        return NextResponse.json({ error: approvalCheck.error }, { status: 400 });
+      }
+
+      const isVisible = shouldDoctorBeListedAfterApproval({
+        approvalStatus: "APPROVED",
+        nmcverified: application.nmcverified,
+        subscriptionStatus: application.subscription?.status,
+      });
+
       await prisma.doctorProfile.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           approvalStatus: "APPROVED",
           rejectionReason: null,
-          isVisible: application.subscription?.status === "ACTIVE",
+          isVisible,
         },
       });
 
       const { revalidateDoctorPublicPages } = await import("@/lib/revalidate-doctors");
-      revalidateDoctorPublicPages(application.specialty);
+      revalidateDoctorPublicPages(application.specialty, application.slug);
 
       await sendApprovalEmail(application.user.email, application.displayName);
 
@@ -53,7 +73,7 @@ export async function PATCH(
 
     if (action === "REJECT") {
       await prisma.doctorProfile.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           approvalStatus: "REJECTED",
           rejectionReason: reason || "Application did not meet verification requirements.",
@@ -65,6 +85,8 @@ export async function PATCH(
         application.displayName,
         reason || "Application did not meet verification requirements."
       );
+      const { revalidateDoctorPublicPages } = await import("@/lib/revalidate-doctors");
+      revalidateDoctorPublicPages(application.specialty, application.slug);
       return NextResponse.json({ ok: true, status: "REJECTED" });
     }
 

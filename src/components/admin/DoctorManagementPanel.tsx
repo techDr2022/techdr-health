@@ -296,18 +296,20 @@ export function DoctorManagementPanel({ doctors }: { doctors: AdminDoctorRow[] }
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a
-              href="/api/admin/doctors/bulk-import/template?format=xlsx"
+            <button
+              type="button"
+              onClick={() => window.location.assign("/api/admin/doctors/bulk-import/template?format=xlsx")}
               className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
             >
               Download Excel template
-            </a>
-            <a
-              href="/api/admin/doctors/bulk-import/template"
+            </button>
+            <button
+              type="button"
+              onClick={() => window.location.assign("/api/admin/doctors/bulk-import/template")}
               className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
             >
               Download CSV template
-            </a>
+            </button>
           </div>
         </div>
 

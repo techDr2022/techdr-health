@@ -19,14 +19,16 @@ async function requireAdmin() {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   const authResult = await requireAdmin();
   if (authResult.error) return authResult.error;
 
   try {
     const doctor = await prisma.doctorProfile.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { id: true, userId: true },
     });
     if (!doctor) {

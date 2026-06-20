@@ -99,3 +99,19 @@
 .card-hover {
   @apply transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl;
 }
+
+@keyframes voice-wave {
+  0%,
+  100% {
+    height: 0.35rem;
+    opacity: 0.55;
+  }
+  50% {
+    height: 1.25rem;
+    opacity: 1;
+  }
+}
+
+.voice-wave-bar {
+  animation: voice-wave 0.9s ease-in-out infinite;
+}
